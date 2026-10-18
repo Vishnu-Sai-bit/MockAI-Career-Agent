@@ -9,11 +9,93 @@
             <h3 class="fw-bold mb-1"><i class="bi bi-file-earmark-person text-primary me-2"></i>Extracted Resume Intelligence</h3>
             <p class="text-muted small mb-0">Review and verify extracted data from <strong>{{ resume.filename }}</strong>. Correct any values below.</p>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 align-items-center">
+            <form method="POST" action="{{ url_for('resume.analyze_with_gemini') }}" class="m-0">
+                <button type="submit" class="btn btn-outline-primary"><i class="bi bi-stars me-1"></i> Analyze with Gemini</button>
+            </form>
             <a href="{{ url_for('ats.ats_report') }}" class="btn btn-outline-custom"><i class="bi bi-graph-up-arrow me-1"></i> ATS Quality Audit</a>
             <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary-custom"><i class="bi bi-search me-1"></i> View Matching Jobs</a>
         </div>
     </div>
+
+    {% set gemini = resume.ats_feedback.get('gemini_critique') if resume.ats_feedback else None %}
+    {% if gemini %}
+        <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4 border-start border-4 border-primary">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-stars me-2"></i>Gemini AI Resume Intelligence & Diagnostic</h5>
+                    <small class="text-muted">In-depth ATS assessment powered by Google Gemini</small>
+                </div>
+                <span class="badge bg-primary-subtle text-primary border">Estimated ATS Quality: {{ gemini.get('ats_score_estimate', 85) }}/100</span>
+            </div>
+
+            <div class="p-3 bg-light rounded-3 mb-3 border">
+                <h6 class="fw-bold mb-1 text-dark"><i class="bi bi-info-circle-fill text-primary me-1"></i> Executive Summary</h6>
+                <p class="text-muted small mb-0">{{ gemini.get('executive_summary', '') }}</p>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="p-3 bg-success-subtle rounded-3 border border-success-subtle h-100">
+                        <h6 class="fw-bold text-success mb-2"><i class="bi bi-check-circle-fill me-1"></i> Key Strengths</h6>
+                        <ul class="text-secondary small mb-0 ps-3">
+                            {% for s in gemini.get('key_strengths', []) %}
+                                <li class="mb-1">{{ s }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-danger-subtle rounded-3 border border-danger-subtle h-100">
+                        <h6 class="fw-bold text-danger mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> Critical Weaknesses & Gaps</h6>
+                        <ul class="text-secondary small mb-0 ps-3">
+                            {% for w in gemini.get('critical_weaknesses_and_gaps', []) %}
+                                <li class="mb-1">{{ w }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            {% if gemini.get('actionable_bullet_rewrites') %}
+                <div class="mb-3">
+                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-pencil-square text-warning me-1"></i> Actionable Bullet Point Improvements</h6>
+                    <div class="d-flex flex-column gap-2">
+                        {% for r in gemini.get('actionable_bullet_rewrites', []) %}
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="text-muted small mb-1"><strong>Before / Concept:</strong> <em>"{{ r.get('original_or_concept') }}"</em></div>
+                                <div class="text-success small fw-semibold mb-1"><strong>Recommended Rewrite:</strong> "{{ r.get('recommended_rewrite') }}"</div>
+                                <div class="text-muted small"><strong>Rationale:</strong> {{ r.get('rationale') }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if gemini.get('ats_formatting_advice') %}
+                <div>
+                    <h6 class="fw-bold text-dark mb-1"><i class="bi bi-file-earmark-check text-info me-1"></i> ATS Scanner Formatting Advice</h6>
+                    <ul class="text-muted small mb-0 ps-3">
+                        {% for a in gemini.get('ats_formatting_advice', []) %}
+                            <li>{{ a }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="alert alert-light border shadow-sm d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <i class="bi bi-stars text-primary fs-5 me-2"></i>
+                <strong>Unlock Deep Gemini AI Analysis</strong>: Extract categorized skills, identify missing metrics, and get instant bullet point rewrites.
+            </div>
+            <form method="POST" action="{{ url_for('resume.analyze_with_gemini') }}" class="m-0">
+                <button type="submit" class="btn btn-sm btn-primary-custom">
+                    <i class="bi bi-cpu me-1"></i> Run Gemini AI Analysis
+                </button>
+            </form>
+        </div>
+    {% endif %}
 
     <form method="POST" action="{{ url_for('resume.update_parsed_profile') }}">
         <div class="row g-4">

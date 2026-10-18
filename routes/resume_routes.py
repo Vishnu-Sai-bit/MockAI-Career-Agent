@@ -10,7 +10,9 @@ from utils.file_validation import validate_uploaded_file
 from utils.text_extraction import extract_text
 from services.resume_parser import ResumeParser
 from services.ats_scorer import ATSScorer
+from services.gemini_service import GeminiService
 from tasks.recompute_matches import recompute_user_matches
+from utils.logging_config import logger
 
 resume_bp = Blueprint("resume", __name__, url_prefix="/resume")
 
@@ -47,13 +49,41 @@ def upload_resume():
             flash(extract_err or "Unable to extract text from document.", "danger")
             return redirect(request.url)
 
-        # Parse structured intelligence
+        # Parse structured intelligence (deterministic baseline)
         parser = ResumeParser()
         parsed_data = parser.parse(raw_text)
+
+        # Deep Gemini AI extraction & critique if API key is configured
+        gemini = GeminiService()
+        gemini_result = None
+        if gemini.is_available():
+            try:
+                gemini_result = gemini.analyze_resume_deep(raw_text)
+                if gemini_result and gemini_result.get("parsed_data"):
+                    g_data = gemini_result["parsed_data"]
+                    for k in ["name", "email", "phone", "location", "headline", "summary", "experience_years"]:
+                        if g_data.get(k):
+                            parsed_data[k] = g_data[k]
+                    if g_data.get("skills"):
+                        parsed_data["skills"] = sorted(list(set(parsed_data.get("skills", []) + g_data["skills"])))
+                    if g_data.get("skills_by_category"):
+                        parsed_data["skills_by_category"] = g_data["skills_by_category"]
+                    if g_data.get("experience"):
+                        parsed_data["experience"] = g_data["experience"]
+                    if g_data.get("projects"):
+                        parsed_data["projects"] = g_data["projects"]
+                    if g_data.get("education"):
+                        parsed_data["education"] = g_data["education"]
+                    if g_data.get("certifications"):
+                        parsed_data["certifications"] = g_data["certifications"]
+            except Exception as e:
+                logger.error(f"Gemini resume intelligence error: {e}")
 
         # Compute ATS quality score
         scorer = ATSScorer()
         ats_report = scorer.score_resume(raw_text, parsed_data)
+        if gemini_result and gemini_result.get("ai_critique"):
+            ats_report["gemini_critique"] = gemini_result["ai_critique"]
 
         # Deactivate old resumes
         Resume.query.filter_by(user_id=current_user.id, is_active=True).update({"is_active": False})
@@ -170,3 +200,75 @@ def delete_resume(resume_id):
     db.session.commit()
     flash("Resume and stored parsing data deleted.", "info")
     return redirect(url_for("resume.upload_resume"))
+
+
+@resume_bp.route("/analyze-with-gemini", methods=["POST"])
+@login_required
+def analyze_with_gemini():
+    resume = current_user.get_active_resume()
+    if not resume:
+        flash("Please upload a resume first.", "warning")
+        return redirect(url_for("resume.upload_resume"))
+
+    gemini = GeminiService()
+    if not gemini.is_available():
+        flash("Gemini API Key is not configured. Please add GEMINI_API_KEY to your .env file.", "warning")
+        return redirect(url_for("resume.resume_analysis"))
+
+    result = gemini.analyze_resume_deep(resume.raw_text or "")
+    if not result:
+        flash("Gemini AI was unable to process the resume text. Please verify your GEMINI_API_KEY in .env.", "danger")
+        return redirect(url_for("resume.resume_analysis"))
+
+    # Update parsed data
+    parsed_data = dict(resume.parsed_data or {})
+    g_data = result.get("parsed_data", {})
+    for k in ["name", "email", "phone", "location", "headline", "summary", "experience_years"]:
+        if g_data.get(k):
+            parsed_data[k] = g_data[k]
+    if g_data.get("skills"):
+        parsed_data["skills"] = sorted(list(set(parsed_data.get("skills", []) + g_data["skills"])))
+    if g_data.get("skills_by_category"):
+        parsed_data["skills_by_category"] = g_data["skills_by_category"]
+    if g_data.get("experience"):
+        parsed_data["experience"] = g_data["experience"]
+    if g_data.get("projects"):
+        parsed_data["projects"] = g_data["projects"]
+    if g_data.get("education"):
+        parsed_data["education"] = g_data["education"]
+    if g_data.get("certifications"):
+        parsed_data["certifications"] = g_data["certifications"]
+
+    resume.parsed_data = parsed_data
+
+    # Update ATS feedback with Gemini critique
+    ats_feedback = dict(resume.ats_feedback or {})
+    if result.get("ai_critique"):
+        ats_feedback["gemini_critique"] = result["ai_critique"]
+    resume.ats_feedback = ats_feedback
+
+    # Update candidate profile
+    profile = current_user.candidate_profile
+    if profile:
+        if parsed_data.get("name"):
+            profile.full_name = parsed_data["name"]
+        if parsed_data.get("headline"):
+            profile.headline = parsed_data["headline"]
+        if parsed_data.get("summary"):
+            profile.summary = parsed_data["summary"]
+        if parsed_data.get("skills"):
+            profile.skills = parsed_data["skills"]
+        if parsed_data.get("experience_years"):
+            profile.experience_years = parsed_data["experience_years"]
+        if parsed_data.get("projects"):
+            profile.projects = parsed_data["projects"]
+        if parsed_data.get("education"):
+            profile.education = parsed_data["education"]
+
+    db.session.commit()
+
+    # Recalculate job compatibility matches immediately
+    recompute_user_matches(current_user, resume)
+
+    flash("Resume successfully analyzed with Google Gemini AI!", "success")
+    return redirect(url_for("resume.resume_analysis"))
