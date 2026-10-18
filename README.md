@@ -9,13 +9,13 @@ AI Job Agent is a Python + Flask platform designed to revolutionize the job appl
 1. **100% Grounded in Real Sources**: Every recommended job originates from a traceable, verified source record (Greenhouse, Lever, Ashby, Remotive, RemoteOK, Arbeitnow, or official company career portals).
 2. **Direct Official Application Links**: The `/apply/<job_id>` route retrieves the verified application URL from the database and validates scheme, SSRF safety, and permitted hosts before safely redirecting. It never fabricates URLs or relies on open query redirects.
 3. **Transparent ATS Scoring**: Implements an explainable, deterministic weighted compatibility formula:
-   $$\mathbf{M = 0.35S + 0.20E + 0.15K + 0.10P + 0.10L + 0.10Q}$$
-   - **S (35%)**: Required & Preferred Skill Overlap
-   - **E (20%)**: Relevant Experience Alignment
+   $$\mathbf{M = 0.40S + 0.25E + 0.15K + 0.10P + 0.10Q}$$
+   - **S (40%)**: Required & Preferred Skill Overlap
+   - **E (25%)**: Relevant Experience Alignment
    - **K (15%)**: Job-Description Keyword Coverage (TF-IDF Cosine Similarity)
    - **P (10%)**: Project Evidence Overlap
-   - **L (10%)**: Location & Work Mode Fit (Remote / Hybrid / On-site)
    - **Q (10%)**: Qualification & Degree Alignment
+   *(Location & Work Mode fit is preserved as an informative eligibility flag for user transparency without skewing core ATS qualifications)*.
 4. **Conversational Career Assistant**: Natural language career queries (e.g. *"Find Python developer jobs matching my resume"*, *"Show jobs with an 80% or higher match"*, *"Which skills am I missing?"*, *"Prepare a cover letter"*).
 5. **Human-in-the-Loop Privacy & Safety**: Resumes are stored outside public web directories. Clicking Apply Now never automatically marks a job as applied—applications are tracked accurately through candidate confirmation or verified integration.
 

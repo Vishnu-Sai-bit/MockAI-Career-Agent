@@ -68,13 +68,24 @@ def test_explainable_job_matching_formula():
     assert "Flask" in skills_detail["matched_required"]
     assert "Docker" in skills_detail["matched_required"]
 
-    # Verify formula breakdown structure
+    # Verify formula breakdown structure (5 components, location removed)
     assert "skills" in breakdown
     assert "experience" in breakdown
     assert "keyword_coverage" in breakdown
     assert "projects" in breakdown
-    assert "location_work_mode" in breakdown
     assert "qualifications" in breakdown
+    assert "location_work_mode" not in breakdown
+
+    # Verify exact deterministic calculation: M = 0.40S + 0.25E + 0.15K + 0.10P + 0.10Q
+    expected_score = round(
+        0.40 * breakdown["skills"] +
+        0.25 * breakdown["experience"] +
+        0.15 * breakdown["keyword_coverage"] +
+        0.10 * breakdown["projects"] +
+        0.10 * breakdown["qualifications"],
+        2
+    )
+    assert abs(score - expected_score) < 0.05
 
     # Verify explainable narrative
     explanation = match_result["match_explanation"]

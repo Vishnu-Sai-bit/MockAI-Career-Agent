@@ -7,13 +7,12 @@ from models.resume import Resume
 from models.user import CandidateProfile
 
 class JobMatcher:
-    # Component weights as defined in Blueprint Section 5:
-    # M = 0.35S + 0.20E + 0.15K + 0.10P + 0.10L + 0.10Q
-    W_SKILLS = 0.35
-    W_EXPERIENCE = 0.20
+    # Component weights without Location:
+    # M = 0.40S + 0.25E + 0.15K + 0.10P + 0.10Q
+    W_SKILLS = 0.40
+    W_EXPERIENCE = 0.25
     W_KEYWORDS = 0.15
     W_PROJECTS = 0.10
-    W_LOCATION = 0.10
     W_QUALIFICATIONS = 0.10
 
     def compute_match(
@@ -24,6 +23,8 @@ class JobMatcher:
     ) -> Dict[str, Any]:
         """
         Calculates explainable ATS Job Compatibility Score and breakdown.
+        Formula: M = 0.40S + 0.25E + 0.15K + 0.10P + 0.10Q
+        (Location & Work Mode fit is treated as an informative eligibility flag, not scored in ATS qualification).
         """
         resume_data = resume.parsed_data or {}
         candidate_skills = [s.lower() for s in (resume_data.get("skills") or profile.skills or [])]
@@ -32,31 +33,30 @@ class JobMatcher:
         candidate_education = resume_data.get("education") or profile.education or []
         resume_raw_text = resume.raw_text or ""
 
-        # 1. Skills Alignment (S)
+        # 1. Skills Alignment (S - 40%)
         s_score, skill_details = self._score_skills(candidate_skills, job)
 
-        # 2. Experience Alignment (E)
+        # 2. Experience Alignment (E - 25%)
         e_score, exp_details = self._score_experience(candidate_years, job)
 
-        # 3. Keyword Coverage (K)
+        # 3. Keyword Coverage (K - 15%)
         k_score = self._score_keyword_coverage(resume_raw_text, job.description)
 
-        # 4. Project Alignment (P)
+        # 4. Project Alignment (P - 10%)
         p_score, proj_details = self._score_projects(candidate_projects, job)
 
-        # 5. Location & Work Mode Alignment (L)
-        l_score, loc_flags = self._score_location_and_work_mode(profile, job)
-
-        # 6. Qualification Alignment (Q)
+        # 5. Qualification Alignment (Q - 10%)
         q_score, qual_details = self._score_qualifications(candidate_education, job)
 
-        # Weighted calculation
+        # Advisory Location & Work Mode flags (informational advisory, 0% ATS weight)
+        _, loc_flags = self._score_location_and_work_mode(profile, job)
+
+        # Weighted ATS compatibility calculation
         total_score = round(
             self.W_SKILLS * s_score +
             self.W_EXPERIENCE * e_score +
             self.W_KEYWORDS * k_score +
             self.W_PROJECTS * p_score +
-            self.W_LOCATION * l_score +
             self.W_QUALIFICATIONS * q_score,
             2
         )
@@ -78,7 +78,6 @@ class JobMatcher:
                 "experience": round(e_score, 1),
                 "keyword_coverage": round(k_score, 1),
                 "projects": round(p_score, 1),
-                "location_work_mode": round(l_score, 1),
                 "qualifications": round(q_score, 1)
             },
             "skill_match_details": skill_details,

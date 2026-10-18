@@ -43,13 +43,13 @@
                 <div class="card p-4 custom-card border-0 bg-white shadow-sm h-100">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="fw-bold mb-0"><i class="bi bi-calculator text-primary me-2"></i>Formula Breakdown</h5>
-                        <code class="small text-muted">M = 0.35S + 0.20E + 0.15K + 0.10P + 0.10L + 0.10Q</code>
+                        <code class="small text-muted">M = 0.40S + 0.25E + 0.15K + 0.10P + 0.10Q</code>
                     </div>
                     {% set b = match.score_breakdown %}
                     <div class="d-flex flex-column gap-3">
                         <div>
                             <div class="d-flex justify-content-between small fw-semibold mb-1">
-                                <span><i class="bi bi-cpu text-info me-1"></i> Required Skills (S - 35% weight)</span>
+                                <span><i class="bi bi-cpu text-info me-1"></i> Skills Alignment (S - 40% weight)</span>
                                 <span>{{ b.skills }} / 100</span>
                             </div>
                             <div class="progress" style="height: 8px;">
@@ -58,7 +58,7 @@
                         </div>
                         <div>
                             <div class="d-flex justify-content-between small fw-semibold mb-1">
-                                <span><i class="bi bi-clock-history text-primary me-1"></i> Experience Alignment (E - 20% weight)</span>
+                                <span><i class="bi bi-clock-history text-primary me-1"></i> Experience Alignment (E - 25% weight)</span>
                                 <span>{{ b.experience }} / 100</span>
                             </div>
                             <div class="progress" style="height: 8px;">
@@ -76,20 +76,11 @@
                         </div>
                         <div>
                             <div class="d-flex justify-content-between small fw-semibold mb-1">
-                                <span><i class="bi bi-folder-check text-success me-1"></i> Project Alignment (P - 10% weight)</span>
+                                <span><i class="bi bi-folder-check text-success me-1"></i> Project Evidence (P - 10% weight)</span>
                                 <span>{{ b.projects }} / 100</span>
                             </div>
                             <div class="progress" style="height: 8px;">
                                 <div class="progress-bar bg-success" style="width: {{ b.projects }}%"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="d-flex justify-content-between small fw-semibold mb-1">
-                                <span><i class="bi bi-geo-alt text-danger me-1"></i> Location & Mode Fit (L - 10% weight)</span>
-                                <span>{{ b.location_work_mode }} / 100</span>
-                            </div>
-                            <div class="progress" style="height: 8px;">
-                                <div class="progress-bar bg-danger" style="width: {{ b.location_work_mode }}%"></div>
                             </div>
                         </div>
                         <div>
