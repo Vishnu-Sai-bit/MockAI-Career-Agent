@@ -13,13 +13,16 @@ def utc_now():
     return datetime.now(timezone.utc)
 
 DEFAULT_SOURCES = [
-    {"platform": "remotive", "company_key": "all", "name": "Remotive Remote Jobs Feed"},
-    {"platform": "arbeitnow", "company_key": "all", "name": "Arbeitnow Global Jobs Feed"},
-    {"platform": "remoteok", "company_key": "all", "name": "RemoteOK Tech Jobs Feed"},
+    {"platform": "workday", "company_key": "nvidia", "name": "NVIDIA (Workday)"},
+    {"platform": "workday", "company_key": "adobe", "name": "Adobe (Workday)"},
+    {"platform": "workday", "company_key": "autodesk", "name": "Autodesk (Workday)"},
     {"platform": "greenhouse", "company_key": "gitlab", "name": "GitLab (Greenhouse)"},
     {"platform": "greenhouse", "company_key": "stripe", "name": "Stripe (Greenhouse)"},
     {"platform": "lever", "company_key": "spotify", "name": "Spotify (Lever)"},
-    {"platform": "ashby", "company_key": "linear", "name": "Linear (Ashby)"}
+    {"platform": "ashby", "company_key": "linear", "name": "Linear (Ashby)"},
+    {"platform": "remotive", "company_key": "all", "name": "Remotive Remote Jobs Feed"},
+    {"platform": "arbeitnow", "company_key": "all", "name": "Arbeitnow Global Jobs Feed"},
+    {"platform": "remoteok", "company_key": "all", "name": "RemoteOK Tech Jobs Feed"}
 ]
 
 def ensure_default_sources():
