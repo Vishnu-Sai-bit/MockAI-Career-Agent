@@ -1,7 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from extensions import db, login_manager
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 class User(UserMixin, db.Model):
     __tablename__ = "users"
@@ -9,7 +12,7 @@ class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(180), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
 
     # Relationships
     candidate_profile = db.relationship("CandidateProfile", backref="user", uselist=False, cascade="all, delete-orphan")
@@ -25,6 +28,7 @@ class User(UserMixin, db.Model):
         return check_password_hash(self.password_hash, password)
 
     def get_active_resume(self):
+        from models.resume import Resume
         return self.resumes.filter_by(is_active=True).first() or self.resumes.order_by(Resume.uploaded_at.desc()).first()
 
     def __repr__(self):
@@ -45,23 +49,23 @@ class CandidateProfile(db.Model):
     # Structured intelligence
     skills = db.Column(db.JSON, default=list)  # list of strings
     experience_years = db.Column(db.Float, default=0.0)
-    education = db.Column(db.JSON, default=list)  # list of dicts: degree, institution, year, field
-    projects = db.Column(db.JSON, default=list)  # list of dicts: title, description, technologies
-    certifications = db.Column(db.JSON, default=list)  # list of strings or dicts
+    education = db.Column(db.JSON, default=list)
+    projects = db.Column(db.JSON, default=list)
+    certifications = db.Column(db.JSON, default=list)
 
     # User Preferences
-    preferred_titles = db.Column(db.JSON, default=list)  # list of strings
-    preferred_countries = db.Column(db.JSON, default=list)  # list of strings
+    preferred_titles = db.Column(db.JSON, default=list)
+    preferred_countries = db.Column(db.JSON, default=list)
     preferred_cities = db.Column(db.JSON, default=list)
-    work_modes = db.Column(db.JSON, default=lambda: ["remote", "hybrid", "on-site"])  # remote, hybrid, on-site
+    work_modes = db.Column(db.JSON, default=lambda: ["remote", "hybrid", "on-site"])
     min_salary = db.Column(db.Float, nullable=True)
     max_salary = db.Column(db.Float, nullable=True)
     currency = db.Column(db.String(10), default="USD")
-    experience_level = db.Column(db.String(50), default="mid")  # entry, mid, senior, lead
+    experience_level = db.Column(db.String(50), default="mid")
     employment_types = db.Column(db.JSON, default=lambda: ["full-time"])
     visa_sponsorship_required = db.Column(db.Boolean, default=False)
     
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=utc_now, onupdate=utc_now)
 
     def __repr__(self):
         return f"<CandidateProfile user_id={self.user_id} name='{self.full_name}'>"
@@ -69,4 +73,4 @@ class CandidateProfile(db.Model):
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))

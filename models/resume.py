@@ -1,5 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from extensions import db
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 class Resume(db.Model):
     __tablename__ = "resumes"
@@ -22,7 +25,7 @@ class Resume(db.Model):
     ats_feedback = db.Column(db.JSON, default=dict)       # detailed breakdown & improvement tips
     
     is_active = db.Column(db.Boolean, default=True)
-    uploaded_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    uploaded_at = db.Column(db.DateTime, default=utc_now, nullable=False)
 
     # Relationships
     matches = db.relationship("JobMatch", backref="resume", cascade="all, delete-orphan", lazy="dynamic")

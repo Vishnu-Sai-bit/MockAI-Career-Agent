@@ -1,5 +1,8 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from extensions import db
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 class Job(db.Model):
     __tablename__ = "jobs"
@@ -8,7 +11,7 @@ class Job(db.Model):
     source_id = db.Column(db.Integer, db.ForeignKey("job_sources.id", ondelete="CASCADE"), nullable=False, index=True)
     
     # Source Identifiers (Core grounding requirement)
-    source_platform = db.Column(db.String(50), nullable=False, index=True)  # greenhouse, lever, ashby, workday, remotive, remoteok, etc.
+    source_platform = db.Column(db.String(50), nullable=False, index=True)
     source_company_key = db.Column(db.String(100), nullable=False)
     source_job_id = db.Column(db.String(150), nullable=False, index=True)
     
@@ -19,9 +22,9 @@ class Job(db.Model):
     location = db.Column(db.String(255), default="", index=True)
     country = db.Column(db.String(100), default="")
     city = db.Column(db.String(100), default="")
-    work_mode = db.Column(db.String(50), default="on-site")  # remote, hybrid, on-site
-    employment_type = db.Column(db.String(50), default="full-time")  # full-time, part-time, contract, internship
-    experience_level = db.Column(db.String(50), default="any")  # entry, mid, senior, lead, executive
+    work_mode = db.Column(db.String(50), default="on-site")
+    employment_type = db.Column(db.String(50), default="full-time")
+    experience_level = db.Column(db.String(50), default="any")
     
     # Compensation
     salary_min = db.Column(db.Float, nullable=True)
@@ -31,8 +34,8 @@ class Job(db.Model):
     # Job Description & Requirements
     description = db.Column(db.Text, default="")
     raw_description = db.Column(db.Text, default="")
-    required_skills = db.Column(db.JSON, default=list)  # list of strings
-    preferred_skills = db.Column(db.JSON, default=list) # list of strings
+    required_skills = db.Column(db.JSON, default=list)
+    preferred_skills = db.Column(db.JSON, default=list)
     
     # Direct Official Links (Core system requirement)
     original_url = db.Column(db.String(1000), nullable=False)
@@ -41,11 +44,10 @@ class Job(db.Model):
     
     # Timestamps & Status
     published_at = db.Column(db.DateTime, nullable=True, index=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    last_verified_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    status = db.Column(db.String(50), default="active", index=True)  # active, closed, expired, unavailable, unknown
+    created_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    last_verified_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    status = db.Column(db.String(50), default="active", index=True)
     
-    # Full original payload for provenance & debugging
     source_metadata = db.Column(db.JSON, default=dict)
 
     # Relationships
@@ -67,8 +69,8 @@ class VerificationLog(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     job_id = db.Column(db.Integer, db.ForeignKey("jobs.id", ondelete="CASCADE"), nullable=False, index=True)
-    checked_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    result = db.Column(db.String(50), nullable=False)  # active, closed, redirect_error, http_error, host_disallowed
+    checked_at = db.Column(db.DateTime, default=utc_now, nullable=False)
+    result = db.Column(db.String(50), nullable=False)
     http_status = db.Column(db.Integer, nullable=True)
     destination_url = db.Column(db.String(1000), nullable=True)
     details = db.Column(db.Text, default="")

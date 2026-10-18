@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Dict, Any
 from extensions import db
 from models.job_source import JobSource
@@ -8,6 +8,9 @@ from services.job_normalizer import JobNormalizer
 from services.job_deduplicator import JobDeduplicator
 from utils.url_validation import validate_external_job_url
 from utils.logging_config import logger
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 DEFAULT_SOURCES = [
     {"platform": "remotive", "company_key": "all", "name": "Remotive Remote Jobs Feed"},
@@ -63,13 +66,11 @@ def run_job_refresh(limit_per_source: int = 25) -> Dict[str, Any]:
             for raw in raw_records:
                 normalized = normalizer.normalize(raw)
                 
-                # Deduplication check
                 duplicate = deduplicator.find_duplicate(normalized, existing_jobs)
                 if duplicate:
                     total_duplicates += 1
                     continue
 
-                # URL Validation
                 target_url = normalized["apply_url"] or normalized["original_url"]
                 is_valid, err_msg, clean_url = validate_external_job_url(target_url, expected_platform=source.platform)
                 if not is_valid:
@@ -77,7 +78,6 @@ def run_job_refresh(limit_per_source: int = 25) -> Dict[str, Any]:
                     total_invalid_urls += 1
                     continue
 
-                # Create Job Record
                 new_job = Job(
                     source_id=source.id,
                     source_platform=normalized["source_platform"],
@@ -102,9 +102,9 @@ def run_job_refresh(limit_per_source: int = 25) -> Dict[str, Any]:
                     original_url=normalized["original_url"],
                     apply_url=normalized["apply_url"],
                     canonical_url=normalized["canonical_url"],
-                    published_at=normalized["published_at"] or datetime.utcnow(),
-                    created_at=datetime.utcnow(),
-                    last_verified_at=datetime.utcnow(),
+                    published_at=normalized["published_at"] or utc_now(),
+                    created_at=utc_now(),
+                    last_verified_at=utc_now(),
                     status="active",
                     source_metadata=normalized["source_metadata"]
                 )
@@ -113,7 +113,7 @@ def run_job_refresh(limit_per_source: int = 25) -> Dict[str, Any]:
                 total_added += 1
 
             source.sync_status = "success"
-            source.last_sync_at = datetime.utcnow()
+            source.last_sync_at = utc_now()
             source.sync_error = None
             db.session.commit()
 

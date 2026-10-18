@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, Any, Optional
 from extensions import db
 from models.user import User
@@ -7,6 +7,9 @@ from models.job import Job
 from models.job_match import JobMatch
 from services.job_matcher import JobMatcher
 from utils.logging_config import logger
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 def recompute_user_matches(user: User, resume: Optional[Resume] = None) -> Dict[str, Any]:
     """
@@ -46,7 +49,7 @@ def recompute_user_matches(user: User, resume: Optional[Resume] = None) -> Dict[
                     skill_match_details=res["skill_match_details"],
                     match_explanation=res["match_explanation"],
                     eligibility_flags=res["eligibility_flags"],
-                    created_at=datetime.utcnow()
+                    created_at=utc_now()
                 )
                 db.session.add(new_match)
             count += 1

@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 from extensions import db
 from models.application import Application, ApplicationDocument
@@ -6,6 +6,9 @@ from models.job_match import SavedJob
 from models.job import Job
 
 VALID_STATUSES = ["saved", "prepared", "applied", "interviewing", "offer", "rejected", "withdrawn"]
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 class ApplicationService:
     def get_or_create_application(self, user_id: int, job_id: int, status: str = "prepared") -> Application:
@@ -15,7 +18,7 @@ class ApplicationService:
                 user_id=user_id,
                 job_id=job_id,
                 status=status if status in VALID_STATUSES else "prepared",
-                created_at=datetime.utcnow()
+                created_at=utc_now()
             )
             db.session.add(app)
             db.session.commit()
@@ -35,7 +38,7 @@ class ApplicationService:
         if status in VALID_STATUSES:
             app.status = status
             if status == "applied" and not app.submitted_at:
-                app.submitted_at = datetime.utcnow()
+                app.submitted_at = utc_now()
 
         if notes is not None:
             app.notes = notes
@@ -45,15 +48,11 @@ class ApplicationService:
             app.next_action_description = next_action_desc
 
         app.is_integration_verified = is_verified
-        app.updated_at = datetime.utcnow()
+        app.updated_at = utc_now()
         db.session.commit()
         return app
 
     def toggle_saved_job(self, user_id: int, job_id: int, notes: str = "") -> bool:
-        """
-        Toggles saving/bookmarking a job for a user.
-        Returns True if saved, False if unsaved.
-        """
         existing = SavedJob.query.filter_by(user_id=user_id, job_id=job_id).first()
         if existing:
             db.session.delete(existing)

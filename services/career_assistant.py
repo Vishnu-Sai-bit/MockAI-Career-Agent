@@ -1,5 +1,6 @@
 import re
 from typing import Dict, Any, List, Optional
+from extensions import db
 from models.user import User
 from models.job import Job
 from models.job_match import JobMatch
@@ -133,7 +134,7 @@ class CareerAssistant:
 
         job = None
         if context_job_id:
-            job = Job.query.get(context_job_id)
+            job = db.session.get(Job, context_job_id)
         
         if not job:
             top_match = user.job_matches.order_by(JobMatch.match_score.desc()).first()
@@ -170,7 +171,7 @@ class CareerAssistant:
                 "cards": []
             }
 
-        job = Job.query.get(context_job_id) if context_job_id else None
+        job = db.session.get(Job, context_job_id) if context_job_id else None
         if not job:
             top_match = user.job_matches.order_by(JobMatch.match_score.desc()).first()
             if top_match:
@@ -211,7 +212,7 @@ class CareerAssistant:
         }
 
     def _handle_interview_prep(self, user: User, resume, context_job_id: Optional[int]) -> Dict[str, Any]:
-        job = Job.query.get(context_job_id) if context_job_id else Job.query.filter_by(status="active").first()
+        job = db.session.get(Job, context_job_id) if context_job_id else Job.query.filter_by(status="active").first()
         if not job or not resume:
             return {
                 "reply": "Select a job to view tailored interview preparation questions.",
@@ -266,9 +267,7 @@ class CareerAssistant:
 
         # Keyword extraction
         keyword = msg
-        # Remove percentage mention without boundary restriction on %
         keyword = re.sub(r"\d{1,3}%", "", keyword)
-        # Remove common query framing terms
         for stop in ["find", "show", "search for", "jobs", "job", "matching my resume", "with an", "or higher match", "or higher", "match", "fresher", "remote", "in india", "worldwide", "please"]:
             keyword = re.sub(r"(?i)\b" + re.escape(stop) + r"\b", "", keyword)
         keyword = keyword.strip()

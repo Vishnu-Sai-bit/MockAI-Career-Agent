@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Tuple, Optional
 import requests
 from extensions import db
@@ -6,6 +6,9 @@ from models.job import Job, VerificationLog
 from utils.url_validation import validate_external_job_url, is_safe_host
 from collectors import get_collector_for_platform
 from utils.logging_config import logger
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 class JobVerifier:
     def __init__(self, timeout: int = 6, max_redirects: int = 5):
@@ -23,18 +26,16 @@ class JobVerifier:
         if not is_valid_url:
             self._record_log(job, "host_disallowed", 0, target_url, err_msg or "Disallowed host or unsafe scheme")
             job.status = "unavailable"
-            job.last_verified_at = datetime.utcnow()
+            job.last_verified_at = utc_now()
             db.session.commit()
             return False, f"URL validation failed: {err_msg}"
 
-        # Attempt platform-specific verification first if collector supports it
         is_active = True
         status_code = 200
         details = "Verified active"
 
         try:
             collector = get_collector_for_platform(job.source_platform)
-            # Some collectors support single job API verification
             if hasattr(collector, "verify_job_live"):
                 is_active, status_code, details = collector.verify_job_live(
                     original_url=job.original_url,
@@ -49,7 +50,7 @@ class JobVerifier:
 
         result_type = "active" if is_active else ("closed" if status_code in (404, 410) else "http_error")
         job.status = "active" if is_active else "closed"
-        job.last_verified_at = datetime.utcnow()
+        job.last_verified_at = utc_now()
 
         self._record_log(job, result_type, status_code, target_url, details)
         db.session.commit()
@@ -74,7 +75,6 @@ class JobVerifier:
                     loc = resp.headers.get("Location")
                     if not loc:
                         break
-                    # If relative URL, make absolute
                     if loc.startswith("/"):
                         from urllib.parse import urljoin
                         current_url = urljoin(current_url, loc)
@@ -100,6 +100,6 @@ class JobVerifier:
             http_status=http_status,
             destination_url=dest_url,
             details=details,
-            checked_at=datetime.utcnow()
+            checked_at=utc_now()
         )
         db.session.add(log)

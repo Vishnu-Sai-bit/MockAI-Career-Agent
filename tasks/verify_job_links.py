@@ -1,9 +1,12 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 from typing import Dict, Any
 from extensions import db
 from models.job import Job
 from services.job_verifier import JobVerifier
 from utils.logging_config import logger
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 def verify_active_jobs(batch_size: int = 20, max_age_hours: int = 12) -> Dict[str, Any]:
     """
@@ -11,9 +14,8 @@ def verify_active_jobs(batch_size: int = 20, max_age_hours: int = 12) -> Dict[st
     detects closed/expired listings, and records audit logs.
     """
     verifier = JobVerifier()
-    cutoff = datetime.utcnow() - timedelta(hours=max_age_hours)
+    cutoff = utc_now() - timedelta(hours=max_age_hours)
     
-    # Prioritize active jobs that haven't been verified recently
     jobs_to_verify = Job.query.filter(
         Job.status == "active",
         Job.last_verified_at <= cutoff
