@@ -100,13 +100,38 @@ class JobSearchService:
             if min_match_score is not None:
                 query = query.filter(JobMatch.match_score >= float(min_match_score))
 
+            from sqlalchemy import case
+
+            # Prioritize jobs matching the candidate's resume first, followed by remaining jobs
+            is_matched = case(
+                (and_(JobMatch.match_score.isnot(None), JobMatch.match_score > 0), 1),
+                else_=0
+            )
+
             if sort_by == "match":
-                query = query.order_by(desc(JobMatch.match_score), desc(Job.published_at), desc(Job.id))
+                query = query.order_by(
+                    desc(is_matched),
+                    desc(JobMatch.match_score),
+                    desc(Job.published_at),
+                    desc(Job.id)
+                )
             elif sort_by == "salary":
-                query = query.order_by(desc(Job.salary_max), desc(Job.published_at), desc(Job.id))
-            else:
-                # Default to freshest first
+                query = query.order_by(
+                    desc(is_matched),
+                    desc(Job.salary_max),
+                    desc(Job.published_at),
+                    desc(Job.id)
+                )
+            elif sort_by == "all_fresh":
                 query = query.order_by(desc(Job.published_at), desc(Job.id))
+            else:
+                # Default: Resume matched jobs first (highest match & freshest), followed by remaining jobs
+                query = query.order_by(
+                    desc(is_matched),
+                    desc(JobMatch.match_score),
+                    desc(Job.published_at),
+                    desc(Job.id)
+                )
         else:
             query = query.order_by(desc(Job.published_at), desc(Job.id))
 
@@ -129,9 +154,11 @@ class JobSearchService:
                     job_id=job.id
                 ).first()
 
+            is_job_matched = bool(match_obj and match_obj.match_score and match_obj.match_score > 0)
             results.append({
                 "job": job,
                 "match": match_obj,
+                "is_matched": is_job_matched,
                 "is_saved": job.id in user_saved_ids,
                 "is_applied": job.id in user_applied_ids
             })
