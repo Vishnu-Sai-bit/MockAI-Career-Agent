@@ -6,7 +6,7 @@ AI Job Agent is a Python + Flask platform designed to revolutionize the job appl
 
 ## Key Core Guarantees
 
-1. **100% Grounded in Real Sources**: Every recommended job originates from a traceable, verified source record (Greenhouse, Lever, Ashby, Remotive, RemoteOK, Arbeitnow, or official company career portals).
+1. **100% Grounded in Real Sources**: Every recommended job originates from a traceable, verified source record (Greenhouse, Lever, Ashby, Workday, SmartRecruiters, Workable, Recruitee, Remotive, RemoteOK, Arbeitnow, or official company career portals).
 2. **Direct Official Application Links**: The `/apply/<job_id>` route retrieves the verified application URL from the database and validates scheme, SSRF safety, and permitted hosts before safely redirecting. It never fabricates URLs or relies on open query redirects.
 3. **Transparent ATS Scoring**: Implements an explainable, deterministic weighted compatibility formula:
    $$\mathbf{M = 0.40S + 0.25E + 0.15K + 0.10P + 0.10Q}$$
