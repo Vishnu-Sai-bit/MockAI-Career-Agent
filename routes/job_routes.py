@@ -20,6 +20,8 @@ def list_jobs():
     work_mode = request.args.get("work_mode", "all")
     platform = request.args.get("platform", "all")
     exp_level = request.args.get("experience_level", "all")
+    date_posted = request.args.get("date_posted", "all")
+    sort_by = request.args.get("sort_by", "fresh")
     min_score = request.args.get("min_match")
     page = request.args.get("page", 1, type=int)
 
@@ -31,6 +33,8 @@ def list_jobs():
         work_mode=work_mode,
         platform=platform,
         experience_level=exp_level,
+        date_posted=date_posted,
+        sort_by=sort_by,
         min_match_score=float(min_score) if min_score else None,
         page=page,
         per_page=12
@@ -47,9 +51,12 @@ def list_jobs():
         work_mode=work_mode,
         platform=platform,
         experience_level=exp_level,
+        date_posted=date_posted,
+        sort_by=sort_by,
         min_score=min_score,
         available_platforms=available_platforms
     )
+
 
 
 @jobs_bp.route("/jobs/<int:job_id>")

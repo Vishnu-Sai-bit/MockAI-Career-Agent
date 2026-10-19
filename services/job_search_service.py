@@ -15,14 +15,18 @@ class JobSearchService:
         platform: Optional[str] = None,
         experience_level: Optional[str] = None,
         min_match_score: Optional[float] = None,
+        date_posted: Optional[str] = None,
         status: str = "active",
         page: int = 1,
         per_page: int = 12,
-        sort_by: str = "match"
+        sort_by: str = "fresh"
     ) -> Dict[str, Any]:
         """
         Queries and filters jobs with match scores for the given candidate.
+        Defaults to freshest jobs first.
         """
+        from datetime import datetime, timezone, timedelta
+
         active_resume = user.get_active_resume() if user else None
 
         query = Job.query
@@ -32,7 +36,6 @@ class JobSearchService:
         # Multi-term keyword filtering
         if keyword:
             terms = [t.strip().lower() for t in keyword.split() if len(t.strip()) > 1]
-            # Ignore generic words if specific tech words are present
             tech_terms = [t for t in terms if t not in ("developer", "engineer", "software", "jobs", "job", "position")]
             effective_terms = tech_terms if tech_terms else terms
             
@@ -66,6 +69,25 @@ class JobSearchService:
         if experience_level and experience_level.lower() != "all":
             query = query.filter(Job.experience_level == experience_level.lower())
 
+        # Date posted filtering (24h, 1d, 3d, 7d, 14d, 30d)
+        if date_posted and date_posted.lower() != "all":
+            now = datetime.now(timezone.utc)
+            dp = date_posted.lower()
+            cutoff = None
+            if dp in ("24h", "1d", "24hours", "1day"):
+                cutoff = now - timedelta(hours=24)
+            elif dp in ("3d", "3days"):
+                cutoff = now - timedelta(days=3)
+            elif dp in ("7d", "1w", "week", "7days"):
+                cutoff = now - timedelta(days=7)
+            elif dp in ("14d", "2w", "14days"):
+                cutoff = now - timedelta(days=14)
+            elif dp in ("30d", "1m", "month", "30days"):
+                cutoff = now - timedelta(days=30)
+
+            if cutoff:
+                query = query.filter(Job.published_at >= cutoff)
+
         if active_resume:
             query = query.outerjoin(
                 JobMatch,
@@ -80,7 +102,10 @@ class JobSearchService:
 
             if sort_by == "match":
                 query = query.order_by(desc(JobMatch.match_score), desc(Job.published_at), desc(Job.id))
+            elif sort_by == "salary":
+                query = query.order_by(desc(Job.salary_max), desc(Job.published_at), desc(Job.id))
             else:
+                # Default to freshest first
                 query = query.order_by(desc(Job.published_at), desc(Job.id))
         else:
             query = query.order_by(desc(Job.published_at), desc(Job.id))

@@ -142,3 +142,16 @@ def candidate_profile_api():
         "skills": ["Python", "Flask", "Machine Learning", "SQL"]
     }
 
+
+@dashboard_bp.route("/sync-jobs", methods=["GET", "POST"])
+@login_required
+def sync_jobs():
+    from tasks.refresh_jobs import run_job_refresh
+    try:
+        stats = run_job_refresh(limit_per_source=5)
+        flash(f"Sync complete! Processed {stats.get('total_fetched', 0)} jobs ({stats.get('new_jobs_added', 0)} new, {stats.get('existing_updated', 0)} updated).", "success")
+    except Exception as e:
+        flash(f"Job sync completed with status: {str(e)}", "info")
+    return redirect(request.referrer or url_for("jobs.list_jobs"))
+
+

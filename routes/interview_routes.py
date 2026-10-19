@@ -6,6 +6,24 @@ from services.interview_simulator import InterviewSimulator
 interview_bp = Blueprint("interview", __name__, url_prefix="/interview")
 simulator = InterviewSimulator()
 
+@interview_bp.route("/")
+@interview_bp.route("/hub")
+@login_required
+def interview_hub():
+    from models.application import Application
+    from models.job import SavedJob
+    app = Application.query.filter_by(user_id=current_user.id).order_by(Application.created_at.desc()).first()
+    if app:
+        return redirect(url_for("interview.start_interview", job_id=app.job_id))
+    saved = SavedJob.query.filter_by(user_id=current_user.id).order_by(SavedJob.saved_at.desc()).first()
+    if saved:
+        return redirect(url_for("interview.start_interview", job_id=saved.job_id))
+    job = Job.query.filter_by(status="active").order_by(Job.published_at.desc()).first()
+    if job:
+        return redirect(url_for("interview.start_interview", job_id=job.id))
+    flash("No active jobs found for interview practice.", "warning")
+    return redirect(url_for("jobs.list_jobs"))
+
 @interview_bp.route("/<int:job_id>")
 @login_required
 def start_interview(job_id):

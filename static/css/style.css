@@ -165,3 +165,18 @@ footer {
     color: #94a3b8;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
+
+/* Offcanvas Sidebar Styles */
+.hover-bg-dark {
+    transition: all 0.2s ease-in-out;
+}
+.hover-bg-dark:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: #38bdf8 !important;
+    transform: translateX(3px);
+}
+.nav-section-title {
+    font-size: 0.68rem;
+    letter-spacing: 0.06rem;
+}
+
