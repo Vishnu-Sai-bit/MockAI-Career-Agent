@@ -155,6 +155,34 @@
 
             <!-- Right Column: Extracted Projects & Experience & Education -->
             <div class="col-lg-5">
+                <!-- Google XYZ Bullet Point Optimizer Studio -->
+                <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4 border-start border-4 border-info">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold mb-0 text-info"><i class="bi bi-magic me-1"></i>Google XYZ Bullet Optimizer</h6>
+                        <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.7rem;">Active Voice</span>
+                    </div>
+                    <p class="text-muted small mb-2">Transform weak resume bullets into <em>"Accomplished [X] measured by [Y], by doing [Z]"</em> with quantified metrics.</p>
+                    <div class="mb-2">
+                        <textarea id="raw-bullet-input" class="form-control form-control-sm mb-2" rows="2" placeholder="e.g. Worked on Python backend API and improved performance..."></textarea>
+                        <button type="button" class="btn btn-sm btn-info text-white w-100 fw-semibold" id="btn-optimize-bullet">
+                            <i class="bi bi-stars me-1"></i> Transform with XYZ Formula
+                        </button>
+                    </div>
+
+                    <!-- Optimized Results Box -->
+                    <div id="optimized-bullets-box" class="d-none mt-3 p-3 bg-light rounded border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold text-success small"><i class="bi bi-check-circle me-1"></i>Optimized XYZ Variations:</span>
+                            <small class="text-muted" id="xyz-critique"></small>
+                        </div>
+                        <div id="xyz-variations-list" class="d-flex flex-column gap-2 mb-2"></div>
+                        <div class="border-top pt-2">
+                            <small class="fw-bold text-secondary d-block mb-1">Recommended Metrics to Quantify:</small>
+                            <ul class="small text-muted ps-3 mb-0" id="xyz-metrics-list"></ul>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Projects -->
                 <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
                     <h5 class="fw-bold mb-3"><i class="bi bi-folder-check text-success me-2"></i>Extracted Projects</h5>
@@ -214,4 +242,67 @@
         </div>
     </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('btn-optimize-bullet').addEventListener('click', function() {
+    const raw = document.getElementById('raw-bullet-input').value.trim();
+    if (!raw) {
+        alert('Please enter a bullet point or project description first.');
+        return;
+    }
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Optimizing with XYZ Formula...';
+
+    fetch("{{ url_for('resume.optimize_bullet') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bullet: raw, target_role: "{{ profile.headline or 'Software Engineer' }}" })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars me-1"></i> Transform with XYZ Formula';
+        if (data.success && data.result) {
+            const res = data.result;
+            document.getElementById('xyz-critique').textContent = res.critique || 'Google XYZ Formula';
+            const varList = document.getElementById('xyz-variations-list');
+            varList.innerHTML = (res.optimized_bullets || []).map((b, i) => `
+                <div class="p-2 bg-white rounded border d-flex justify-content-between align-items-center gap-2">
+                    <span class="small text-dark fw-semibold">${b}</span>
+                    <button type="button" class="btn btn-sm btn-outline-primary copy-bullet-btn flex-shrink-0" data-text="${b.replace(/"/g, '&quot;')}">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            const metricsList = document.getElementById('xyz-metrics-list');
+            metricsList.innerHTML = (res.impact_metrics || []).map(m => `<li>${m}</li>`).join('');
+
+            document.getElementById('optimized-bullets-box').classList.remove('d-none');
+
+            document.querySelectorAll('.copy-bullet-btn').forEach(cBtn => {
+                cBtn.addEventListener('click', function() {
+                    const text = this.getAttribute('data-text');
+                    navigator.clipboard.writeText(text).then(() => {
+                        this.innerHTML = '<i class="bi bi-check2"></i>';
+                        this.classList.replace('btn-outline-primary', 'btn-success');
+                        setTimeout(() => {
+                            this.innerHTML = '<i class="bi bi-clipboard"></i>';
+                            this.classList.replace('btn-success', 'btn-outline-primary');
+                        }, 2000);
+                    });
+                });
+            });
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars me-1"></i> Transform with XYZ Formula';
+        alert('Optimization error: ' + err);
+    });
+});
+</script>
 {% endblock %}

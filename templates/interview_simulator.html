@@ -58,17 +58,27 @@
                     <span class="badge bg-primary-subtle text-primary" id="active-q-type">{{ questions[0].type }}</span>
                     <span class="small text-muted" id="active-q-num">Question 1 of {{ questions|length }}</span>
                 </div>
-                <h5 class="fw-bold text-dark mb-3" id="active-q-text">{{ questions[0].question }}</h5>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <h5 class="fw-bold text-dark mb-0 flex-grow-1" id="active-q-text">{{ questions[0].question }}</h5>
+                    <button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 flex-shrink-0" id="speak-q-btn" title="Listen to Question (AI Voice)">
+                        <i class="bi bi-volume-up-fill"></i> <span>Listen</span>
+                    </button>
+                </div>
                 <p class="small text-muted mb-3" id="active-q-criteria"><i class="bi bi-info-circle me-1"></i>{{ questions[0].evaluation_criteria }}</p>
 
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold">Your Answer (Type or speak your response using the STAR method):</label>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label small fw-semibold mb-0">Your Answer (Type or speak using the STAR method):</label>
+                        <span id="speech-indicator" class="badge bg-danger-subtle text-danger border border-danger-subtle d-none">
+                            <span class="spinner-grow spinner-grow-sm me-1" style="width: 0.6rem; height: 0.6rem;"></span> Recording Audio...
+                        </span>
+                    </div>
                     <textarea id="user-answer-box" class="form-control" rows="6" placeholder="During my time at... our team encountered... I took ownership by... and the final outcome was..."></textarea>
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center">
-                    <button class="btn btn-outline-secondary btn-sm" id="mic-btn">
-                        <i class="bi bi-mic me-1"></i> Voice Input
+                    <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" id="mic-btn">
+                        <i class="bi bi-mic-fill"></i> <span id="mic-btn-text">Voice Input</span>
                     </button>
                     <button class="btn btn-primary-custom" id="submit-answer-btn">
                         <i class="bi bi-stars me-1"></i> Evaluate with STAR AI
@@ -79,8 +89,38 @@
             <!-- Dynamic Evaluation Result Card -->
             <div id="eval-result-card" class="card p-4 custom-card border-0 bg-white shadow-sm d-none">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-speedometer2 text-primary me-2"></i>Evaluation Result</h5>
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-speedometer2 text-primary me-2"></i>STAR Evaluation Result</h5>
                     <span class="fs-4 fw-bold text-success" id="eval-score">--/100</span>
+                </div>
+
+                <!-- Speech Delivery Analytics Banner -->
+                <div id="speech-analytics-box" class="card border-0 bg-light p-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold small mb-0"><i class="bi bi-soundwave text-info me-1"></i>Spoken Delivery & Cadence Analytics</h6>
+                        <span class="badge bg-info-subtle text-info fw-semibold" id="delivery-score-badge">Score: --</span>
+                    </div>
+                    <div class="row g-2 text-center small">
+                        <div class="col-4">
+                            <div class="bg-white p-2 rounded border">
+                                <span class="text-secondary d-block" style="font-size: 0.72rem;">Speaking Pace</span>
+                                <strong id="speech-wpm">-- WPM</strong>
+                                <small class="d-block text-muted" id="speech-pace-rating" style="font-size: 0.68rem;">--</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-white p-2 rounded border">
+                                <span class="text-secondary d-block" style="font-size: 0.72rem;">Filler Words</span>
+                                <strong id="speech-fillers-count">0 Detected</strong>
+                                <small class="d-block text-muted" id="speech-filler-ratio" style="font-size: 0.68rem;">0% of speech</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="bg-white p-2 rounded border">
+                                <span class="text-secondary d-block" style="font-size: 0.72rem;">Delivery Tip</span>
+                                <span class="d-block text-truncate small fw-semibold text-primary" id="speech-pace-tip" title="Delivery Tip">Steady pacing</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row g-2 mb-3 text-center">
@@ -132,6 +172,87 @@
 <script>
 let currentJobId = {{ job.id }};
 let activeQuestionText = "{{ questions[0].question }}";
+let speechStartTime = null;
+let speechDurationSeconds = null;
+
+// Read Aloud Question via Web Speech Synthesis
+document.getElementById('speak-q-btn').addEventListener('click', function() {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(activeQuestionText);
+        utterance.rate = 0.95;
+        utterance.pitch = 1.0;
+        window.speechSynthesis.speak(utterance);
+    } else {
+        alert('Text-to-speech is not supported on this browser.');
+    }
+});
+
+// Speech to Text via Web Speech Recognition
+let recognition = null;
+let isRecording = false;
+
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = function(event) {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            transcript += event.results[i][0].transcript;
+        }
+        const box = document.getElementById('user-answer-box');
+        box.value = (box.value + ' ' + transcript).trim();
+    };
+
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        stopRecording();
+    };
+
+    recognition.onend = function() {
+        if (isRecording) {
+            stopRecording();
+        }
+    };
+}
+
+function startRecording() {
+    if (!recognition) {
+        alert('Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
+        return;
+    }
+    isRecording = true;
+    speechStartTime = Date.now();
+    recognition.start();
+    document.getElementById('mic-btn-text').textContent = 'Stop Recording';
+    document.getElementById('mic-btn').classList.replace('btn-outline-danger', 'btn-danger');
+    document.getElementById('speech-indicator').classList.remove('d-none');
+}
+
+function stopRecording() {
+    isRecording = false;
+    if (speechStartTime) {
+        speechDurationSeconds = Math.max(1, (Date.now() - speechStartTime) / 1000);
+    }
+    if (recognition) {
+        try { recognition.stop(); } catch(e) {}
+    }
+    document.getElementById('mic-btn-text').textContent = 'Voice Input';
+    document.getElementById('mic-btn').classList.replace('btn-danger', 'btn-outline-danger');
+    document.getElementById('speech-indicator').classList.add('d-none');
+}
+
+document.getElementById('mic-btn').addEventListener('click', function() {
+    if (isRecording) {
+        stopRecording();
+    } else {
+        startRecording();
+    }
+});
 
 document.querySelectorAll('.question-btn').forEach(btn => {
     btn.addEventListener('click', function() {
@@ -143,13 +264,16 @@ document.querySelectorAll('.question-btn').forEach(btn => {
         document.getElementById('active-q-criteria').innerHTML = '<i class="bi bi-info-circle me-1"></i>' + this.getAttribute('data-criteria');
         document.getElementById('user-answer-box').value = '';
         document.getElementById('eval-result-card').classList.add('d-none');
+        if (isRecording) stopRecording();
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     });
 });
 
 document.getElementById('submit-answer-btn').addEventListener('click', function() {
+    if (isRecording) stopRecording();
     const answer = document.getElementById('user-answer-box').value.trim();
     if (!answer) {
-        alert('Please enter your answer before evaluating.');
+        alert('Please enter or speak your answer before evaluating.');
         return;
     }
     const btn = this;
@@ -162,7 +286,8 @@ document.getElementById('submit-answer-btn').addEventListener('click', function(
         body: JSON.stringify({
             job_id: currentJobId,
             question: activeQuestionText,
-            answer: answer
+            answer: answer,
+            duration_seconds: speechDurationSeconds
         })
     })
     .then(r => r.json())
@@ -177,6 +302,18 @@ document.getElementById('submit-answer-btn').addEventListener('click', function(
             document.getElementById('eval-t-score').textContent = (sb.task ? sb.task.score : '--') + '%';
             document.getElementById('eval-a-score').textContent = (sb.action ? sb.action.score : '--') + '%';
             document.getElementById('eval-r-score').textContent = (sb.result ? sb.result.score : '--') + '%';
+
+            // Speech Analytics
+            if (ev.speech_analytics) {
+                const sp = ev.speech_analytics;
+                document.getElementById('delivery-score-badge').textContent = 'Delivery: ' + sp.delivery_score + '/100';
+                document.getElementById('speech-wpm').textContent = Math.round(sp.estimated_wpm) + ' WPM';
+                document.getElementById('speech-pace-rating').textContent = sp.pace_rating || '--';
+                document.getElementById('speech-fillers-count').textContent = sp.total_filler_words + ' Detected';
+                document.getElementById('speech-filler-ratio').textContent = sp.filler_ratio_percent + '% of words';
+                document.getElementById('speech-pace-tip').textContent = sp.pace_tip || 'Steady delivery';
+                document.getElementById('speech-pace-tip').title = sp.pace_tip || '';
+            }
 
             const strengthsList = document.getElementById('eval-strengths');
             strengthsList.innerHTML = (ev.strengths || []).map(s => `<li>${s}</li>`).join('');

@@ -95,14 +95,17 @@ Format output as a valid JSON array of objects:
             }
         ]
 
-    def evaluate_star_answer(self, question: str, user_answer: str, job: Job) -> Dict[str, Any]:
+    def evaluate_star_answer(self, question: str, user_answer: str, job: Job, duration_seconds: Optional[float] = None) -> Dict[str, Any]:
         """
         Evaluates a candidate's response according to the STAR method:
         - Situation (Context)
         - Task (Goal / Challenge)
         - Action (Specific execution & ownership)
         - Result (Measurable outcome)
+        Also evaluates speech delivery cadence and filler words.
         """
+        speech_analytics = self.analyze_speech_delivery(user_answer, duration_seconds)
+
         prompt = f"""You are an elite interview coach evaluating a candidate's answer for the role of {job.title} at {job.company}.
 Evaluate the candidate's answer using the STAR method (Situation, Task, Action, Result).
 
@@ -136,6 +139,7 @@ Output MUST be a single valid JSON object adhering to this schema:
         if raw_resp:
             parsed = self.gemini._clean_and_parse_json(raw_resp)
             if isinstance(parsed, dict) and "overall_score" in parsed:
+                parsed["speech_analytics"] = speech_analytics
                 return parsed
 
         # Deterministic fallback evaluation
@@ -159,5 +163,64 @@ Output MUST be a single valid JSON object adhering to this schema:
                 "Include concrete metrics to validate the outcome (e.g. 40% performance gain)",
                 "Explicitly describe alternatives considered before choosing your approach"
             ],
-            "improved_exemplar_answer": f"In my recent role, our team faced a major challenge where (Situation)... My specific responsibility was to (Task)... I spearheaded the architecture by (Action)... As a direct result, we achieved (Result: e.g. 99.9% uptime and a 35% reduction in latency)."
+            "improved_exemplar_answer": f"In my recent role, our team faced a major challenge where (Situation)... My specific responsibility was to (Task)... I spearheaded the architecture by (Action)... As a direct result, we achieved (Result: e.g. 99.9% uptime and a 35% reduction in latency).",
+            "speech_analytics": speech_analytics
         }
+
+    def analyze_speech_delivery(self, answer_text: str, duration_seconds: Optional[float] = None) -> Dict[str, Any]:
+        """
+        Analyzes spoken speech delivery: detects filler words, speaking cadence/WPM, and delivery clarity.
+        """
+        import re
+
+        text_clean = (answer_text or "").lower()
+        words = re.findall(r'\b[a-z\']+\b', text_clean)
+        word_count = len(words)
+
+        FILLER_WORDS = [
+            "um", "uh", "like", "you know", "basically", "actually",
+            "literally", "sort of", "kind of", "i mean", "honestly"
+        ]
+
+        detected_fillers = {}
+        total_filler_count = 0
+        for filler in FILLER_WORDS:
+            pattern = r'\b' + re.escape(filler) + r'\b'
+            matches = len(re.findall(pattern, text_clean))
+            if matches > 0:
+                detected_fillers[filler] = matches
+                total_filler_count += matches
+
+        filler_ratio = (total_filler_count / word_count * 100) if word_count > 0 else 0.0
+
+        # WPM Calculation
+        if duration_seconds and duration_seconds > 0:
+            wpm = round((word_count / duration_seconds) * 60, 1)
+        else:
+            # Assume normal conversational reading pace ~130 WPM
+            wpm = 135.0
+
+        if wpm < 110:
+            pace_rating = "Slightly Deliberate / Slow"
+            pace_tip = "Try to maintain steady momentum to keep the interviewer fully engaged."
+        elif 110 <= wpm <= 160:
+            pace_rating = "Optimal Cadence"
+            pace_tip = "Excellent pacing. Clear and easy for the interviewer to digest."
+        else:
+            pace_rating = "Fast Paced"
+            pace_tip = "Slow down slightly and pause after key milestones to let technical points sink in."
+
+        # Delivery score (deduct for excessive fillers or extreme pacing)
+        delivery_score = max(50, min(100, int(95 - (filler_ratio * 4) - (abs(wpm - 135) * 0.15))))
+
+        return {
+            "word_count": word_count,
+            "estimated_wpm": wpm,
+            "pace_rating": pace_rating,
+            "pace_tip": pace_tip,
+            "total_filler_words": total_filler_count,
+            "filler_ratio_percent": round(filler_ratio, 1),
+            "detected_fillers": detected_fillers,
+            "delivery_score": delivery_score
+        }
+

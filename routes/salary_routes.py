@@ -43,3 +43,18 @@ def counter_offer_api():
 
     result = salary_service.generate_counter_offer(company, role, current_base, target_base, justification)
     return jsonify({"success": True, "counter_offer": result})
+
+
+@salary_bp.route("/api/convert-ppp", methods=["POST"])
+@login_required
+def convert_ppp_api():
+    from services.salary_normalizer_service import SalaryNormalizerService
+    data = request.get_json() or {}
+    amount = float(data.get("amount", 100000))
+    from_curr = data.get("from_curr", "USD")
+    home_curr = data.get("home_curr", "INR")
+
+    normalizer = SalaryNormalizerService()
+    result = normalizer.calculate_ppp_equivalent(amount, from_curr=from_curr, home_curr=home_curr)
+    return jsonify({"success": True, "data": result})
+

@@ -130,3 +130,86 @@ def view_tailored_cover_letter(job_id):
     cover_data = doc_gen.generate_tailored_cover_letter(resume, current_user.candidate_profile, job)
     return render_template("tailored_cover_letter.html", job=job, doc=cover_data)
 
+
+@applications_bp.route("/outreach/<int:app_id>")
+@login_required
+def application_outreach(app_id):
+    from services.outreach_service import OutreachService
+    app = Application.query.filter_by(id=app_id, user_id=current_user.id).first_or_404()
+    job = app.job
+    profile = current_user.candidate_profile
+
+    outreach_svc = OutreachService()
+    personas = outreach_svc.generate_recruiter_personas(job.company, job.title)
+    templates = outreach_svc.generate_outreach_templates(
+        candidate_name=profile.full_name or current_user.email.split('@')[0],
+        candidate_skills=profile.skills or [],
+        company=job.company,
+        job_title=job.title
+    )
+    followup_7d = outreach_svc.generate_followup_email(
+        candidate_name=profile.full_name or current_user.email.split('@')[0],
+        company=job.company,
+        job_title=job.title,
+        application_date=app.created_at,
+        stage="7day"
+    )
+    followup_14d = outreach_svc.generate_followup_email(
+        candidate_name=profile.full_name or current_user.email.split('@')[0],
+        company=job.company,
+        job_title=job.title,
+        application_date=app.created_at,
+        stage="14day"
+    )
+    followup_interview = outreach_svc.generate_followup_email(
+        candidate_name=profile.full_name or current_user.email.split('@')[0],
+        company=job.company,
+        job_title=job.title,
+        application_date=app.created_at,
+        stage="post_interview"
+    )
+
+    return jsonify({
+        "success": True,
+        "application_id": app.id,
+        "job_title": job.title,
+        "company": job.company,
+        "personas": personas,
+        "templates": templates,
+        "followups": {
+            "7day": followup_7d,
+            "14day": followup_14d,
+            "post_interview": followup_interview
+        }
+    })
+
+
+@applications_bp.route("/calendar/<int:app_id>")
+@login_required
+def application_calendar(app_id):
+    from datetime import datetime, timezone, timedelta
+    from flask import Response
+    from services.career_analytics_service import CareerAnalyticsService
+
+    app = Application.query.filter_by(id=app_id, user_id=current_user.id).first_or_404()
+    job = app.job
+    event_time = app.next_action_at or (datetime.now(timezone.utc) + timedelta(days=2))
+
+    analytics_svc = CareerAnalyticsService()
+    cal_data = analytics_svc.generate_calendar_links(
+        job_title=job.title,
+        company=job.company,
+        event_time=event_time,
+        event_type="Technical Interview" if app.status == "interviewing" else "Application Follow-up"
+    )
+
+    if request.args.get("download") == "1":
+        return Response(
+            cal_data["ics_content"],
+            mimetype="text/calendar",
+            headers={"Content-Disposition": f"attachment; filename=interview_{app.id}.ics"}
+        )
+
+    return jsonify({"success": True, "calendar": cal_data})
+
+

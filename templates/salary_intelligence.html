@@ -128,6 +128,83 @@
             </div>
         </div>
     </div>
+
+    <!-- Global Currency & Purchasing Power Parity (PPP) Converter -->
+    <div class="row g-4 mt-2">
+        <div class="col-12">
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm border-start border-4 border-success">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-globe2 text-success me-2"></i>Global Remote Salary & Purchasing Power Parity (PPP) Normalizer</h5>
+                        <small class="text-muted">Compare nominal foreign exchange value vs true local purchasing power and cost-of-living multiplier.</small>
+                    </div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1">Global Remote Intelligence</span>
+                </div>
+
+                <form id="ppp-converter-form" class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Offered Amount</label>
+                        <input type="number" id="ppp-amount" class="form-control" value="100000" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Offered Currency</label>
+                        <select id="ppp-from-curr" class="form-select">
+                            <option value="USD" selected>USD ($ - US Dollar)</option>
+                            <option value="EUR">EUR (€ - Euro)</option>
+                            <option value="GBP">GBP (£ - British Pound)</option>
+                            <option value="CAD">CAD ($ - Canadian Dollar)</option>
+                            <option value="AUD">AUD ($ - Australian Dollar)</option>
+                            <option value="SGD">SGD ($ - Singapore Dollar)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Living / Home Location</label>
+                        <select id="ppp-home-curr" class="form-select">
+                            <option value="INR" selected>INR (₹ - India)</option>
+                            <option value="EUR">EUR (€ - Europe)</option>
+                            <option value="GBP">GBP (£ - United Kingdom)</option>
+                            <option value="CAD">CAD ($ - Canada)</option>
+                            <option value="AUD">AUD ($ - Australia)</option>
+                            <option value="USD">USD ($ - United States)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success w-100 fw-semibold" id="btn-convert-ppp">
+                            <i class="bi bi-arrow-left-right me-1"></i> Calculate PPP
+                        </button>
+                    </div>
+                </form>
+
+                <!-- PPP Result Box -->
+                <div id="ppp-result-box" class="p-3 bg-light rounded-3 border d-none">
+                    <div class="row g-3 text-center mb-2">
+                        <div class="col-md-4">
+                            <div class="bg-white p-3 rounded border">
+                                <span class="text-secondary small d-block mb-1">Nominal Forex Value</span>
+                                <h4 class="fw-bold text-dark mb-0" id="ppp-nominal-val">--</h4>
+                                <small class="text-muted" style="font-size: 0.72rem;">Direct currency conversion</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-white p-3 rounded border border-success">
+                                <span class="text-success small fw-bold d-block mb-1">Local PPP Buying Power</span>
+                                <h4 class="fw-bold text-success mb-0" id="ppp-buying-power">--</h4>
+                                <small class="text-muted" style="font-size: 0.72rem;">Lifestyle equivalence in local economy</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-white p-3 rounded border">
+                                <span class="text-secondary small d-block mb-1">Arbitrage Advantage</span>
+                                <h4 class="fw-bold text-primary mb-0" id="ppp-multiplier">--</h4>
+                                <small class="text-muted" style="font-size: 0.72rem;">Purchasing power multiplier</small>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="small text-muted mb-0 fst-italic" id="ppp-analysis-text"></p>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -197,5 +274,39 @@ function copyNegotiationEmail() {
     const text = document.getElementById('co-email-body').innerText;
     navigator.clipboard.writeText(text).then(() => alert('Negotiation email copied to clipboard!'));
 }
+
+document.getElementById('ppp-converter-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btn-convert-ppp');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Calculating...';
+
+    fetch("{{ url_for('salary.convert_ppp_api') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            amount: document.getElementById('ppp-amount').value,
+            from_curr: document.getElementById('ppp-from-curr').value,
+            home_curr: document.getElementById('ppp-home-curr').value
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-arrow-left-right me-1"></i> Calculate PPP';
+        if (data.success && data.data) {
+            const d = data.data;
+            document.getElementById('ppp-nominal-val').textContent = d.home_currency + ' ' + Number(d.nominal_exchange_value).toLocaleString();
+            document.getElementById('ppp-buying-power').textContent = d.home_currency + ' ' + Number(d.local_ppp_buying_power).toLocaleString();
+            document.getElementById('ppp-multiplier').textContent = d.ppp_multiplier + 'x Multiplier';
+            document.getElementById('ppp-analysis-text').textContent = d.analysis || '';
+            document.getElementById('ppp-result-box').classList.remove('d-none');
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-arrow-left-right me-1"></i> Calculate PPP';
+    });
+});
 </script>
 {% endblock %}

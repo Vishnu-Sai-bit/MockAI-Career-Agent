@@ -70,6 +70,15 @@ class GeminiService:
 
         return None
 
+    def generate_json(self, prompt: str, timeout: int = 25) -> Optional[Dict[str, Any]]:
+        """
+        Invokes Gemini and cleans and parses the response into a JSON object.
+        """
+        raw = self.generate_text(prompt, timeout=timeout)
+        if raw:
+            return self._clean_and_parse_json(raw)
+        return None
+
     def analyze_resume_deep(self, raw_text: str) -> Optional[Dict[str, Any]]:
         """
         Uses Google Gemini to parse and deeply analyze a resume with professional ATS intelligence.

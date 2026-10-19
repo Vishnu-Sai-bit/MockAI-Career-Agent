@@ -55,46 +55,60 @@
     <!-- AI Application Toolset Cards -->
     {% if current_user.is_authenticated %}
         <div class="row g-3 mb-4">
-            <div class="col-md-4">
+            <div class="col-lg-3 col-md-6">
                 <div class="card p-3 custom-card border-0 bg-white shadow-sm h-100 d-flex flex-column justify-content-between">
                     <div>
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <span class="fs-4 text-primary"><i class="bi bi-file-earmark-check-fill"></i></span>
-                            <h6 class="fw-bold mb-0">ATS-Tailored Resume</h6>
+                            <h6 class="fw-bold mb-0">ATS Tailored Resume</h6>
                         </div>
-                        <p class="text-muted small mb-3">Re-align your resume keywords and achievements specifically for {{ job.company }}.</p>
+                        <p class="text-muted small mb-3">Re-align your resume keywords specifically for {{ job.company }}.</p>
                     </div>
                     <a href="{{ url_for('applications.view_tailored_resume', job_id=job.id) }}" class="btn btn-sm btn-outline-custom w-100">
-                        <i class="bi bi-file-earmark-pdf me-1"></i> Generate Tailored Resume
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Tailored Resume
                     </a>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-lg-3 col-md-6">
                 <div class="card p-3 custom-card border-0 bg-white shadow-sm h-100 d-flex flex-column justify-content-between">
                     <div>
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <span class="fs-4 text-info"><i class="bi bi-envelope-paper-fill"></i></span>
                             <h6 class="fw-bold mb-0">Custom Cover Letter</h6>
                         </div>
-                        <p class="text-muted small mb-3">Customized 3-paragraph executive cover letter addressed to {{ job.company }}'s hiring team.</p>
+                        <p class="text-muted small mb-3">Executive cover letter addressed to {{ job.company }}'s hiring team.</p>
                     </div>
                     <a href="{{ url_for('applications.view_tailored_cover_letter', job_id=job.id) }}" class="btn btn-sm btn-outline-custom w-100">
-                        <i class="bi bi-pen me-1"></i> View Cover Letter
+                        <i class="bi bi-pen me-1"></i> Cover Letter
                     </a>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-lg-3 col-md-6">
                 <div class="card p-3 custom-card border-0 bg-white shadow-sm h-100 d-flex flex-column justify-content-between">
                     <div>
                         <div class="d-flex align-items-center gap-2 mb-2">
                             <span class="fs-4 text-success"><i class="bi bi-mic-fill"></i></span>
                             <h6 class="fw-bold mb-0">AI Mock Interview</h6>
                         </div>
-                        <p class="text-muted small mb-3">Practice answering role-specific questions with instant STAR method scoring.</p>
+                        <p class="text-muted small mb-3">Role-specific questions with spoken audio & STAR scoring.</p>
                     </div>
                     <a href="{{ url_for('interview.start_interview', job_id=job.id) }}" class="btn btn-sm btn-outline-custom w-100">
-                        <i class="bi bi-play-circle me-1"></i> Start Mock Interview
+                        <i class="bi bi-play-circle me-1"></i> Mock Interview
                     </a>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="card p-3 custom-card border-0 bg-white shadow-sm h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="fs-4 text-warning"><i class="bi bi-grid-3x3-gap-fill"></i></span>
+                            <h6 class="fw-bold mb-0">Keyword Gap Heatmap</h6>
+                        </div>
+                        <p class="text-muted small mb-3">Side-by-side competency comparison and missing keywords.</p>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-custom w-100" id="btn-view-gap-heatmap">
+                        <i class="bi bi-eye me-1"></i> View Heatmap
+                    </button>
                 </div>
             </div>
         </div>
@@ -233,6 +247,48 @@
                 {% endif %}
             </div>
         </div>
+    <!-- Keyword Gap Heatmap Modal -->
+    <div class="modal fade" id="keywordGapModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title fw-bold"><i class="bi bi-grid-3x3-gap-fill text-warning me-2"></i>ATS Keyword Gap Heatmap</h5>
+                        <small class="text-muted">{{ job.title }} at {{ job.company }}</small>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-semibold small">Keyword Match Coverage:</span>
+                        <span class="fw-bold" id="gap-coverage-pct">--%</span>
+                    </div>
+                    <div class="progress mb-4" style="height: 10px;">
+                        <div id="gap-progress-bar" class="progress-bar bg-success" role="progressbar" style="width: 0%;"></div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-success-subtle rounded border border-success-subtle h-100">
+                                <h6 class="fw-bold text-success mb-2 small"><i class="bi bi-check-circle-fill me-1"></i>Found in Your Resume (<span id="gap-matched-count">0</span>):</h6>
+                                <div id="gap-matched-list" class="d-flex flex-wrap gap-1"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-danger-subtle rounded border border-danger-subtle h-100">
+                                <h6 class="fw-bold text-danger mb-2 small"><i class="bi bi-exclamation-triangle-fill me-1"></i>Missing Keywords in JD (<span id="gap-missing-count">0</span>):</h6>
+                                <div id="gap-missing-list" class="d-flex flex-wrap gap-1"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-3 bg-light rounded border">
+                        <small class="fw-bold text-secondary d-block mb-1">Recommended Action Verbs to Pair with Missing Keywords:</small>
+                        <div id="gap-action-verbs" class="d-flex flex-wrap gap-1"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -254,6 +310,43 @@ function markApplied(jobId) {
         }
     })
     .catch(err => console.error(err));
+}
+
+const gapModalEl = document.getElementById('keywordGapModal');
+if (gapModalEl) {
+    const gapModal = new bootstrap.Modal(gapModalEl);
+    const btnGap = document.getElementById('btn-view-gap-heatmap');
+    if (btnGap) {
+        btnGap.addEventListener('click', function() {
+            gapModal.show();
+            fetch("{{ url_for('resume.keyword_gap', job_id=job.id) }}")
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success && data.heatmap) {
+                        const hm = data.heatmap;
+                        document.getElementById('gap-coverage-pct').textContent = hm.coverage_percentage + '%';
+                        document.getElementById('gap-progress-bar').style.width = hm.coverage_percentage + '%';
+                        document.getElementById('gap-matched-count').textContent = hm.matched_count;
+                        document.getElementById('gap-missing-count').textContent = hm.missing_count;
+
+                        const mList = document.getElementById('gap-matched-list');
+                        mList.innerHTML = (hm.matched_keywords || []).map(k => `
+                            <span class="badge ${k.badge_class} py-1 px-2">${k.keyword}</span>
+                        `).join('') || '<small class="text-muted">None</small>';
+
+                        const missList = document.getElementById('gap-missing-list');
+                        missList.innerHTML = (hm.missing_keywords || []).map(k => `
+                            <span class="badge ${k.badge_class} py-1 px-2">${k.keyword}</span>
+                        `).join('') || '<small class="text-success">No critical keywords missing!</small>';
+
+                        const verbsList = document.getElementById('gap-action-verbs');
+                        verbsList.innerHTML = (hm.suggested_action_verbs || []).map(v => `
+                            <span class="badge bg-white text-dark border py-1 px-2">${v}</span>
+                        `).join('');
+                    }
+                });
+        });
+    }
 }
 </script>
 {% endblock %}

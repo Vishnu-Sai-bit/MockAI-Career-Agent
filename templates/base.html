@@ -12,6 +12,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('app-theme') || 'light';
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
+        })();
+    </script>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -250,6 +256,11 @@
                             <a class="btn btn-primary-custom" href="{{ url_for('auth.register') }}">Get Started</a>
                         </li>
                     {% endif %}
+                    <li class="nav-item ms-lg-1">
+                        <button class="btn btn-sm btn-outline-secondary border-secondary d-flex align-items-center px-2 py-1" id="theme-toggle" title="Toggle Dark/Light Mode">
+                            <i class="bi bi-moon-stars text-warning" id="theme-icon"></i>
+                        </button>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -296,6 +307,30 @@
 
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    (function() {
+        const themeBtn = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        function updateThemeIcon(t) {
+            if (!themeIcon) return;
+            if (t === 'dark') {
+                themeIcon.className = 'bi bi-sun-fill text-warning';
+            } else {
+                themeIcon.className = 'bi bi-moon-stars text-warning';
+            }
+        }
+        updateThemeIcon(document.documentElement.getAttribute('data-bs-theme'));
+        if (themeBtn) {
+            themeBtn.addEventListener('click', function() {
+                const current = document.documentElement.getAttribute('data-bs-theme') || 'light';
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-bs-theme', next);
+                localStorage.setItem('app-theme', next);
+                updateThemeIcon(next);
+            });
+        }
+    })();
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

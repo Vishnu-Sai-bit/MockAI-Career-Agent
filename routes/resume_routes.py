@@ -272,3 +272,47 @@ def analyze_with_gemini():
 
     flash("Resume successfully analyzed with Google Gemini AI!", "success")
     return redirect(url_for("resume.resume_analysis"))
+
+
+@resume_bp.route("/optimize-bullet", methods=["POST"])
+@login_required
+def optimize_bullet():
+    from services.resume_optimizer_service import ResumeOptimizerService
+    data = request.get_json() or {}
+    raw_bullet = data.get("bullet", "").strip()
+    target_role = data.get("target_role", "Software Engineer")
+    target_skill = data.get("target_skill", "")
+
+    if not raw_bullet:
+        return jsonify({"success": False, "error": "Please provide a bullet point to optimize."}), 400
+
+    optimizer = ResumeOptimizerService()
+    result = optimizer.rewrite_bullet_xyz(raw_bullet, target_role=target_role, target_skill=target_skill)
+    return jsonify({"success": True, "result": result})
+
+
+@resume_bp.route("/keyword-gap/<int:job_id>")
+@login_required
+def keyword_gap(job_id):
+    from models.job import Job
+    from services.resume_optimizer_service import ResumeOptimizerService
+
+    job = Job.query.get_or_404(job_id)
+    resume = current_user.get_active_resume()
+    if not resume:
+        return jsonify({"success": False, "error": "No active resume uploaded."}), 400
+
+    optimizer = ResumeOptimizerService()
+    heatmap = optimizer.compute_keyword_gap_heatmap(
+        resume_text=resume.raw_text or "",
+        job_description=job.description or "",
+        job_skills=(job.required_skills or []) + (job.preferred_skills or [])
+    )
+    return jsonify({
+        "success": True,
+        "job_id": job.id,
+        "job_title": job.title,
+        "company": job.company,
+        "heatmap": heatmap
+    })
+

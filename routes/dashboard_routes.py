@@ -64,6 +64,10 @@ def dashboard():
 
     total_active_jobs = Job.query.filter_by(status="active").count()
 
+    from services.career_analytics_service import CareerAnalyticsService
+    analytics_svc = CareerAnalyticsService()
+    funnel_metrics = analytics_svc.compute_funnel_metrics(app_counts)
+
     return render_template(
         "dashboard.html",
         profile=profile,
@@ -72,6 +76,7 @@ def dashboard():
         top_matches=top_matches,
         saved_jobs=saved_jobs,
         app_counts=app_counts,
+        funnel_metrics=funnel_metrics,
         total_applications=len(applications),
         total_active_jobs=total_active_jobs
     )

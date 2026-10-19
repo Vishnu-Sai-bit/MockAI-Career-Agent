@@ -41,10 +41,12 @@ def evaluate_answer():
     job_id = data.get("job_id")
     question = data.get("question", "")
     answer = data.get("answer", "")
+    duration_seconds = data.get("duration_seconds")
 
     if not job_id or not question or not answer:
         return jsonify({"success": False, "error": "Missing question, answer or job ID"}), 400
 
     job = Job.query.get_or_404(int(job_id))
-    evaluation = simulator.evaluate_star_answer(question, answer, job)
+    parsed_duration = float(duration_seconds) if duration_seconds else None
+    evaluation = simulator.evaluate_star_answer(question, answer, job, duration_seconds=parsed_duration)
     return jsonify({"success": True, "evaluation": evaluation})
