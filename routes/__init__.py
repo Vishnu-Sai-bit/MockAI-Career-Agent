@@ -8,6 +8,8 @@ from routes.assistant_routes import assistant_bp
 from routes.interview_routes import interview_bp
 from routes.salary_routes import salary_bp
 from routes.alert_routes import alert_bp
+from routes.watchlist_routes import watchlist_bp
+from routes.extension_routes import extension_bp
 
 __all__ = [
     "auth_bp",
@@ -19,5 +21,7 @@ __all__ = [
     "assistant_bp",
     "interview_bp",
     "salary_bp",
-    "alert_bp"
+    "alert_bp",
+    "watchlist_bp",
+    "extension_bp"
 ]

@@ -140,10 +140,13 @@ class JobSearchService:
         results = []
         user_saved_ids = set()
         user_applied_ids = set()
+        user_dream_companies = set()
 
         if user:
             user_saved_ids = {s.job_id for s in user.saved_jobs.all()}
             user_applied_ids = {a.job_id for a in user.applications.all()}
+            from services.dream_company_service import DreamCompanyService
+            user_dream_companies = DreamCompanyService().get_dream_company_names(user.id)
 
         for job in paginated.items:
             match_obj = None
@@ -155,10 +158,12 @@ class JobSearchService:
                 ).first()
 
             is_job_matched = bool(match_obj and match_obj.match_score and match_obj.match_score > 0)
+            is_dream = bool(job.company and job.company.lower().strip() in user_dream_companies)
             results.append({
                 "job": job,
                 "match": match_obj,
                 "is_matched": is_job_matched,
+                "is_dream_company": is_dream,
                 "is_saved": job.id in user_saved_ids,
                 "is_applied": job.id in user_applied_ids
             })

@@ -1,7 +1,8 @@
 import os
+import re
 import uuid
 from pathlib import Path
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify, send_file, Response
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from extensions import db
@@ -11,6 +12,7 @@ from utils.text_extraction import extract_text
 from services.resume_parser import ResumeParser
 from services.ats_scorer import ATSScorer
 from services.gemini_service import GeminiService
+from services.resume_export_service import ResumeExportService
 from tasks.recompute_matches import recompute_user_matches
 from utils.logging_config import logger
 
@@ -88,6 +90,9 @@ def upload_resume():
         # Deactivate old resumes
         Resume.query.filter_by(user_id=current_user.id, is_active=True).update({"is_active": False})
 
+        profile_title = request.form.get("profile_title", "").strip() or "Primary Profile"
+        target_role = request.form.get("target_role", "").strip() or parsed_data.get("headline", "")
+
         # Save new resume record
         resume = Resume(
             user_id=current_user.id,
@@ -95,6 +100,8 @@ def upload_resume():
             file_path=str(save_path),
             file_type=ext,
             file_size_bytes=save_path.stat().st_size,
+            profile_title=profile_title,
+            target_role=target_role,
             raw_text=raw_text,
             parsed_data=parsed_data,
             readability_score=ats_report["breakdown"]["readability"],
@@ -315,4 +322,39 @@ def keyword_gap(job_id):
         "company": job.company,
         "heatmap": heatmap
     })
+
+
+@resume_bp.route("/export/<int:resume_id>")
+@login_required
+def export_resume(resume_id):
+    resume = Resume.query.filter_by(id=resume_id, user_id=current_user.id).first_or_404()
+    fmt = request.args.get("format", "docx")
+    export_svc = ResumeExportService()
+    profile = current_user.candidate_profile
+
+    if fmt == "docx":
+        docx_buffer = export_svc.export_resume_docx(resume, profile)
+        safe_name = re.sub(r"[^a-zA-Z0-9_\-]", "_", resume.profile_title or "resume")
+        return send_file(
+            docx_buffer,
+            mimetype="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            as_attachment=True,
+            download_name=f"{safe_name}_ATS_Optimized.docx"
+        )
+    else:
+        text_content = export_svc.export_resume_ats_text(resume, profile)
+        return Response(text_content, mimetype="text/plain; charset=utf-8")
+
+
+@resume_bp.route("/switch-active/<int:resume_id>", methods=["POST"])
+@login_required
+def switch_active_resume(resume_id):
+    resume = Resume.query.filter_by(id=resume_id, user_id=current_user.id).first_or_404()
+    Resume.query.filter_by(user_id=current_user.id).update({"is_active": False})
+    resume.is_active = True
+    db.session.commit()
+    recompute_user_matches(current_user, resume)
+    flash(f"Active resume profile switched to '{resume.profile_title}'. Matches updated!", "success")
+    return redirect(url_for("resume.upload_resume"))
+
 

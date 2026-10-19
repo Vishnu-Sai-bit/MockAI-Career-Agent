@@ -12,7 +12,9 @@ from routes import (
     assistant_bp,
     interview_bp,
     salary_bp,
-    alert_bp
+    alert_bp,
+    watchlist_bp,
+    extension_bp
 )
 from tasks.refresh_jobs import ensure_default_sources, run_job_refresh
 from tasks.scheduler import init_job_scheduler
@@ -47,6 +49,8 @@ def create_app(config_name=None):
     app.register_blueprint(interview_bp)
     app.register_blueprint(salary_bp)
     app.register_blueprint(alert_bp)
+    app.register_blueprint(watchlist_bp)
+    app.register_blueprint(extension_bp)
 
     # Register CLI Command for Scheduled / Manual Sync
     @app.cli.command("sync-jobs")

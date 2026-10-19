@@ -50,3 +50,30 @@ def evaluate_answer():
     parsed_duration = float(duration_seconds) if duration_seconds else None
     evaluation = simulator.evaluate_star_answer(question, answer, job, duration_seconds=parsed_duration)
     return jsonify({"success": True, "evaluation": evaluation})
+
+
+@interview_bp.route("/coding/<int:job_id>")
+@login_required
+def coding_challenge(job_id):
+    from services.technical_assessment_service import TechnicalAssessmentService
+    job = Job.query.get_or_404(job_id)
+    profile = current_user.candidate_profile
+
+    assessment_svc = TechnicalAssessmentService()
+    challenge = assessment_svc.generate_coding_challenge(job, profile)
+    return render_template("coding_challenge.html", job=job, challenge=challenge)
+
+
+@interview_bp.route("/coding/<int:job_id>/evaluate", methods=["POST"])
+@login_required
+def evaluate_coding_challenge(job_id):
+    from services.technical_assessment_service import TechnicalAssessmentService
+    job = Job.query.get_or_404(job_id)
+    data = request.get_json() or {}
+    user_code = data.get("code", "")
+    challenge = data.get("challenge", {})
+
+    assessment_svc = TechnicalAssessmentService()
+    evaluation = assessment_svc.evaluate_submission(challenge, user_code)
+    return jsonify({"success": True, "evaluation": evaluation})
+

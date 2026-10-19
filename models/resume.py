@@ -14,7 +14,9 @@ class Resume(db.Model):
     file_type = db.Column(db.String(20), nullable=False)  # pdf, docx
     file_size_bytes = db.Column(db.Integer, default=0)
     
-    # Extracted data
+    # Extracted data & Multi-Profile targeting
+    profile_title = db.Column(db.String(100), default="Primary Profile")
+    target_role = db.Column(db.String(150), default="")
     raw_text = db.Column(db.Text, default="")
     parsed_data = db.Column(db.JSON, default=dict)
     

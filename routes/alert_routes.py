@@ -51,3 +51,12 @@ def trigger_check():
     sent_count = notification_service.check_and_send_alerts()
     flash(f"Scanned all active alerts! {sent_count} notification(s) dispatched.", "info")
     return redirect(url_for("alerts.alerts_home"))
+
+@alert_bp.route("/trigger-digest", methods=["POST"])
+@login_required
+def trigger_digest():
+    digests = notification_service.generate_daily_morning_digest(user_id=current_user.id)
+    count = digests[0]["job_count"] if digests else 0
+    flash(f"Morning Digest compiled! Found {count} top matching job(s) for your profile.", "success")
+    return redirect(url_for("alerts.alerts_home"))
+

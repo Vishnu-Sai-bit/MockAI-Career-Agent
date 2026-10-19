@@ -25,16 +25,16 @@
 
         {% for key, label, badge_color in stages %}
             {% set column_apps = grouped.get(key, []) %}
-            <div class="kanban-column">
+            <div class="kanban-column" data-stage="{{ key }}">
                 <div class="kanban-header">
                     <span>{{ label }}</span>
-                    <span class="badge bg-{{ badge_color }} rounded-pill">{{ column_apps|length }}</span>
+                    <span class="badge bg-{{ badge_color }} rounded-pill column-count-badge">{{ column_apps|length }}</span>
                 </div>
 
-                <div class="d-flex flex-column gap-2">
+                <div class="d-flex flex-column gap-2 kanban-drop-zone" style="min-height: 120px;">
                     {% for app in column_apps %}
                         {% set job = app.job %}
-                        <div class="kanban-card">
+                        <div class="kanban-card" draggable="true" data-app-id="{{ app.id }}" style="cursor: grab;">
                             <div class="d-flex justify-content-between align-items-start mb-1">
                                 <h6 class="fw-bold mb-0 text-dark small">
                                     <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="text-decoration-none text-dark">{{ job.title }}</a>
@@ -311,5 +311,66 @@ function loadOutreachData(appId, openCalTab) {
             }
         });
 }
+
+// Drag & Drop Functionality for Kanban Pipeline
+let draggedCard = null;
+
+document.querySelectorAll('.kanban-card').forEach(card => {
+    card.addEventListener('dragstart', function(e) {
+        draggedCard = this;
+        e.dataTransfer.setData('text/plain', this.getAttribute('data-app-id'));
+        this.style.opacity = '0.4';
+    });
+    card.addEventListener('dragend', function() {
+        this.style.opacity = '1';
+        draggedCard = null;
+    });
+});
+
+document.querySelectorAll('.kanban-column').forEach(column => {
+    column.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('border-primary');
+    });
+    column.addEventListener('dragleave', function() {
+        this.classList.remove('border-primary');
+    });
+    column.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('border-primary');
+        const appId = e.dataTransfer.getData('text/plain');
+        const targetStage = this.getAttribute('data-stage');
+
+        if (appId && targetStage && draggedCard) {
+            const dropZone = this.querySelector('.kanban-drop-zone');
+            if (dropZone) {
+                dropZone.appendChild(draggedCard);
+                // Update dropdown select inside card
+                const select = draggedCard.querySelector('.select-app-status');
+                if (select) select.value = targetStage;
+            }
+
+            // Sync with backend API
+            fetch('/applications/api/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    application_id: appId,
+                    status: targetStage
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                // Update column badge counts
+                document.querySelectorAll('.kanban-column').forEach(col => {
+                    const badge = col.querySelector('.column-count-badge');
+                    const cards = col.querySelectorAll('.kanban-card');
+                    if (badge) badge.textContent = cards.length;
+                });
+            })
+            .catch(err => console.error('Kanban drag error:', err));
+        }
+    });
+});
 </script>
 {% endblock %}

@@ -15,6 +15,17 @@
                 <form method="POST" action="{{ url_for('resume.upload_resume') }}" enctype="multipart/form-data">
                     <input type="file" name="resume_file" id="resume-file-input" class="d-none" accept=".pdf,.docx">
                     
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Profile Title / Specialization</label>
+                            <input type="text" name="profile_title" class="form-control" placeholder="e.g. Senior Backend, DevOps / SRE, AI Engineer">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Target Role Keyword</label>
+                            <input type="text" name="target_role" class="form-control" placeholder="e.g. Python Backend Engineer">
+                        </div>
+                    </div>
+
                     <div class="upload-dropzone mb-3" id="resume-dropzone">
                         <i class="bi bi-cloud-arrow-up text-primary display-4 mb-2 d-block"></i>
                         <h6 class="fw-bold mb-1">Click to browse or drag & drop your resume here</h6>
@@ -34,26 +45,35 @@
             <!-- Stored Resumes History & Privacy -->
             {% if resumes %}
                 <div class="card p-4 custom-card border-0 bg-white shadow-sm">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-clock-history me-2"></i>Uploaded Resumes History</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-collection-fill text-primary me-2"></i>Targeted Resume Profiles ({{ resumes|length }})</h5>
+                        <small class="text-muted">Target different roles with specialized resumes</small>
+                    </div>
                     <div class="table-responsive">
                         <table class="table align-middle">
                             <thead class="table-light">
                                 <tr class="small text-muted">
-                                    <th>File Name</th>
-                                    <th>Uploaded</th>
-                                    <th>Quality Score</th>
+                                    <th>Profile & File</th>
+                                    <th>Target Role</th>
+                                    <th>ATS Score</th>
                                     <th>Status</th>
-                                    <th class="text-end">Actions</th>
+                                    <th class="text-end">Actions & Export</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for r in resumes %}
                                     <tr>
                                         <td>
-                                            <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
-                                            <strong>{{ r.filename }}</strong>
+                                            <div class="fw-bold text-dark">{{ r.profile_title or 'General Profile' }}</div>
+                                            <small class="text-muted"><i class="bi bi-file-earmark-text me-1"></i>{{ r.filename }}</small>
                                         </td>
-                                        <td class="small text-muted">{{ r.uploaded_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                        <td class="small">
+                                            {% if r.target_role %}
+                                                <span class="badge bg-light text-dark border">{{ r.target_role }}</span>
+                                            {% else %}
+                                                <span class="text-muted small">Any Role</span>
+                                            {% endif %}
+                                        </td>
                                         <td>
                                             <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
                                                 {{ r.ats_quality_score|round(0)|int }}/100
@@ -61,17 +81,29 @@
                                         </td>
                                         <td>
                                             {% if r.is_active %}
-                                                <span class="badge bg-success">Active</span>
+                                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Active</span>
                                             {% else %}
-                                                <span class="badge bg-secondary">Archived</span>
+                                                <form method="POST" action="{{ url_for('resume.switch_active_resume', resume_id=r.id) }}" class="d-inline">
+                                                    <button type="submit" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;">
+                                                        Set Active
+                                                    </button>
+                                                </form>
                                             {% endif %}
                                         </td>
                                         <td class="text-end">
-                                            <form method="POST" action="{{ url_for('resume.delete_resume', resume_id=r.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to permanently delete this resume and its data?');">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Resume & Privacy Clean">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('resume.export_resume', resume_id=r.id, format='docx') }}" class="btn btn-outline-primary" title="Download ATS-Friendly .docx">
+                                                    <i class="bi bi-file-earmark-word me-1"></i> DOCX
+                                                </a>
+                                                <a href="{{ url_for('resume.export_resume', resume_id=r.id, format='text') }}" target="_blank" class="btn btn-outline-secondary" title="View Plain ATS Text">
+                                                    <i class="bi bi-file-text"></i>
+                                                </a>
+                                                <form method="POST" action="{{ url_for('resume.delete_resume', resume_id=r.id) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to permanently delete this resume profile?');">
+                                                    <button type="submit" class="btn btn-outline-danger" title="Delete Profile">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 {% endfor %}

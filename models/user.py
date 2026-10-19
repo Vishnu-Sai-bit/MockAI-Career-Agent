@@ -20,6 +20,7 @@ class User(UserMixin, db.Model):
     job_matches = db.relationship("JobMatch", backref="user", cascade="all, delete-orphan", lazy="dynamic")
     saved_jobs = db.relationship("SavedJob", backref="user", cascade="all, delete-orphan", lazy="dynamic")
     applications = db.relationship("Application", backref="user", cascade="all, delete-orphan", lazy="dynamic")
+    dream_companies = db.relationship("DreamCompany", backref="user", cascade="all, delete-orphan", lazy="dynamic")
 
     def set_password(self, password: str):
         self.password_hash = generate_password_hash(password)
@@ -27,9 +28,17 @@ class User(UserMixin, db.Model):
     def check_password(self, password: str) -> bool:
         return check_password_hash(self.password_hash, password)
 
-    def get_active_resume(self):
+    def get_active_resume(self, target_role=None):
         from models.resume import Resume
+        if target_role:
+            matched = self.resumes.filter(Resume.target_role.ilike(f"%{target_role}%")).first()
+            if matched:
+                return matched
         return self.resumes.filter_by(is_active=True).first() or self.resumes.order_by(Resume.uploaded_at.desc()).first()
+
+    def get_all_resumes(self):
+        from models.resume import Resume
+        return self.resumes.order_by(Resume.uploaded_at.desc()).all()
 
     def __repr__(self):
         return f"<User {self.email}>"
