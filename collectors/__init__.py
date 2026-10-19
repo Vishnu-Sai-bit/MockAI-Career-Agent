@@ -8,12 +8,18 @@ from collectors.remotive_collector import RemotiveCollector
 from collectors.remoteok_collector import RemoteOKCollector
 from collectors.arbeitnow_collector import ArbeitnowCollector
 from collectors.company_careers_collector import CompanyCareersCollector
+from collectors.smartrecruiters_collector import SmartRecruitersCollector
+from collectors.workable_collector import WorkableCollector
+from collectors.recruitee_collector import RecruiteeCollector
 
 COLLECTOR_REGISTRY: Dict[str, Type[BaseCollector]] = {
     "greenhouse": GreenhouseCollector,
     "lever": LeverCollector,
     "ashby": AshbyCollector,
     "workday": WorkdayCollector,
+    "smartrecruiters": SmartRecruitersCollector,
+    "workable": WorkableCollector,
+    "recruitee": RecruiteeCollector,
     "remotive": RemotiveCollector,
     "remoteok": RemoteOKCollector,
     "arbeitnow": ArbeitnowCollector,
@@ -33,6 +39,9 @@ __all__ = [
     "LeverCollector",
     "AshbyCollector",
     "WorkdayCollector",
+    "SmartRecruitersCollector",
+    "WorkableCollector",
+    "RecruiteeCollector",
     "RemotiveCollector",
     "RemoteOKCollector",
     "ArbeitnowCollector",

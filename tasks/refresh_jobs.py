@@ -20,6 +20,9 @@ DEFAULT_SOURCES = [
     {"platform": "greenhouse", "company_key": "stripe", "name": "Stripe (Greenhouse)"},
     {"platform": "lever", "company_key": "spotify", "name": "Spotify (Lever)"},
     {"platform": "ashby", "company_key": "linear", "name": "Linear (Ashby)"},
+    {"platform": "smartrecruiters", "company_key": "averydennison", "name": "Avery Dennison (SmartRecruiters)"},
+    {"platform": "workable", "company_key": "skroutz", "name": "Skroutz (Workable)"},
+    {"platform": "recruitee", "company_key": "bunq", "name": "bunq (Recruitee)"},
     {"platform": "remotive", "company_key": "all", "name": "Remotive Remote Jobs Feed"},
     {"platform": "arbeitnow", "company_key": "all", "name": "Arbeitnow Global Jobs Feed"},
     {"platform": "remoteok", "company_key": "all", "name": "RemoteOK Tech Jobs Feed"}

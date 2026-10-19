@@ -9,6 +9,9 @@ TRUSTED_PLATFORMS = {
     "lever": {"jobs.lever.co"},
     "ashby": {"jobs.ashbyhq.com"},
     "workday": {"myworkdayjobs.com", "wd3.myworkday.com", "wd5.myworkday.com", "wd1.myworkday.com"},
+    "smartrecruiters": {"smartrecruiters.com", "jobs.smartrecruiters.com"},
+    "workable": {"workable.com", "apply.workable.com"},
+    "recruitee": {"recruitee.com", "careers.bunq.com"},
     "remotive": {"remotive.com"},
     "remoteok": {"remoteok.com"},
     "arbeitnow": {"arbeitnow.com"}
@@ -103,6 +106,12 @@ def validate_external_job_url(
         # For Workday, subdomains can be e.g. company.wd3.myworkdayjobs.com
         if expected_platform == "workday":
             matches_platform = "myworkdayjobs.com" in hostname or "myworkday.com" in hostname
+        elif expected_platform == "smartrecruiters":
+            matches_platform = "smartrecruiters.com" in hostname
+        elif expected_platform == "workable":
+            matches_platform = "workable.com" in hostname
+        elif expected_platform == "recruitee":
+            matches_platform = "recruitee.com" in hostname or "careers.bunq.com" in hostname
 
         if not matches_platform and not allow_custom_domains:
             return False, f"URL domain '{hostname}' does not match expected platform '{expected_platform}'.", None
