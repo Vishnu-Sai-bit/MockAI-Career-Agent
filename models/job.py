@@ -60,6 +60,11 @@ class Job(db.Model):
         db.UniqueConstraint("source_id", "source_job_id", name="uq_source_job"),
     )
 
+    @property
+    def posted_relative_time(self) -> str:
+        from utils.date_helpers import format_relative_time
+        return format_relative_time(self.published_at or self.created_at)
+
     def __repr__(self):
         return f"<Job id={self.id} title='{self.title}' company='{self.company}' source={self.source_platform}>"
 
