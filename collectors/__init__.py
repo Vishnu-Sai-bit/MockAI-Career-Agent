@@ -11,6 +11,13 @@ from collectors.company_careers_collector import CompanyCareersCollector
 from collectors.smartrecruiters_collector import SmartRecruitersCollector
 from collectors.workable_collector import WorkableCollector
 from collectors.recruitee_collector import RecruiteeCollector
+from collectors.adzuna_collector import AdzunaCollector
+from collectors.jobicy_collector import JobicyCollector
+from collectors.themuse_collector import TheMuseCollector
+from collectors.himalayas_collector import HimalayasCollector
+from collectors.bamboohr_collector import BambooHRCollector
+from collectors.personio_collector import PersonioCollector
+from collectors.usajobs_collector import USAJobsCollector
 
 COLLECTOR_REGISTRY: Dict[str, Type[BaseCollector]] = {
     "greenhouse": GreenhouseCollector,
@@ -23,7 +30,14 @@ COLLECTOR_REGISTRY: Dict[str, Type[BaseCollector]] = {
     "remotive": RemotiveCollector,
     "remoteok": RemoteOKCollector,
     "arbeitnow": ArbeitnowCollector,
-    "company_career": CompanyCareersCollector
+    "company_career": CompanyCareersCollector,
+    "adzuna": AdzunaCollector,
+    "jobicy": JobicyCollector,
+    "themuse": TheMuseCollector,
+    "himalayas": HimalayasCollector,
+    "bamboohr": BambooHRCollector,
+    "personio": PersonioCollector,
+    "usajobs": USAJobsCollector
 }
 
 def get_collector_for_platform(platform_name: str) -> BaseCollector:
@@ -46,6 +60,13 @@ __all__ = [
     "RemoteOKCollector",
     "ArbeitnowCollector",
     "CompanyCareersCollector",
+    "AdzunaCollector",
+    "JobicyCollector",
+    "TheMuseCollector",
+    "HimalayasCollector",
+    "BambooHRCollector",
+    "PersonioCollector",
+    "USAJobsCollector",
     "COLLECTOR_REGISTRY",
     "get_collector_for_platform"
 ]

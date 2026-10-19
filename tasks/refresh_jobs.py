@@ -25,7 +25,12 @@ DEFAULT_SOURCES = [
     {"platform": "recruitee", "company_key": "bunq", "name": "bunq (Recruitee)"},
     {"platform": "remotive", "company_key": "all", "name": "Remotive Remote Jobs Feed"},
     {"platform": "arbeitnow", "company_key": "all", "name": "Arbeitnow Global Jobs Feed"},
-    {"platform": "remoteok", "company_key": "all", "name": "RemoteOK Tech Jobs Feed"}
+    {"platform": "remoteok", "company_key": "all", "name": "RemoteOK Tech Jobs Feed"},
+    {"platform": "adzuna", "company_key": "in", "name": "Adzuna Jobs (India)"},
+    {"platform": "adzuna", "company_key": "us", "name": "Adzuna Jobs (USA)"},
+    {"platform": "jobicy", "company_key": "all", "name": "Jobicy Remote Tech Feed"},
+    {"platform": "themuse", "company_key": "all", "name": "The Muse Careers Feed"},
+    {"platform": "himalayas", "company_key": "all", "name": "Himalayas Curated Remote Feed"}
 ]
 
 def ensure_default_sources():

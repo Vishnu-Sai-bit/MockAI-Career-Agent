@@ -33,7 +33,22 @@ class Config:
         "myworkdayjobs.com",
         "wd3.myworkday.com",
         "wd5.myworkday.com",
-        "wd1.myworkday.com"
+        "wd1.myworkday.com",
+        "smartrecruiters.com",
+        "jobs.smartrecruiters.com",
+        "workable.com",
+        "apply.workable.com",
+        "recruitee.com",
+        "adzuna.com",
+        "adzuna.in",
+        "adzuna.co.uk",
+        "jobicy.com",
+        "themuse.com",
+        "himalayas.app",
+        "bamboohr.com",
+        "personio.de",
+        "personio.com",
+        "usajobs.gov"
     }
 
     # Job Refresher Configuration
@@ -41,9 +56,14 @@ class Config:
     VERIFY_LINK_TIMEOUT_SEC = 6
     MAX_REDIRECTS = 5
 
-    # AI / LLM Configuration (Optional integration fallback)
+    # AI / LLM Configuration
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
+
+    # Job Platform APIs
+    ADZUNA_APP_ID = os.getenv("ADZUNA_APP_ID", "")
+    ADZUNA_APP_KEY = os.getenv("ADZUNA_APP_KEY", "")
+    USAJOBS_API_KEY = os.getenv("USAJOBS_API_KEY", "")
 
 
 class DevelopmentConfig(Config):

@@ -14,7 +14,14 @@ TRUSTED_PLATFORMS = {
     "recruitee": {"recruitee.com", "careers.bunq.com"},
     "remotive": {"remotive.com"},
     "remoteok": {"remoteok.com"},
-    "arbeitnow": {"arbeitnow.com"}
+    "arbeitnow": {"arbeitnow.com"},
+    "adzuna": {"adzuna.com", "adzuna.in", "adzuna.co.uk"},
+    "jobicy": {"jobicy.com"},
+    "themuse": {"themuse.com"},
+    "himalayas": {"himalayas.app"},
+    "bamboohr": {"bamboohr.com"},
+    "personio": {"personio.de", "personio.com"},
+    "usajobs": {"usajobs.gov"}
 }
 
 ALLOWED_SCHEMES = {"https"}
@@ -112,6 +119,20 @@ def validate_external_job_url(
             matches_platform = "workable.com" in hostname
         elif expected_platform == "recruitee":
             matches_platform = "recruitee.com" in hostname or "careers.bunq.com" in hostname
+        elif expected_platform == "adzuna":
+            matches_platform = "adzuna." in hostname
+        elif expected_platform == "bamboohr":
+            matches_platform = "bamboohr.com" in hostname
+        elif expected_platform == "personio":
+            matches_platform = "personio." in hostname
+        elif expected_platform == "jobicy":
+            matches_platform = "jobicy.com" in hostname
+        elif expected_platform == "themuse":
+            matches_platform = "themuse.com" in hostname
+        elif expected_platform == "himalayas":
+            matches_platform = "himalayas.app" in hostname
+        elif expected_platform == "usajobs":
+            matches_platform = "usajobs.gov" in hostname
 
         if not matches_platform and not allow_custom_domains:
             return False, f"URL domain '{hostname}' does not match expected platform '{expected_platform}'.", None
