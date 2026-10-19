@@ -18,6 +18,7 @@ from routes import (
 )
 from tasks.refresh_jobs import ensure_default_sources, run_job_refresh
 from tasks.scheduler import init_job_scheduler
+from tasks.schema_migration import ensure_schema_upgrades
 from utils.date_helpers import format_relative_time
 
 def create_app(config_name=None):
@@ -63,6 +64,7 @@ def create_app(config_name=None):
     # Initialize database tables and default job sources
     with app.app_context():
         db.create_all()
+        ensure_schema_upgrades()
         try:
             ensure_default_sources()
         except Exception:
