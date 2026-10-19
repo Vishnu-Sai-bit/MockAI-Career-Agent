@@ -1,0 +1,201 @@
+{% extends "base.html" %}
+
+{% block title %}Salary Intelligence & Offer Negotiation — AI Job Agent{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-cash-stack text-success me-2"></i>Salary Intelligence & Offer Negotiation</h3>
+            <p class="text-muted small mb-0">Benchmark real-world compensation percentiles and generate counter-offer negotiation strategies.</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left: Salary Benchmark Estimator -->
+        <div class="col-lg-6">
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-graph-up text-primary me-2"></i>Market Compensation Benchmark</h5>
+                
+                <form id="salary-estimate-form" class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Job Title</label>
+                        <input type="text" id="est-title" class="form-control" value="{{ profile.headline or 'Data Science & AI Engineer' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Location</label>
+                        <input type="text" id="est-location" class="form-control" value="{{ profile.location or 'Bengaluru, India' }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Years of Experience</label>
+                        <input type="number" step="0.5" id="est-years" class="form-control" value="{{ profile.experience_years or 3 }}">
+                    </div>
+                    <div class="col-md-6 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary-custom w-100">
+                            <i class="bi bi-calculator me-1"></i> Recalculate
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Salary Percentiles Display -->
+                <div class="p-3 bg-light rounded-3 border mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small">Estimated Market Median:</span>
+                        <span class="badge bg-success-subtle text-success fw-bold" id="est-demand">{{ estimate.market_demand_rating }} Demand</span>
+                    </div>
+                    <h2 class="fw-bold text-dark mb-3" id="est-median">{{ estimate.currency }} {{ "{:,.0f}".format(estimate.median) }}</h2>
+
+                    <div class="row g-2 text-center small">
+                        <div class="col-4">
+                            <div class="p-2 border rounded bg-white">
+                                <span class="text-muted d-block">25th Percentile</span>
+                                <strong id="est-p25">{{ estimate.currency }} {{ "{:,.0f}".format(estimate.percentile_25) }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 border rounded bg-white">
+                                <span class="text-muted d-block">75th Percentile</span>
+                                <strong id="est-p75">{{ estimate.currency }} {{ "{:,.0f}".format(estimate.percentile_75) }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 border rounded bg-white">
+                                <span class="text-muted d-block">Top 10% (90th)</span>
+                                <strong id="est-p90">{{ estimate.currency }} {{ "{:,.0f}".format(estimate.percentile_90) }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h6 class="small fw-bold text-dark mb-1">Key Compensation Drivers:</h6>
+                    <ul class="small text-muted ps-3 mb-2" id="est-drivers">
+                        {% for d in estimate.salary_drivers %}
+                            <li>{{ d }}</li>
+                        {% endfor %}
+                    </ul>
+                    <p class="small text-muted mb-0 fst-italic" id="est-leverage">{{ estimate.negotiation_leverage_summary }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Offer Negotiation & Counter-Offer Generator -->
+        <div class="col-lg-6">
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-briefcase text-success me-2"></i>Counter-Offer Negotiation Assistant</h5>
+                <p class="text-muted small mb-3">Received an offer? Generate an executive, polite counter-offer email backed by market value.</p>
+
+                <form id="counter-offer-form" class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Company Name</label>
+                        <input type="text" id="co-company" class="form-control" placeholder="e.g. Stripe, NVIDIA" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Offered Role</label>
+                        <input type="text" id="co-role" class="form-control" placeholder="e.g. Senior Data Engineer" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Offered Base Salary</label>
+                        <input type="number" id="co-offered" class="form-control" placeholder="100000" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Target Requested Base</label>
+                        <input type="number" id="co-target" class="form-control" placeholder="125000" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Value Justification / Specialized Skills</label>
+                        <input type="text" id="co-justification" class="form-control" placeholder="e.g. 4 years specialized experience with Python & Distributed Pipelines" value="Specialized technical experience in high-throughput systems and strong ATS qualifications.">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary-custom w-100" id="gen-counter-btn">
+                            <i class="bi bi-stars me-1"></i> Generate Negotiation Strategy & Email
+                        </button>
+                    </div>
+                </form>
+
+                <div id="counter-result-card" class="d-none pt-3 border-top">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold small text-dark" id="co-subject">Offer Discussion</span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="copyNegotiationEmail()"><i class="bi bi-clipboard me-1"></i>Copy</button>
+                    </div>
+                    <div class="p-3 bg-light border rounded small mb-3" id="co-email-body" style="white-space: pre-line; max-height: 250px; overflow-y: auto;"></div>
+                    <div>
+                        <h6 class="small fw-bold text-primary mb-1">Key Talking Points:</h6>
+                        <ul class="small text-muted ps-3 mb-0" id="co-points"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('salary-estimate-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    fetch("{{ url_for('salary.estimate_api') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            title: document.getElementById('est-title').value,
+            location: document.getElementById('est-location').value,
+            years: document.getElementById('est-years').value,
+            skills: []
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success && data.estimate) {
+            const est = data.estimate;
+            document.getElementById('est-median').textContent = est.currency + ' ' + Number(est.median).toLocaleString();
+            document.getElementById('est-p25').textContent = est.currency + ' ' + Number(est.percentile_25).toLocaleString();
+            document.getElementById('est-p75').textContent = est.currency + ' ' + Number(est.percentile_75).toLocaleString();
+            document.getElementById('est-p90').textContent = est.currency + ' ' + Number(est.percentile_90).toLocaleString();
+            document.getElementById('est-demand').textContent = est.market_demand_rating + ' Demand';
+            document.getElementById('est-drivers').innerHTML = (est.salary_drivers || []).map(d => `<li>${d}</li>`).join('');
+            document.getElementById('est-leverage').textContent = est.negotiation_leverage_summary || '';
+        }
+    });
+});
+
+document.getElementById('counter-offer-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('gen-counter-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Generating strategy...';
+
+    fetch("{{ url_for('salary.counter_offer_api') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            company: document.getElementById('co-company').value,
+            role: document.getElementById('co-role').value,
+            current_base: document.getElementById('co-offered').value,
+            target_base: document.getElementById('co-target').value,
+            justification: document.getElementById('co-justification').value
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars me-1"></i> Generate Negotiation Strategy & Email';
+        if (data.success && data.counter_offer) {
+            const co = data.counter_offer;
+            document.getElementById('co-subject').textContent = co.subject || 'Offer Discussion';
+            document.getElementById('co-email-body').textContent = co.email_body || '';
+            document.getElementById('co-points').innerHTML = (co.talking_points || []).map(p => `<li>${p}</li>`).join('');
+            document.getElementById('counter-result-card').classList.remove('d-none');
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars me-1"></i> Generate Negotiation Strategy & Email';
+    });
+});
+
+function copyNegotiationEmail() {
+    const text = document.getElementById('co-email-body').innerText;
+    navigator.clipboard.writeText(text).then(() => alert('Negotiation email copied to clipboard!'));
+}
+</script>
+{% endblock %}

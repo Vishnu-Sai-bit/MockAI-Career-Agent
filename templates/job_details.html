@@ -52,6 +52,54 @@
         </div>
     </div>
 
+    <!-- AI Application Toolset Cards -->
+    {% if current_user.is_authenticated %}
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card p-3 custom-card border-0 bg-white shadow-sm h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="fs-4 text-primary"><i class="bi bi-file-earmark-check-fill"></i></span>
+                            <h6 class="fw-bold mb-0">ATS-Tailored Resume</h6>
+                        </div>
+                        <p class="text-muted small mb-3">Re-align your resume keywords and achievements specifically for {{ job.company }}.</p>
+                    </div>
+                    <a href="{{ url_for('applications.view_tailored_resume', job_id=job.id) }}" class="btn btn-sm btn-outline-custom w-100">
+                        <i class="bi bi-file-earmark-pdf me-1"></i> Generate Tailored Resume
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 custom-card border-0 bg-white shadow-sm h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="fs-4 text-info"><i class="bi bi-envelope-paper-fill"></i></span>
+                            <h6 class="fw-bold mb-0">Custom Cover Letter</h6>
+                        </div>
+                        <p class="text-muted small mb-3">Customized 3-paragraph executive cover letter addressed to {{ job.company }}'s hiring team.</p>
+                    </div>
+                    <a href="{{ url_for('applications.view_tailored_cover_letter', job_id=job.id) }}" class="btn btn-sm btn-outline-custom w-100">
+                        <i class="bi bi-pen me-1"></i> View Cover Letter
+                    </a>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card p-3 custom-card border-0 bg-white shadow-sm h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="fs-4 text-success"><i class="bi bi-mic-fill"></i></span>
+                            <h6 class="fw-bold mb-0">AI Mock Interview</h6>
+                        </div>
+                        <p class="text-muted small mb-3">Practice answering role-specific questions with instant STAR method scoring.</p>
+                    </div>
+                    <a href="{{ url_for('interview.start_interview', job_id=job.id) }}" class="btn btn-sm btn-outline-custom w-100">
+                        <i class="bi bi-play-circle me-1"></i> Start Mock Interview
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
     <!-- ATS Compatibility Callout -->
     {% if match %}
         <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4 border-start border-4 border-primary">

@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: ai_job_agent_web
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=${SECRET_KEY:-ai-job-agent-secret-production-2026}
+      - DATABASE_URL=postgresql://jobagent:jobpass@db:5432/ai_job_agent
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - ADZUNA_APP_ID=${ADZUNA_APP_ID}
+      - ADZUNA_APP_KEY=${ADZUNA_APP_KEY}
+      - JOB_SYNC_INTERVAL_HOURS=6
+    depends_on:
+      - db
+    volumes:
+      - uploads_data:/app/uploads
+
+  db:
+    image: postgres:16-alpine
+    container_name: ai_job_agent_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: jobagent
+      POSTGRES_PASSWORD: jobpass
+      POSTGRES_DB: ai_job_agent
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
+  uploads_data:

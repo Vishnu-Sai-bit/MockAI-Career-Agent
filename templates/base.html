@@ -55,6 +55,16 @@
                             </a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'salary.salary_home' %}active{% endif %}" href="{{ url_for('salary.salary_home') }}">
+                                <i class="bi bi-cash-stack me-1"></i> Salary AI
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'alerts.alerts_home' %}active{% endif %}" href="{{ url_for('alerts.alerts_home') }}">
+                                <i class="bi bi-bell-fill me-1"></i> Alerts
+                            </a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link text-info fw-semibold {% if request.endpoint == 'assistant.chat_view' %}active{% endif %}" href="{{ url_for('assistant.chat_view') }}">
                                 <i class="bi bi-chat-dots-fill me-1"></i> AI Assistant
                             </a>

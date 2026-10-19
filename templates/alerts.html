@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Job Alerts & Notifications — AI Job Agent{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-bell-fill text-primary me-2"></i>Smart Job Alerts & Notifications</h3>
+            <p class="text-muted small mb-0">Get notified automatically when our background scheduler discovers high-matching jobs.</p>
+        </div>
+        <form method="POST" action="{{ url_for('alerts.trigger_check') }}">
+            <button type="submit" class="btn btn-outline-custom">
+                <i class="bi bi-search me-1"></i> Scan Matches Now
+            </button>
+        </form>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left: Create Alert Form & Active Alert Rules -->
+        <div class="col-lg-5">
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-plus-circle text-primary me-2"></i>Create New Job Alert</h5>
+                
+                <form method="POST" action="{{ url_for('alerts.create_alert') }}" class="d-flex flex-column gap-3">
+                    <div>
+                        <label class="form-label small fw-semibold">Alert Title</label>
+                        <input type="text" name="title" class="form-control" placeholder="e.g. Senior AI Engineer Alert" required>
+                    </div>
+
+                    <div>
+                        <label class="form-label small fw-semibold">Minimum ATS Match Score (%):</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <input type="range" class="form-range" name="min_match_score" min="50" max="95" step="5" value="75" id="score-range" oninput="document.getElementById('score-val').textContent = this.value + '%'">
+                            <span class="badge bg-primary px-3 py-2 fw-bold" id="score-val">75%</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label small fw-semibold">Keywords Filter (Optional, comma-separated)</label>
+                        <input type="text" name="keywords" class="form-control" placeholder="e.g. Remote, Python, AWS">
+                    </div>
+
+                    <div>
+                        <label class="form-label small fw-semibold">Notification Channel</label>
+                        <select name="channel" class="form-select" id="channel-select" onchange="updateDestPlaceholder()">
+                            <option value="email">Email Notification</option>
+                            <option value="telegram">Telegram Bot / Webhook</option>
+                            <option value="in_app">In-App Dashboard Notification</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="form-label small fw-semibold">Destination (Email or Telegram Chat ID)</label>
+                        <input type="text" name="destination" class="form-control" id="dest-input" value="{{ current_user.email }}">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-custom w-100 py-2">
+                        <i class="bi bi-bell me-1"></i> Save Job Alert
+                    </button>
+                </form>
+            </div>
+
+            <!-- Active Alerts List -->
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm">
+                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-sliders text-secondary me-2"></i>Your Configured Alerts ({{ alerts|length }})</h6>
+                {% if alerts %}
+                    <div class="d-flex flex-column gap-2">
+                        {% for a in alerts %}
+                            <div class="p-3 border rounded-3 d-flex justify-content-between align-items-center bg-light">
+                                <div>
+                                    <h6 class="fw-bold mb-1 small">{{ a.title }}</h6>
+                                    <div class="text-muted small">
+                                        <span class="badge bg-primary-subtle text-primary">{{ a.min_match_score|int }}%+ Score</span> · 
+                                        <span>Channel: {{ a.channel|title }}</span>
+                                    </div>
+                                </div>
+                                <form method="POST" action="{{ url_for('alerts.toggle_alert', alert_id=a.id) }}">
+                                    <button type="submit" class="btn btn-sm {% if a.is_active %}btn-success{% else %}btn-secondary{% endif %}">
+                                        {{ 'Active' if a.is_active else 'Paused' }}
+                                    </button>
+                                </form>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted small mb-0">No active alerts configured. Create one above to receive instant alerts for top opportunities.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Right: Notification History Log -->
+        <div class="col-lg-7">
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-inbox text-primary me-2"></i>Recent Alert Notifications</h5>
+                {% if notifications %}
+                    <div class="d-flex flex-column gap-3">
+                        {% for n in notifications %}
+                            <div class="card p-3 border rounded-3 bg-white">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <span class="badge bg-success-subtle text-success me-1">{{ n.status|title }}</span>
+                                        <strong class="text-dark small">{{ n.subject }}</strong>
+                                    </div>
+                                    <small class="text-muted">{{ n.created_at|time_ago }}</small>
+                                </div>
+                                <div class="p-2 bg-light border rounded small mb-2" style="white-space: pre-line; max-height: 180px; overflow-y: auto;">{{ n.message }}</div>
+                                {% if n.job %}
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <small class="text-muted">{{ n.job.company }} · {{ n.job.location }}</small>
+                                        <a href="{{ url_for('jobs.safe_apply_redirect', job_id=n.job.id) }}" target="_blank" class="btn btn-sm btn-primary-custom">
+                                            Apply Directly <i class="bi bi-box-arrow-up-right ms-1"></i>
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-bell-slash display-4 mb-3 d-block text-secondary"></i>
+                        <h6>No notifications yet</h6>
+                        <p class="small mb-0">When new jobs exceeding your threshold are discovered, they will be logged here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateDestPlaceholder() {
+    const channel = document.getElementById('channel-select').value;
+    const dest = document.getElementById('dest-input');
+    if (channel === 'telegram') {
+        dest.placeholder = 'Enter Telegram Chat ID (e.g. 123456789)';
+    } else if (channel === 'email') {
+        dest.placeholder = 'Enter Email Address';
+        dest.value = "{{ current_user.email }}";
+    } else {
+        dest.placeholder = 'In-app notification';
+        dest.value = 'In-App';
+    }
+}
+</script>
+{% endblock %}

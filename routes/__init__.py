@@ -5,6 +5,9 @@ from routes.ats_routes import ats_bp
 from routes.job_routes import jobs_bp
 from routes.application_routes import applications_bp
 from routes.assistant_routes import assistant_bp
+from routes.interview_routes import interview_bp
+from routes.salary_routes import salary_bp
+from routes.alert_routes import alert_bp
 
 __all__ = [
     "auth_bp",
@@ -13,5 +16,8 @@ __all__ = [
     "ats_bp",
     "jobs_bp",
     "applications_bp",
-    "assistant_bp"
+    "assistant_bp",
+    "interview_bp",
+    "salary_bp",
+    "alert_bp"
 ]

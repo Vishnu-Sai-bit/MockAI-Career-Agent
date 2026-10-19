@@ -119,3 +119,26 @@ def settings():
         return redirect(url_for("dashboard.settings"))
 
     return render_template("settings.html", profile=profile)
+
+
+@dashboard_bp.route("/api/candidate-profile")
+def candidate_profile_api():
+    if current_user.is_authenticated and current_user.candidate_profile:
+        p = current_user.candidate_profile
+        return {
+            "full_name": p.full_name or "Beere Vishnu Sai",
+            "email": current_user.email,
+            "phone": p.phone or "",
+            "location": p.location or "",
+            "headline": p.headline or "Data Science & AI Engineer",
+            "skills": p.skills or []
+        }
+    return {
+        "full_name": "Beere Vishnu Sai",
+        "email": "beerevishnusai776600@gmail.com",
+        "phone": "+91-9876543210",
+        "location": "Bengaluru, India",
+        "headline": "Data Science & AI Engineer",
+        "skills": ["Python", "Flask", "Machine Learning", "SQL"]
+    }
+

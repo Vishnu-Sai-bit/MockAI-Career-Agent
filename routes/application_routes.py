@@ -99,3 +99,34 @@ def create_application():
 
     app = app_service.get_or_create_application(current_user.id, int(job_id), status=status)
     return jsonify({"success": True, "application_id": app.id, "status": app.status})
+
+
+@applications_bp.route("/tailored-resume/<int:job_id>")
+@login_required
+def view_tailored_resume(job_id):
+    job = Job.query.get_or_404(job_id)
+    resume = current_user.get_active_resume()
+    if not resume:
+        flash("Please upload a resume first.", "info")
+        return redirect(url_for("resume.upload_resume"))
+
+    from services.tailored_document_generator import TailoredDocumentGenerator
+    doc_gen = TailoredDocumentGenerator()
+    tailored_data = doc_gen.generate_tailored_resume(resume, current_user.candidate_profile, job)
+    return render_template("tailored_resume.html", job=job, doc=tailored_data)
+
+
+@applications_bp.route("/tailored-cover-letter/<int:job_id>")
+@login_required
+def view_tailored_cover_letter(job_id):
+    job = Job.query.get_or_404(job_id)
+    resume = current_user.get_active_resume()
+    if not resume:
+        flash("Please upload a resume first.", "info")
+        return redirect(url_for("resume.upload_resume"))
+
+    from services.tailored_document_generator import TailoredDocumentGenerator
+    doc_gen = TailoredDocumentGenerator()
+    cover_data = doc_gen.generate_tailored_cover_letter(resume, current_user.candidate_profile, job)
+    return render_template("tailored_cover_letter.html", job=job, doc=cover_data)
+

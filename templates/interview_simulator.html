@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}AI Mock Interview for {{ job.title }} at {{ job.company }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small mb-1">
+                    <li class="breadcrumb-item"><a href="{{ url_for('jobs.job_details', job_id=job.id) }}">{{ job.title }}</a></li>
+                    <li class="breadcrumb-item active">AI Mock Interview</li>
+                </ol>
+            </nav>
+            <h3 class="fw-bold mb-0">🎙️ AI Mock Interview Simulator</h3>
+            <p class="text-muted small mb-0">Role-specific behavioral & technical questions tailored to <strong>{{ job.title }}</strong> at <strong>{{ job.company }}</strong>.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="btn btn-outline-custom">Back to Job</a>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Left: Question Carousel / Selector -->
+        <div class="col-lg-5">
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-3">
+                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-list-check text-primary me-2"></i>Interview Questions ({{ questions|length }})</h6>
+                <div class="list-group list-group-flush" id="question-list">
+                    {% for q in questions %}
+                        <button type="button" class="list-group-item list-group-item-action p-3 rounded-3 mb-2 question-btn {% if loop.first %}active{% endif %}" data-q-id="{{ q.id }}" data-question="{{ q.question }}" data-type="{{ q.type }}" data-criteria="{{ q.evaluation_criteria }}">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="badge bg-secondary-subtle text-secondary small">{{ q.type }}</span>
+                                <small class="fw-bold">Q{{ loop.index }}</small>
+                            </div>
+                            <div class="fw-semibold small text-truncate-2">{{ q.question }}</div>
+                        </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- STAR Guide Card -->
+            <div class="card p-3 custom-card border-0 bg-white shadow-sm">
+                <h6 class="fw-bold text-success mb-2"><i class="bi bi-lightbulb-fill text-warning me-1"></i>STAR Formulation Guide</h6>
+                <ul class="list-unstyled small text-muted mb-0">
+                    <li class="mb-1"><strong>S - Situation:</strong> Set context, team stakes, and problem.</li>
+                    <li class="mb-1"><strong>T - Task:</strong> State what you were tasked to accomplish.</li>
+                    <li class="mb-1"><strong>A - Action:</strong> Focus on your specific technical execution.</li>
+                    <li><strong>R - Result:</strong> Conclude with measurable impact & numbers.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Right: Interactive Answer & Live STAR Evaluator -->
+        <div class="col-lg-7">
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge bg-primary-subtle text-primary" id="active-q-type">{{ questions[0].type }}</span>
+                    <span class="small text-muted" id="active-q-num">Question 1 of {{ questions|length }}</span>
+                </div>
+                <h5 class="fw-bold text-dark mb-3" id="active-q-text">{{ questions[0].question }}</h5>
+                <p class="small text-muted mb-3" id="active-q-criteria"><i class="bi bi-info-circle me-1"></i>{{ questions[0].evaluation_criteria }}</p>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-semibold">Your Answer (Type or speak your response using the STAR method):</label>
+                    <textarea id="user-answer-box" class="form-control" rows="6" placeholder="During my time at... our team encountered... I took ownership by... and the final outcome was..."></textarea>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <button class="btn btn-outline-secondary btn-sm" id="mic-btn">
+                        <i class="bi bi-mic me-1"></i> Voice Input
+                    </button>
+                    <button class="btn btn-primary-custom" id="submit-answer-btn">
+                        <i class="bi bi-stars me-1"></i> Evaluate with STAR AI
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dynamic Evaluation Result Card -->
+            <div id="eval-result-card" class="card p-4 custom-card border-0 bg-white shadow-sm d-none">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-speedometer2 text-primary me-2"></i>Evaluation Result</h5>
+                    <span class="fs-4 fw-bold text-success" id="eval-score">--/100</span>
+                </div>
+
+                <div class="row g-2 mb-3 text-center">
+                    <div class="col-3">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted d-block">Situation</small>
+                            <strong id="eval-s-score">--</strong>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted d-block">Task</small>
+                            <strong id="eval-t-score">--</strong>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted d-block">Action</small>
+                            <strong id="eval-a-score">--</strong>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted d-block">Result</small>
+                            <strong id="eval-r-score">--</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="fw-bold text-success small mb-1"><i class="bi bi-check-circle me-1"></i>Key Strengths:</h6>
+                    <ul class="small text-muted ps-3 mb-0" id="eval-strengths"></ul>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="fw-bold text-warning-emphasis small mb-1"><i class="bi bi-exclamation-triangle me-1"></i>Areas for Improvement:</h6>
+                    <ul class="small text-muted ps-3 mb-0" id="eval-improvements"></ul>
+                </div>
+
+                <div class="p-3 bg-light border rounded">
+                    <h6 class="fw-bold text-primary small mb-1"><i class="bi bi-stars me-1"></i>Polished Exemplar Answer:</h6>
+                    <p class="small text-dark mb-0 fst-italic" id="eval-exemplar"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentJobId = {{ job.id }};
+let activeQuestionText = "{{ questions[0].question }}";
+
+document.querySelectorAll('.question-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.question-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        activeQuestionText = this.getAttribute('data-question');
+        document.getElementById('active-q-text').textContent = activeQuestionText;
+        document.getElementById('active-q-type').textContent = this.getAttribute('data-type');
+        document.getElementById('active-q-criteria').innerHTML = '<i class="bi bi-info-circle me-1"></i>' + this.getAttribute('data-criteria');
+        document.getElementById('user-answer-box').value = '';
+        document.getElementById('eval-result-card').classList.add('d-none');
+    });
+});
+
+document.getElementById('submit-answer-btn').addEventListener('click', function() {
+    const answer = document.getElementById('user-answer-box').value.trim();
+    if (!answer) {
+        alert('Please enter your answer before evaluating.');
+        return;
+    }
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Evaluating with STAR AI...';
+
+    fetch("{{ url_for('interview.evaluate_answer') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            job_id: currentJobId,
+            question: activeQuestionText,
+            answer: answer
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars me-1"></i> Evaluate with STAR AI';
+        if (data.success && data.evaluation) {
+            const ev = data.evaluation;
+            document.getElementById('eval-score').textContent = ev.overall_score + '/100';
+            const sb = ev.star_breakdown || {};
+            document.getElementById('eval-s-score').textContent = (sb.situation ? sb.situation.score : '--') + '%';
+            document.getElementById('eval-t-score').textContent = (sb.task ? sb.task.score : '--') + '%';
+            document.getElementById('eval-a-score').textContent = (sb.action ? sb.action.score : '--') + '%';
+            document.getElementById('eval-r-score').textContent = (sb.result ? sb.result.score : '--') + '%';
+
+            const strengthsList = document.getElementById('eval-strengths');
+            strengthsList.innerHTML = (ev.strengths || []).map(s => `<li>${s}</li>`).join('');
+
+            const impList = document.getElementById('eval-improvements');
+            impList.innerHTML = (ev.areas_for_improvement || []).map(i => `<li>${i}</li>`).join('');
+
+            document.getElementById('eval-exemplar').textContent = ev.improved_exemplar_answer || '';
+            document.getElementById('eval-result-card').classList.remove('d-none');
+        } else {
+            alert('Evaluation failed: ' + (data.error || 'Server error'));
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars me-1"></i> Evaluate with STAR AI';
+        alert('Connection error: ' + err);
+    });
+});
+</script>
+{% endblock %}

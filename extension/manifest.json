@@ -1,0 +1,34 @@
+{
+  "manifest_version": 3,
+  "name": "AI Job Agent Companion — Auto-Fill Assistant",
+  "version": "1.0.0",
+  "description": "1-click auto-fill for official job applications on Greenhouse, Lever, Ashby, Workday and SmartRecruiters.",
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://*.greenhouse.io/*",
+    "https://*.lever.co/*",
+    "https://*.ashbyhq.com/*",
+    "https://*.myworkdayjobs.com/*",
+    "https://*.smartrecruiters.com/*",
+    "http://127.0.0.1:5000/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "AI Job Agent Auto-Fill"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.greenhouse.io/*",
+        "https://*.lever.co/*",
+        "https://*.ashbyhq.com/*",
+        "https://*.myworkdayjobs.com/*",
+        "https://*.smartrecruiters.com/*"
+      ],
+      "js": ["content.js"]
+    }
+  ]
+}

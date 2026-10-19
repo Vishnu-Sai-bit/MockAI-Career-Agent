@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Tailored Resume for {{ job.title }} at {{ job.company }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header Controls -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small mb-1">
+                    <li class="breadcrumb-item"><a href="{{ url_for('jobs.job_details', job_id=job.id) }}">{{ job.title }}</a></li>
+                    <li class="breadcrumb-item active">Tailored ATS Resume</li>
+                </ol>
+            </nav>
+            <h3 class="fw-bold mb-0">🎯 ATS-Tailored Resume</h3>
+            <p class="text-muted small mb-0">Customized specifically for <strong>{{ job.title }}</strong> at <strong>{{ job.company }}</strong>.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button onclick="window.print()" class="btn btn-primary-custom">
+                <i class="bi bi-printer me-1"></i> Print / Save as PDF
+            </button>
+            <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="btn btn-outline-custom">Back to Job</a>
+        </div>
+    </div>
+
+    <!-- Targeted Keywords Bar -->
+    {% if doc.ats_keywords_targeted %}
+        <div class="card p-3 border-0 bg-white shadow-sm mb-4">
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <span class="small fw-bold text-success"><i class="bi bi-check-circle-fill me-1"></i>ATS Keywords Integrated:</span>
+                {% for kw in doc.ats_keywords_targeted %}
+                    <span class="skill-pill matched">{{ kw }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Resume Paper Sheet Preview -->
+    <div class="card p-5 border-0 shadow-sm mx-auto resume-paper bg-white" style="max-width: 850px; font-family: 'Georgia', serif; line-height: 1.5; color: #1e293b;">
+        <div class="text-center pb-3 border-bottom mb-4">
+            <h2 class="fw-bold mb-1" style="font-family: -apple-system, sans-serif; letter-spacing: 0.5px;">{{ doc.candidate_name }}</h2>
+            <div class="text-muted small" style="font-family: -apple-system, sans-serif;">{{ doc.contact_info }}</div>
+            <div class="fw-semibold text-primary mt-1" style="font-family: -apple-system, sans-serif;">{{ doc.tailored_headline }}</div>
+        </div>
+
+        <!-- Summary -->
+        <div class="mb-4">
+            <h6 class="text-uppercase fw-bold text-secondary border-bottom pb-1 mb-2" style="font-family: -apple-system, sans-serif; font-size: 13px; letter-spacing: 1px;">Professional Summary</h6>
+            <p class="mb-0 text-dark" style="font-size: 14.5px;">{{ doc.tailored_summary }}</p>
+        </div>
+
+        <!-- Skills -->
+        <div class="mb-4">
+            <h6 class="text-uppercase fw-bold text-secondary border-bottom pb-1 mb-2" style="font-family: -apple-system, sans-serif; font-size: 13px; letter-spacing: 1px;">Core Competencies & Technical Skills</h6>
+            <div class="d-flex flex-wrap gap-2 pt-1" style="font-family: -apple-system, sans-serif;">
+                {% for sk in doc.highlighted_skills %}
+                    <span class="badge bg-light text-dark border px-2 py-1" style="font-size: 12px;">{{ sk }}</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Experience -->
+        <div class="mb-4">
+            <h6 class="text-uppercase fw-bold text-secondary border-bottom pb-1 mb-3" style="font-family: -apple-system, sans-serif; font-size: 13px; letter-spacing: 1px;">Professional Experience</h6>
+            {% for exp in doc.tailored_experience %}
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-baseline mb-1">
+                        <div>
+                            <strong style="font-family: -apple-system, sans-serif; font-size: 15px;">{{ exp.title }}</strong> · 
+                            <span class="text-muted">{{ exp.company }}</span>
+                        </div>
+                        <span class="text-muted small" style="font-family: -apple-system, sans-serif;">{{ exp.duration }}</span>
+                    </div>
+                    {% if exp.highlights %}
+                        <ul class="mb-0 ps-3" style="font-size: 14px;">
+                            {% for hl in exp.highlights %}
+                                <li class="mb-1">{{ hl }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Projects -->
+        {% if doc.tailored_projects %}
+            <div class="mb-4">
+                <h6 class="text-uppercase fw-bold text-secondary border-bottom pb-1 mb-3" style="font-family: -apple-system, sans-serif; font-size: 13px; letter-spacing: 1px;">Key Projects & Technical Evidence</h6>
+                {% for proj in doc.tailored_projects %}
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between">
+                            <strong style="font-family: -apple-system, sans-serif; font-size: 14px;">{{ proj.name }}</strong>
+                            {% if proj.technologies %}<span class="text-muted small" style="font-family: -apple-system, sans-serif;">{{ proj.technologies }}</span>{% endif %}
+                        </div>
+                        <p class="mb-0 text-dark small" style="font-size: 13.5px;">{{ proj.description }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Education -->
+        {% if doc.education %}
+            <div>
+                <h6 class="text-uppercase fw-bold text-secondary border-bottom pb-1 mb-2" style="font-family: -apple-system, sans-serif; font-size: 13px; letter-spacing: 1px;">Education & Credentials</h6>
+                {% for edu in doc.education %}
+                    <div class="d-flex justify-content-between align-items-baseline small">
+                        <div>
+                            <strong>{{ edu.degree }}</strong> — <span class="text-muted">{{ edu.institution }}</span>
+                        </div>
+                        <span class="text-muted">{{ edu.year }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+@media print {
+    body { background: white !important; }
+    .navbar, .footer, .btn, .breadcrumb, .card.bg-white.mb-4:not(.resume-paper) { display: none !important; }
+    .resume-paper {
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+}
+</style>
+{% endblock %}
