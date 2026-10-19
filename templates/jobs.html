@@ -23,21 +23,31 @@
     <!-- Search & Filter Controls -->
     <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
         <form method="GET" action="{{ url_for('jobs.list_jobs') }}" class="row g-3">
-            <div class="col-md-3">
+            <div class="col-lg-3 col-md-6">
                 <label class="form-label small fw-semibold">Keywords / Title</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
                     <input type="text" name="q" class="form-control" placeholder="e.g. Python Developer, React..." value="{{ keyword }}">
                 </div>
             </div>
-            <div class="col-md-2">
+            <div class="col-lg-2 col-md-6">
                 <label class="form-label small fw-semibold">Location / Country</label>
                 <div class="input-group">
                     <span class="input-group-text bg-light"><i class="bi bi-geo-alt"></i></span>
                     <input type="text" name="location" class="form-control" placeholder="e.g. Remote, India..." value="{{ location }}">
                 </div>
             </div>
-            <div class="col-md-2">
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label small fw-semibold">Experience Level</label>
+                <select name="experience_level" class="form-select">
+                    <option value="all" {% if experience_level == 'all' or not experience_level %}selected{% endif %}>All Experience Levels</option>
+                    <option value="entry" {% if experience_level == 'entry' %}selected{% endif %}>💼 Entry Level (0–2 Yrs)</option>
+                    <option value="mid" {% if experience_level == 'mid' %}selected{% endif %}>💼 Mid Level (2–5 Yrs)</option>
+                    <option value="senior" {% if experience_level == 'senior' %}selected{% endif %}>💼 Senior Level (5–8 Yrs)</option>
+                    <option value="lead" {% if experience_level == 'lead' %}selected{% endif %}>💼 Lead / Staff (8+ Yrs)</option>
+                </select>
+            </div>
+            <div class="col-lg-2 col-md-4">
                 <label class="form-label small fw-semibold">Date Posted</label>
                 <select name="date_posted" class="form-select">
                     <option value="all" {% if date_posted == 'all' or not date_posted %}selected{% endif %}>Any Time</option>
@@ -48,7 +58,25 @@
                     <option value="30d" {% if date_posted == '30d' or date_posted == '1m' %}selected{% endif %}>Past Month (30 Days)</option>
                 </select>
             </div>
-            <div class="col-md-2">
+            <div class="col-lg-3 col-md-4 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-primary-custom flex-grow-1 py-2">
+                    <i class="bi bi-funnel-fill me-1"></i> Filter Jobs
+                </button>
+                <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-secondary py-2" title="Reset Filters">
+                    <i class="bi bi-x-circle"></i>
+                </a>
+            </div>
+
+            <div class="col-lg-3 col-md-4">
+                <label class="form-label small fw-semibold">Work Mode</label>
+                <select name="work_mode" class="form-select">
+                    <option value="all" {% if work_mode == 'all' or not work_mode %}selected{% endif %}>All Work Modes</option>
+                    <option value="remote" {% if work_mode == 'remote' %}selected{% endif %}>🌐 Remote</option>
+                    <option value="hybrid" {% if work_mode == 'hybrid' %}selected{% endif %}>🏢 Hybrid</option>
+                    <option value="on-site" {% if work_mode == 'on-site' %}selected{% endif %}>📍 On-site</option>
+                </select>
+            </div>
+            <div class="col-lg-3 col-md-4">
                 <label class="form-label small fw-semibold">Sort By</label>
                 <select name="sort_by" class="form-select">
                     <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>🎯 Matched First & Fresh</option>
@@ -57,29 +85,31 @@
                     <option value="all_fresh" {% if sort_by == 'all_fresh' %}selected{% endif %}>🕒 All Freshest First</option>
                 </select>
             </div>
-            <div class="col-md-2">
-                <label class="form-label small fw-semibold">Platform</label>
+            <div class="col-lg-3 col-md-4">
+                <label class="form-label small fw-semibold">Source Platform</label>
                 <select name="platform" class="form-select">
-                    <option value="all" {% if platform == 'all' %}selected{% endif %}>All Sources</option>
+                    <option value="all" {% if platform == 'all' %}selected{% endif %}>All Sources (16+ ATS)</option>
                     {% for p in available_platforms %}
                         <option value="{{ p }}" {% if platform == p %}selected{% endif %}>{{ p|title }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="col-md-1 d-flex align-items-end">
-                <button type="submit" class="btn btn-primary-custom w-100 py-2">Filter</button>
-            </div>
         </form>
     </div>
 
     <!-- Results Header -->
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
             <span class="text-muted small">Found <strong>{{ results.total }}</strong> verified postings</span>
             {% if current_user.is_authenticated and current_user.get_active_resume() %}
                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2">
                     <i class="bi bi-bullseye me-1"></i> Matched Roles Ranked First
                 </span>
+                {% if current_user.candidate_profile and current_user.candidate_profile.experience_years is not none %}
+                    <span class="badge bg-light text-dark border ms-2">
+                        <i class="bi bi-person-workspace text-primary me-1"></i>Your Experience: <strong>{{ current_user.candidate_profile.experience_years }} Yrs</strong>
+                    </span>
+                {% endif %}
             {% endif %}
         </div>
         {% if current_user.is_authenticated and not current_user.get_active_resume() %}
@@ -123,6 +153,27 @@
                                 {% if item.is_dream_company %}
                                     <span class="badge bg-warning text-dark border border-warning">
                                         <i class="bi bi-star-fill text-warning me-1"></i>Dream Company
+                                    </span>
+                                {% endif %}
+                                {% if job.experience_level == 'entry' %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                        <i class="bi bi-briefcase me-1"></i>0–2 Yrs (Entry)
+                                    </span>
+                                {% elif job.experience_level == 'mid' %}
+                                    <span class="badge bg-info-subtle text-info border border-info-subtle">
+                                        <i class="bi bi-briefcase me-1"></i>2–5 Yrs (Mid)
+                                    </span>
+                                {% elif job.experience_level == 'senior' %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                        <i class="bi bi-briefcase me-1"></i>5–8 Yrs (Senior)
+                                    </span>
+                                {% elif job.experience_level == 'lead' %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                        <i class="bi bi-briefcase me-1"></i>8+ Yrs (Lead)
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="bi bi-briefcase me-1"></i>{{ job.experience_level|title }} Exp
                                     </span>
                                 {% endif %}
                                 <span class="badge bg-light text-dark border">{{ job.work_mode|title }}</span>
@@ -175,13 +226,13 @@
             <nav class="mt-4">
                 <ul class="pagination justify-content-center">
                     <li class="page-item {% if not results.has_prev %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('jobs.list_jobs', page=results.page - 1, q=keyword, location=location, work_mode=work_mode, platform=platform, date_posted=date_posted, sort_by=sort_by) }}">Previous</a>
+                        <a class="page-link" href="{{ url_for('jobs.list_jobs', page=results.page - 1, q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}">Previous</a>
                     </li>
                     <li class="page-item active">
                         <span class="page-link">{{ results.page }} / {{ results.pages }}</span>
                     </li>
                     <li class="page-item {% if not results.has_next %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('jobs.list_jobs', page=results.page + 1, q=keyword, location=location, work_mode=work_mode, platform=platform, date_posted=date_posted, sort_by=sort_by) }}">Next</a>
+                        <a class="page-link" href="{{ url_for('jobs.list_jobs', page=results.page + 1, q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}">Next</a>
                     </li>
                 </ul>
             </nav>

@@ -101,7 +101,8 @@ Output MUST be a single, valid JSON object (and nothing else) adhering exactly t
     "location": "City, State/Country",
     "headline": "Concise professional title (e.g. Senior Full-Stack Engineer)",
     "summary": "Professional executive summary of experience and core competencies",
-    "experience_years": 4.5,
+    "experience_years": 0.5,
+    "_experience_years_rule": "CRITICAL: Calculate strictly the total duration of actual professional work experience and internships in decimal years (e.g. 6 months = 0.5, 1 year = 1.0, 3 months = 0.25). NEVER include years spent in college, university, high school, or graduation degree! If candidate is a fresher or only has educational projects, set experience_years to 0.0.",
     "skills": ["Python", "Flask", "PostgreSQL", "Docker", "AWS"],
     "work_experience": [
       {{

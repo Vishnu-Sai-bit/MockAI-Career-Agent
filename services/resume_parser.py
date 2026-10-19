@@ -28,6 +28,13 @@ DEGREE_PATTERNS = [
     r"\b(associate['’]?s?|diploma)\b"
 ]
 
+MONTH_MAP = {
+    "jan": 1, "january": 1, "feb": 2, "february": 2, "mar": 3, "march": 3,
+    "apr": 4, "april": 4, "may": 5, "jun": 6, "june": 6,
+    "jul": 7, "july": 7, "aug": 8, "august": 8, "sep": 9, "sept": 9, "september": 9,
+    "oct": 10, "october": 10, "nov": 11, "november": 11, "dec": 12, "december": 12
+}
+
 class ResumeParser:
     def parse(self, raw_text: str) -> Dict[str, Any]:
         """
@@ -122,33 +129,45 @@ class ResumeParser:
         return mapping.get(skill.lower(), skill.title())
 
     def _extract_experience(self, text: str, lines: List[str]) -> Dict[str, Any]:
-        # Estimate years of experience from year mentions
-        years = [int(y) for y in re.findall(r"\b(20[0-2][0-9]|199[0-9])\b", text)]
-        total_years = 0.0
-        if years:
-            current_year = datetime.now().year
-            min_year = min(years)
-            total_years = max(0.0, float(min(current_year - min_year, 35)))
+        """
+        Accurately extracts work experience roles and calculates professional experience duration.
+        CRITICAL: Never counts education dates or years since college matriculation as experience!
+        """
+        # 1. First check for explicit experience duration in the text (e.g. '0.5 years', '6 months experience')
+        explicit_months_match = re.search(r"\b([0-9]+)\s*(?:months?|mos?)(?:\s+(?:of\s+)?experience)?\b", text, re.IGNORECASE)
+        explicit_years_match = re.search(r"\b([0-9]+(?:\.[0-9]+)?)\+?\s*(?:years?|yrs?)(?:\s+(?:of\s+)?experience)\b", text, re.IGNORECASE)
 
-        # Extract roles from lines following Experience header
+        # 2. Extract lines belonging specifically to the Experience section
         roles = []
+        exp_lines = []
         is_exp_section = False
         current_role = None
 
+        EXP_HEADERS = [
+            "experience", "work experience", "professional experience",
+            "employment history", "internships", "internship experience", "work history"
+        ]
+        OTHER_HEADERS = [
+            "education", "academic background", "academics", "projects",
+            "technical skills", "skills", "certifications", "publications", "achievements"
+        ]
+
         for line in lines:
-            line_lower = line.lower()
-            if any(h in line_lower for h in ["work experience", "professional experience", "employment history"]):
+            line_clean = line.strip().lower()
+            if any(line_clean == h or line_clean.startswith(h + " ") or line_clean.startswith(h + ":") for h in EXP_HEADERS):
                 is_exp_section = True
                 continue
-            elif is_exp_section and any(h in line_lower for h in ["education", "skills", "projects", "certifications"]):
+            elif is_exp_section and any(line_clean == h or line_clean.startswith(h + " ") or line_clean.startswith(h + ":") for h in OTHER_HEADERS):
                 is_exp_section = False
                 if current_role:
                     roles.append(current_role)
+                    current_role = None
                 break
 
             if is_exp_section:
+                exp_lines.append(line)
                 # Check for role header
-                if any(kw in line_lower for kw in ["developer", "engineer", "lead", "analyst", "manager", "intern", "specialist"]):
+                if any(kw in line_clean for kw in ["developer", "engineer", "lead", "analyst", "manager", "intern", "specialist", "consultant", "associate", "trainee", "founder", "contractor"]):
                     if current_role:
                         roles.append(current_role)
                     current_role = {"title": line, "details": []}
@@ -157,6 +176,44 @@ class ResumeParser:
 
         if current_role and current_role not in roles:
             roles.append(current_role)
+
+        # 3. Calculate experience duration strictly from the extracted experience section
+        total_months = 0
+        date_pattern = re.compile(
+            r"(?:(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+)?(20[0-2][0-9]|199[0-9])"
+            r"\s*(?:-|–|—|to)\s*"
+            r"(?:(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?\s+)?(20[0-2][0-9]|199[0-9]|present|current|now)",
+            re.IGNORECASE
+        )
+
+        exp_text = " \n ".join(exp_lines)
+        matches = date_pattern.findall(exp_text)
+
+        now = datetime.now()
+        for start_mon_str, start_yr_str, end_mon_str, end_yr_str in matches:
+            start_yr = int(start_yr_str)
+            start_mon = MONTH_MAP.get(start_mon_str.lower(), 1) if start_mon_str else 1
+
+            if end_yr_str.lower() in ("present", "current", "now"):
+                end_yr = now.year
+                end_mon = now.month
+            else:
+                end_yr = int(end_yr_str)
+                end_mon = MONTH_MAP.get(end_mon_str.lower(), 12) if end_mon_str else 12
+
+            diff_months = (end_yr - start_yr) * 12 + (end_mon - start_mon) + 1
+            if 0 < diff_months <= 480:  # reasonable cap (up to 40 years)
+                total_months += diff_months
+
+        # If date ranges in experience yielded months, convert to years
+        if total_months > 0:
+            total_years = round(total_months / 12.0, 1)
+        elif explicit_months_match:
+            total_years = round(int(explicit_months_match.group(1)) / 12.0, 1)
+        elif explicit_years_match:
+            total_years = round(float(explicit_years_match.group(1)), 1)
+        else:
+            total_years = 0.0
 
         return {"total_years": total_years, "roles": roles}
 

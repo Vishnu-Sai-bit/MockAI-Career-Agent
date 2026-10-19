@@ -18,6 +18,17 @@
             <div class="col-lg-8">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <span class="badge bg-secondary-subtle text-secondary">{{ job.source_platform|title }}</span>
+                    {% if job.experience_level == 'entry' %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-briefcase me-1"></i>0–2 Yrs (Entry)</span>
+                    {% elif job.experience_level == 'mid' %}
+                        <span class="badge bg-info-subtle text-info border border-info-subtle"><i class="bi bi-briefcase me-1"></i>2–5 Yrs (Mid)</span>
+                    {% elif job.experience_level == 'senior' %}
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle"><i class="bi bi-briefcase me-1"></i>5–8 Yrs (Senior)</span>
+                    {% elif job.experience_level == 'lead' %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-briefcase me-1"></i>8+ Yrs (Lead)</span>
+                    {% else %}
+                        <span class="badge bg-light text-dark border"><i class="bi bi-briefcase me-1"></i>{{ job.experience_level|title }} Exp</span>
+                    {% endif %}
                     <span class="badge bg-light text-dark border">{{ job.work_mode|title }}</span>
                     <span class="badge bg-light text-dark border">{{ job.employment_type|title }}</span>
                     {% if job.status == 'active' %}
@@ -208,6 +219,100 @@
         </div>
 
         <div class="col-lg-4">
+            <!-- Experience & Role Fit Card -->
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4 border-start border-4 border-info">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold mb-0"><i class="bi bi-briefcase-fill text-info me-2"></i>Experience & Role Fit</h6>
+                    {% if job.experience_level == 'entry' %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">Entry (0–2 Yrs)</span>
+                    {% elif job.experience_level == 'mid' %}
+                        <span class="badge bg-info-subtle text-info border border-info-subtle">Mid (2–5 Yrs)</span>
+                    {% elif job.experience_level == 'senior' %}
+                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">Senior (5–8 Yrs)</span>
+                    {% elif job.experience_level == 'lead' %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Lead (8+ Yrs)</span>
+                    {% else %}
+                        <span class="badge bg-light text-dark border">{{ job.experience_level|title }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="small mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                        <span class="text-muted">Target Seniority:</span>
+                        <span class="fw-bold">
+                            {% if job.experience_level == 'entry' %}
+                                0 – 2 Years (Freshers & Interns)
+                            {% elif job.experience_level == 'mid' %}
+                                2 – 5 Years (Mid-Level Professional)
+                            {% elif job.experience_level == 'senior' %}
+                                5 – 8 Years (Senior Engineer)
+                            {% elif job.experience_level == 'lead' %}
+                                8+ Years (Staff / Principal / Lead)
+                            {% else %}
+                                {{ job.experience_level|title }}
+                            {% endif %}
+                        </span>
+                    </div>
+
+                    {% if current_user.is_authenticated and current_user.candidate_profile %}
+                        {% set cand_exp = current_user.candidate_profile.experience_years|default(0.0, true) %}
+                        <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
+                            <span class="text-muted">Your Experience:</span>
+                            <span class="fw-bold text-primary">
+                                {% if cand_exp < 1.0 %}
+                                    {{ cand_exp }} Yrs ({{ (cand_exp * 12)|round|int }} Months)
+                                {% else %}
+                                    {{ cand_exp }} Year{% if cand_exp != 1.0 %}s{% endif %}
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <!-- Fit Assessment -->
+                        <div class="p-2 rounded mb-2 {% if job.experience_level == 'entry' and cand_exp <= 2.5 %}bg-success-subtle text-success border border-success-subtle{% elif job.experience_level == 'mid' and cand_exp >= 2.0 %}bg-success-subtle text-success border border-success-subtle{% elif job.experience_level == 'mid' and cand_exp < 2.0 %}bg-warning-subtle text-warning-emphasis border border-warning-subtle{% elif job.experience_level in ['senior', 'lead'] and cand_exp < 4.0 %}bg-danger-subtle text-danger border border-danger-subtle{% else %}bg-light text-dark border{% endif %}">
+                            <div class="d-flex align-items-start gap-2">
+                                <i class="bi {% if job.experience_level == 'entry' and cand_exp <= 2.5 %}bi-check-circle-fill{% elif job.experience_level == 'mid' and cand_exp >= 2.0 %}bi-check-circle-fill{% elif job.experience_level == 'mid' and cand_exp < 2.0 %}bi-info-circle-fill{% else %}bi-exclamation-triangle-fill{% endif %} mt-1"></i>
+                                <div>
+                                    {% if job.experience_level == 'entry' %}
+                                        <strong>Optimal Entry-Level Fit:</strong> Your experience matches early-career expectations.
+                                    {% elif job.experience_level == 'mid' %}
+                                        {% if cand_exp >= 2.0 %}
+                                            <strong>Strong Seniority Fit:</strong> Meets required mid-level baseline experience.
+                                        {% else %}
+                                            <strong>Junior-to-Mid Stretch:</strong> Position targets 2+ years. Highlight relevant hands-on projects and internships in your application.
+                                        {% endif %}
+                                    {% elif job.experience_level in ['senior', 'lead'] %}
+                                        <strong>Seniority Reach:</strong> Position seeks experienced leads. Consider applying if you have strong advanced domain projects.
+                                    {% else %}
+                                        <strong>General Fit:</strong> Check specific requirements in the description below.
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Parsed Roles from Active Resume -->
+                        {% set active_resume = current_user.get_active_resume() %}
+                        {% if active_resume and active_resume.parsed_data and active_resume.parsed_data.get('experience') %}
+                            <div class="mt-3">
+                                <span class="text-muted fs-8 text-uppercase fw-bold d-block mb-1">Parsed Work Experience:</span>
+                                {% for r_exp in active_resume.parsed_data.get('experience')[:3] %}
+                                    <div class="bg-light p-2 rounded mb-1 border fs-8">
+                                        <div class="fw-semibold text-dark">{{ r_exp.title or 'Role' }}</div>
+                                        <div class="text-muted d-flex justify-content-between">
+                                            <span>{{ r_exp.company or 'Company' }}</span>
+                                            <span>{{ r_exp.duration or '' }}</span>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="p-2 bg-light rounded text-muted fs-8">
+                            <a href="{{ url_for('auth.login') }}" class="text-primary fw-semibold">Sign in</a> to compare your exact years of work experience with this vacancy.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
             <!-- Source Provenance Details -->
             <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
                 <h6 class="fw-bold mb-3"><i class="bi bi-shield-check text-success me-2"></i>Source Provenance</h6>

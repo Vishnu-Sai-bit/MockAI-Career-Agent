@@ -303,3 +303,85 @@ def test_kanban_drag_and_drop_status_update_api(client, test_setup):
     # Verify updated in DB
     updated_app = db.session.get(Application, app.id)
     assert updated_app.status == "interviewing"
+
+
+def test_resume_parser_exact_experience_months_not_confused_by_college_years():
+    from services.resume_parser import ResumeParser
+    parser = ResumeParser()
+    sample_text = """
+    VISHNU SAI BEERE
+    Email: vishnu@example.com | Phone: 9876543210
+    
+    EDUCATION
+    B.Tech in Computer Science and Engineering
+    CMR Technical Campus (2022 - 2026)
+    CGPA: 8.5
+    
+    WORK EXPERIENCE
+    Data Analyst Intern | ABC Solutions
+    Oct 2025 - Mar 2026
+    - Conducted exploratory data analysis on 500k+ records using Python and Pandas.
+    - Designed interactive Tableau dashboards for executive leadership.
+    
+    SKILLS
+    Python, SQL, Tableau, Power BI, Machine Learning
+    """
+    res = parser.parse(sample_text)
+    assert res is not None
+    # Must be 0.5 years (6 months), NOT 4 years from 2026 - 2022 college years!
+    assert res["experience_years"] == 0.5
+    assert len(res["experience"]) >= 1
+    assert "Intern" in res["experience"][0]["title"]
+
+
+def test_job_search_and_card_experience_level(client, test_setup):
+    user = test_setup["user"]
+    source = test_setup["source"]
+
+    entry_job = Job(
+        source_id=source.id,
+        source_platform="greenhouse",
+        source_company_key="stripe",
+        source_job_id="stripe-entry-001",
+        title="Associate Analyst",
+        company="Stripe",
+        location="Bengaluru",
+        experience_level="entry",
+        original_url="https://boards.greenhouse.io/stripe/jobs/stripe-entry-001",
+        apply_url="https://boards.greenhouse.io/stripe/jobs/stripe-entry-001",
+        status="active"
+    )
+    senior_job = Job(
+        source_id=source.id,
+        source_platform="greenhouse",
+        source_company_key="stripe",
+        source_job_id="stripe-senior-002",
+        title="Staff Data Architect",
+        company="Stripe",
+        location="Bengaluru",
+        experience_level="lead",
+        original_url="https://boards.greenhouse.io/stripe/jobs/stripe-senior-002",
+        apply_url="https://boards.greenhouse.io/stripe/jobs/stripe-senior-002",
+        status="active"
+    )
+    db.session.add_all([entry_job, senior_job])
+    db.session.commit()
+
+    with client.session_transaction() as sess:
+        sess["_user_id"] = str(user.id)
+
+    # 1. Search filter for 'entry' jobs
+    resp = client.get("/jobs?experience_level=entry")
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+    assert "Associate Analyst" in html
+    assert "0–2 Yrs (Entry)" in html
+
+    # 2. View job details page for entry_job - Experience & Role Fit card present
+    resp_details = client.get(f"/jobs/{entry_job.id}")
+    assert resp_details.status_code == 200
+    details_html = resp_details.get_data(as_text=True)
+    assert "Experience &amp; Role Fit" in details_html or "Experience & Role Fit" in details_html
+    assert "Target Seniority" in details_html
+    assert "0 – 2 Years (Freshers &amp; Interns)" in details_html or "0 – 2 Years (Freshers & Interns)" in details_html
+
