@@ -109,3 +109,9 @@ pytest -v
 python app.py
 ```
 Open your browser at `http://127.0.0.1:5000`.
+
+### 5. Build Clean Distributable Release
+To package a clean, production-ready source release archive (excluding local secrets, SQLite databases, virtual environments, and uploaded resumes):
+```powershell
+python scripts/package_release.py
+```
