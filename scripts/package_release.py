@@ -36,7 +36,8 @@ EXCLUDE_EXTENSIONS = {
     ".db",
     ".sqlite",
     ".sqlite3",
-    ".log"
+    ".log",
+    ".zip"
 }
 
 def is_excluded(rel_path: Path) -> bool:
