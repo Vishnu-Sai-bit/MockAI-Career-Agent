@@ -21,7 +21,7 @@
     </div>
 
     <!-- Compact Search & Collapsible Filters Bar -->
-    <div class="card p-3 custom-card border-0 bg-white shadow-sm mb-4">
+    <div class="card p-3 custom-card border-0 shadow-sm mb-4">
         <form method="GET" action="{{ url_for('jobs.list_jobs') }}" id="jobsSearchForm">
             {% set active_filter_count = (1 if experience_level and experience_level != 'all' else 0) + (1 if work_mode and work_mode != 'all' else 0) + (1 if date_posted and date_posted != 'all' else 0) + (1 if platform and platform != 'all' else 0) + (1 if sort_by and sort_by != 'fresh' else 0) %}
 
@@ -29,19 +29,19 @@
             <div class="row g-2 align-items-center">
                 <div class="col-lg-5 col-md-5">
                     <div class="input-group">
-                        <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
+                        <span class="input-group-text"><i class="bi bi-search text-secondary"></i></span>
                         <input type="text" name="q" class="form-control" placeholder="Job title, skills, or company..." value="{{ keyword }}">
                     </div>
                 </div>
                 <div class="col-lg-3 col-md-3">
                     <div class="input-group">
-                        <span class="input-group-text bg-light"><i class="bi bi-geo-alt text-muted"></i></span>
+                        <span class="input-group-text"><i class="bi bi-geo-alt text-secondary"></i></span>
                         <input type="text" name="location" class="form-control" placeholder="City, country, or Remote..." value="{{ location }}">
                     </div>
                 </div>
                 <div class="col-lg-4 col-md-4 d-flex gap-2">
                     <!-- Filters Button: Toggles the remaining filter sections -->
-                    <button type="button" class="btn {% if active_filter_count > 0 %}btn-primary-custom{% else %}btn-outline-secondary{% endif %} d-flex align-items-center justify-content-center gap-1 flex-grow-1" data-bs-toggle="collapse" data-bs-target="#filtersSection" aria-expanded="false" id="toggleFiltersBtn" title="Toggle filters">
+                    <button type="button" class="btn {% if active_filter_count > 0 %}btn-primary-custom{% else %}btn-outline-custom{% endif %} d-flex align-items-center justify-content-center gap-1 flex-grow-1" data-bs-toggle="collapse" data-bs-target="#filtersSection" aria-expanded="false" id="toggleFiltersBtn" title="Toggle filters">
                         <i class="bi bi-funnel{% if active_filter_count > 0 %}-fill{% endif %}"></i>
                         <span>Filters</span>
                         {% if active_filter_count > 0 %}
@@ -53,7 +53,7 @@
                         <i class="bi bi-search me-1"></i> Search
                     </button>
                     {% if keyword or location or active_filter_count > 0 %}
-                        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-secondary" title="Reset all filters">
+                        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-custom" title="Reset all filters">
                             <i class="bi bi-arrow-counterclockwise"></i>
                         </a>
                     {% endif %}
@@ -220,25 +220,30 @@
                 {% set job = item.job %}
                 {% set match = item.match %}
                 <div class="col-lg-6">
-                    <div class="card p-4 custom-card border-0 bg-white shadow-sm h-100 job-card d-flex flex-column justify-content-between">
+                    <div class="card p-4 custom-card border-0 shadow-sm h-100 job-card d-flex flex-column justify-content-between">
                         <div>
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <h5 class="fw-bold mb-1">
-                                        <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="text-dark text-decoration-none">{{ job.title }}</a>
-                                    </h5>
-                                    <div class="text-muted small">
-                                        <strong>{{ job.company }}</strong> · 
-                                        <span><i class="bi bi-geo-alt"></i> {{ job.location }}</span>
+                            <div class="d-flex justify-content-between align-items-start mb-3 gap-2">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="company-icon-box flex-shrink-0">
+                                        <i class="bi bi-buildings"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-1">
+                                            <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="text-white text-decoration-none">{{ job.title }}</a>
+                                        </h5>
+                                        <div class="text-secondary small">
+                                            <strong class="text-light">{{ job.company }}</strong> · 
+                                            <span><i class="bi bi-geo-alt"></i> {{ job.location }}</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="text-end">
+                                <div class="text-end flex-shrink-0">
                                     {% if item.is_matched and match and match.match_score > 0 %}
                                         <span class="match-badge {% if match.match_score >= 80 %}match-high{% elif match.match_score >= 60 %}match-mid{% else %}match-low{% endif %}">
                                             <i class="bi bi-shield-check"></i> {{ match.match_score|round(0)|int }}% Match
                                         </span>
                                     {% else %}
-                                        <span class="badge bg-light text-secondary border">Remaining Role</span>
+                                        <span class="badge badge-new">Verified Role</span>
                                     {% endif %}
                                 </div>
                             </div>
@@ -250,36 +255,36 @@
                                     </span>
                                 {% endif %}
                                 {% if job.experience_level == 'entry' %}
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
-                                        <i class="bi bi-briefcase me-1"></i>0–2 Yrs (Entry)
+                                    <span class="tag-pill">
+                                        <i class="bi bi-briefcase text-success"></i> 0–2 Yrs (Entry)
                                     </span>
                                 {% elif job.experience_level == 'mid' %}
-                                    <span class="badge bg-info-subtle text-info border border-info-subtle">
-                                        <i class="bi bi-briefcase me-1"></i>2–5 Yrs (Mid)
+                                    <span class="tag-pill">
+                                        <i class="bi bi-briefcase text-info"></i> 2–5 Yrs (Mid)
                                     </span>
                                 {% elif job.experience_level == 'senior' %}
-                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
-                                        <i class="bi bi-briefcase me-1"></i>5–8 Yrs (Senior)
+                                    <span class="tag-pill">
+                                        <i class="bi bi-briefcase text-warning"></i> 5–8 Yrs (Senior)
                                     </span>
                                 {% elif job.experience_level == 'lead' %}
-                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
-                                        <i class="bi bi-briefcase me-1"></i>8+ Yrs (Lead)
+                                    <span class="tag-pill">
+                                        <i class="bi bi-briefcase text-danger"></i> 8+ Yrs (Lead)
                                     </span>
                                 {% else %}
-                                    <span class="badge bg-light text-dark border">
-                                        <i class="bi bi-briefcase me-1"></i>{{ job.experience_level|title }} Exp
+                                    <span class="tag-pill">
+                                        <i class="bi bi-briefcase text-secondary"></i> {{ job.experience_level|title }} Exp
                                     </span>
                                 {% endif %}
-                                <span class="badge bg-light text-dark border">{{ job.work_mode|title }}</span>
-                                <span class="badge bg-light text-dark border">{{ job.employment_type|title }}</span>
-                                <span class="badge bg-secondary-subtle text-secondary">{{ job.source_platform|title }}</span>
-                                <span class="badge bg-light text-muted border"><i class="bi bi-clock me-1"></i>{{ job.posted_relative_time }}</span>
+                                <span class="tag-pill"><i class="bi bi-laptop text-info"></i> {{ job.work_mode|title }}</span>
+                                <span class="tag-pill"><i class="bi bi-clock text-secondary"></i> {{ job.employment_type|title }}</span>
+                                <span class="tag-pill"><i class="bi bi-diagram-3 text-secondary"></i> {{ job.source_platform|title }}</span>
+                                <span class="tag-pill"><i class="bi bi-clock-history text-muted"></i> {{ job.posted_relative_time }}</span>
                             </div>
 
                             {% if match and match.match_explanation %}
-                                <p class="text-muted small mb-2 text-truncate-2">{{ match.match_explanation }}</p>
+                                <p class="text-secondary small mb-2 text-truncate-2">{{ match.match_explanation }}</p>
                             {% else %}
-                                <p class="text-muted small mb-2 text-truncate-2">{{ job.description[:180] }}...</p>
+                                <p class="text-secondary small mb-2 text-truncate-2">{{ job.description[:180] }}...</p>
                             {% endif %}
 
                             <!-- Skill overlap preview -->
@@ -298,7 +303,7 @@
                         <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-auto">
                             <div>
                                 {% if current_user.is_authenticated %}
-                                    <button class="btn btn-sm {% if item.is_saved %}btn-warning text-dark{% else %}btn-outline-secondary{% endif %} btn-save-job" data-job-id="{{ job.id }}">
+                                    <button class="btn btn-sm {% if item.is_saved %}btn-warning text-dark{% else %}btn-outline-custom{% endif %} btn-save-job" data-job-id="{{ job.id }}">
                                         <i class="bi bi-bookmark{% if item.is_saved %}-fill{% endif %} me-1"></i> {% if item.is_saved %}Saved{% else %}Save{% endif %}
                                     </button>
                                 {% endif %}

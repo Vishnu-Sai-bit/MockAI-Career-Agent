@@ -1,65 +1,103 @@
-/* Dashboard Stat Cards */
+/* ==========================================================================
+   AI Job Agent — v1.0 Dashboard & Interactive Analytics Styles
+   ========================================================================== */
+
+/* 1. Stat Cards */
 .stat-card {
     padding: 1.25rem;
     display: flex;
     align-items: center;
     gap: 1rem;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-md) !important;
+    background-color: var(--color-card-bg) !important;
+    border: 1px solid var(--color-border) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow);
+    border-color: rgba(59, 130, 246, 0.4) !important;
 }
 
 .stat-icon {
     width: 48px;
     height: 48px;
-    border-radius: 12px;
+    border-radius: var(--radius-md);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    font-size: 1.4rem;
+    flex-shrink: 0;
 }
 
-.stat-blue { background: #dbeafe; color: #1d4ed8; }
-.stat-green { background: #d1fae5; color: #047857; }
-.stat-amber { background: #fef3c7; color: #b45309; }
-.stat-purple { background: #f3e8ff; color: #7e22ce; }
+.stat-blue {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60A5FA;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
 
-/* Progress & Gauges */
+.stat-green {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34D399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.stat-amber {
+    background: rgba(245, 158, 11, 0.15);
+    color: #FBBF24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.stat-purple {
+    background: rgba(124, 58, 237, 0.15);
+    color: #C084FC;
+    border: 1px solid rgba(124, 58, 237, 0.3);
+}
+
+/* 2. Progress Gauges & Score Circles */
 .score-circle {
-    width: 100px;
-    height: 100px;
+    width: 104px;
+    height: 104px;
     border-radius: 50%;
-    background: conic-gradient(var(--accent-blue) calc(var(--percent) * 1%), #e2e8f0 0);
+    background: conic-gradient(var(--color-primary) calc(var(--percent) * 1%), var(--color-surface) 0);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.2);
 }
 
 .score-circle-inner {
-    width: 80px;
-    height: 80px;
-    background: #ffffff;
+    width: 82px;
+    height: 82px;
+    background: var(--color-card-bg);
     border-radius: 50%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     font-weight: 700;
+    color: var(--color-text-primary);
 }
 
-/* Kanban Board for Applications */
+/* 3. Kanban Pipeline Tracker */
 .kanban-board {
     display: flex;
-    gap: 1rem;
+    gap: 1.25rem;
     overflow-x: auto;
     padding-bottom: 1.5rem;
 }
 
 .kanban-column {
-    flex: 0 0 280px;
-    background: #f1f5f9;
+    flex: 0 0 300px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
-    padding: 1rem;
-    min-height: 500px;
+    padding: 1.25rem;
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
 }
 
 .kanban-header {
@@ -68,30 +106,43 @@
     align-items: center;
     margin-bottom: 1rem;
     font-weight: 600;
+    color: var(--color-text-primary);
 }
 
 .kanban-card {
-    background: #ffffff;
-    border: 1px solid var(--border-color);
-    border-radius: 0.5rem;
-    padding: 0.85rem;
-    margin-bottom: 0.75rem;
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    margin-bottom: 0.85rem;
     box-shadow: var(--shadow-sm);
     cursor: grab;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-/* Upload Dropzone */
+.kanban-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: var(--shadow-glow);
+}
+
+.kanban-card:active {
+    cursor: grabbing;
+}
+
+/* 4. Upload Dropzone */
 .upload-dropzone {
-    border: 2px dashed #94a3b8;
+    border: 2px dashed var(--color-border);
     border-radius: var(--radius-lg);
-    background: #f8fafc;
+    background: var(--color-surface);
     padding: 3rem 1.5rem;
     text-align: center;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.25s ease;
 }
 
 .upload-dropzone:hover, .upload-dropzone.dragover {
-    border-color: var(--accent-blue);
-    background: #eff6ff;
+    border-color: var(--color-primary);
+    background: rgba(59, 130, 246, 0.08);
+    box-shadow: var(--shadow-glow);
 }

@@ -37,8 +37,8 @@
                         <span class="badge bg-danger-subtle text-danger">{{ job.status|title }}</span>
                     {% endif %}
                 </div>
-                <h3 class="fw-bold mb-1 text-dark">{{ job.title }}</h3>
-                <h5 class="text-muted fw-normal mb-2">{{ job.company }} · <i class="bi bi-geo-alt"></i> {{ job.location }}</h5>
+                <h3 class="fw-bold mb-1 text-white">{{ job.title }}</h3>
+                <h5 class="text-secondary fw-normal mb-2">{{ job.company }} · <i class="bi bi-geo-alt"></i> {{ job.location }}</h5>
                 <div class="small text-muted d-flex flex-wrap gap-2 align-items-center">
                     <span>Source Job ID: <code>{{ job.source_job_id }}</code></span> · 
                     <span><i class="bi bi-clock me-1 text-primary"></i>Posted: <strong>{{ job.posted_relative_time }}</strong> ({{ job.published_at.strftime('%b %d, %Y') if job.published_at else 'Recently' }})</span> · 
