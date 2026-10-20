@@ -66,3 +66,38 @@ def test_resume_parser_education():
     edu = data["education"]
     assert len(edu) > 0
     assert any("Bachelor" in e.get("degree", "") for e in edu)
+
+def test_file_validation_rejections():
+    import io
+    from utils.file_validation import validate_uploaded_file
+    from werkzeug.datastructures import FileStorage
+
+    # 1. Invalid extension
+    fs_txt = FileStorage(stream=io.BytesIO(b"Hello world"), filename="test.txt")
+    valid, err, _ = validate_uploaded_file(fs_txt)
+    assert not valid
+    assert "Unsupported file type" in err
+
+    # 2. Fake PDF (wrong magic bytes)
+    fs_fake_pdf = FileStorage(stream=io.BytesIO(b"not a real pdf"), filename="test.pdf")
+    valid, err, _ = validate_uploaded_file(fs_fake_pdf)
+    assert not valid
+    assert "Invalid PDF" in err
+
+    # 3. Empty file
+    fs_empty = FileStorage(stream=io.BytesIO(b""), filename="empty.pdf")
+    valid, err, _ = validate_uploaded_file(fs_empty)
+    assert not valid
+    assert "empty" in err
+
+    # 4. Oversized file
+    fs_oversized = FileStorage(stream=io.BytesIO(b"x" * 200), filename="large.pdf")
+    valid, err, _ = validate_uploaded_file(fs_oversized, max_size=100)
+    assert not valid
+    assert "exceeds" in err
+
+    # 5. Valid PDF
+    fs_valid_pdf = FileStorage(stream=io.BytesIO(b"%PDF-1.4 sample content here"), filename="valid.pdf")
+    valid, err, ext = validate_uploaded_file(fs_valid_pdf)
+    assert valid
+    assert ext == "pdf"
