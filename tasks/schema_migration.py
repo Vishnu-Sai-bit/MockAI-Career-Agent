@@ -29,5 +29,13 @@ def ensure_schema_upgrades():
                     conn.execute(text("ALTER TABLE applications ADD COLUMN is_integration_verified BOOLEAN DEFAULT 0"))
                 conn.commit()
 
+        if "candidate_profiles" in tables:
+            profile_cols = [c["name"] for c in inspector.get_columns("candidate_profiles")]
+            with db.engine.connect() as conn:
+                if "open_to_relocation" not in profile_cols:
+                    logger.info("Migrating schema: Adding candidate_profiles.open_to_relocation")
+                    conn.execute(text("ALTER TABLE candidate_profiles ADD COLUMN open_to_relocation BOOLEAN DEFAULT 1"))
+                conn.commit()
+
     except Exception as e:
         logger.warning(f"Schema upgrade check note: {e}")
