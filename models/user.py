@@ -66,6 +66,7 @@ class CandidateProfile(db.Model):
     preferred_titles = db.Column(db.JSON, default=list)
     preferred_countries = db.Column(db.JSON, default=list)
     preferred_cities = db.Column(db.JSON, default=list)
+    open_to_relocation = db.Column(db.Boolean, default=True)
     work_modes = db.Column(db.JSON, default=lambda: ["remote", "hybrid", "on-site"])
     min_salary = db.Column(db.Float, nullable=True)
     max_salary = db.Column(db.Float, nullable=True)

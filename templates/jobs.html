@@ -20,79 +20,164 @@
         </div>
     </div>
 
-    <!-- Search & Filter Controls -->
-    <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
-        <form method="GET" action="{{ url_for('jobs.list_jobs') }}" class="row g-3">
-            <div class="col-lg-3 col-md-6">
-                <label class="form-label small fw-semibold">Keywords / Title</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
-                    <input type="text" name="q" class="form-control" placeholder="e.g. Python Developer, React..." value="{{ keyword }}">
+    <!-- Compact Search & Collapsible Filters Bar -->
+    <div class="card p-3 custom-card border-0 bg-white shadow-sm mb-4">
+        <form method="GET" action="{{ url_for('jobs.list_jobs') }}" id="jobsSearchForm">
+            {% set active_filter_count = (1 if experience_level and experience_level != 'all' else 0) + (1 if work_mode and work_mode != 'all' else 0) + (1 if date_posted and date_posted != 'all' else 0) + (1 if platform and platform != 'all' else 0) + (1 if sort_by and sort_by != 'fresh' else 0) %}
+
+            <!-- Primary Compact Search Row -->
+            <div class="row g-2 align-items-center">
+                <div class="col-lg-5 col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="q" class="form-control" placeholder="Job title, skills, or company..." value="{{ keyword }}">
+                    </div>
                 </div>
-            </div>
-            <div class="col-lg-2 col-md-6">
-                <label class="form-label small fw-semibold">Location / Country</label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light"><i class="bi bi-geo-alt"></i></span>
-                    <input type="text" name="location" class="form-control" placeholder="e.g. Remote, India..." value="{{ location }}">
+                <div class="col-lg-3 col-md-3">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-geo-alt text-muted"></i></span>
+                        <input type="text" name="location" class="form-control" placeholder="City, country, or Remote..." value="{{ location }}">
+                    </div>
                 </div>
-            </div>
-            <div class="col-lg-2 col-md-4">
-                <label class="form-label small fw-semibold">Experience Level</label>
-                <select name="experience_level" class="form-select">
-                    <option value="all" {% if experience_level == 'all' or not experience_level %}selected{% endif %}>All Experience Levels</option>
-                    <option value="entry" {% if experience_level == 'entry' %}selected{% endif %}>💼 Entry Level (0–2 Yrs)</option>
-                    <option value="mid" {% if experience_level == 'mid' %}selected{% endif %}>💼 Mid Level (2–5 Yrs)</option>
-                    <option value="senior" {% if experience_level == 'senior' %}selected{% endif %}>💼 Senior Level (5–8 Yrs)</option>
-                    <option value="lead" {% if experience_level == 'lead' %}selected{% endif %}>💼 Lead / Staff (8+ Yrs)</option>
-                </select>
-            </div>
-            <div class="col-lg-2 col-md-4">
-                <label class="form-label small fw-semibold">Date Posted</label>
-                <select name="date_posted" class="form-select">
-                    <option value="all" {% if date_posted == 'all' or not date_posted %}selected{% endif %}>Any Time</option>
-                    <option value="24h" {% if date_posted == '24h' or date_posted == '1d' %}selected{% endif %}>⚡ Past 24 Hours (1 Day)</option>
-                    <option value="3d" {% if date_posted == '3d' %}selected{% endif %}>Past 3 Days</option>
-                    <option value="7d" {% if date_posted == '7d' or date_posted == '1w' %}selected{% endif %}>Past Week (7 Days)</option>
-                    <option value="14d" {% if date_posted == '14d' or date_posted == '2w' %}selected{% endif %}>Past 2 Weeks</option>
-                    <option value="30d" {% if date_posted == '30d' or date_posted == '1m' %}selected{% endif %}>Past Month (30 Days)</option>
-                </select>
-            </div>
-            <div class="col-lg-3 col-md-4 d-flex align-items-end gap-2">
-                <button type="submit" class="btn btn-primary-custom flex-grow-1 py-2">
-                    <i class="bi bi-funnel-fill me-1"></i> Filter Jobs
-                </button>
-                <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-secondary py-2" title="Reset Filters">
-                    <i class="bi bi-x-circle"></i>
-                </a>
+                <div class="col-lg-4 col-md-4 d-flex gap-2">
+                    <!-- Filters Button: Toggles the remaining filter sections -->
+                    <button type="button" class="btn {% if active_filter_count > 0 %}btn-primary-custom{% else %}btn-outline-secondary{% endif %} d-flex align-items-center justify-content-center gap-1 flex-grow-1" data-bs-toggle="collapse" data-bs-target="#filtersSection" aria-expanded="false" id="toggleFiltersBtn" title="Toggle filters">
+                        <i class="bi bi-funnel{% if active_filter_count > 0 %}-fill{% endif %}"></i>
+                        <span>Filters</span>
+                        {% if active_filter_count > 0 %}
+                            <span class="badge bg-white text-primary rounded-pill ms-1">{{ active_filter_count }}</span>
+                        {% endif %}
+                    </button>
+                    <!-- Search Submit Button -->
+                    <button type="submit" class="btn btn-primary-custom px-3" title="Search Jobs">
+                        <i class="bi bi-search me-1"></i> Search
+                    </button>
+                    {% if keyword or location or active_filter_count > 0 %}
+                        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-secondary" title="Reset all filters">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </a>
+                    {% endif %}
+                </div>
             </div>
 
-            <div class="col-lg-3 col-md-4">
-                <label class="form-label small fw-semibold">Work Mode</label>
-                <select name="work_mode" class="form-select">
-                    <option value="all" {% if work_mode == 'all' or not work_mode %}selected{% endif %}>All Work Modes</option>
-                    <option value="remote" {% if work_mode == 'remote' %}selected{% endif %}>🌐 Remote</option>
-                    <option value="hybrid" {% if work_mode == 'hybrid' %}selected{% endif %}>🏢 Hybrid</option>
-                    <option value="on-site" {% if work_mode == 'on-site' %}selected{% endif %}>📍 On-site</option>
-                </select>
-            </div>
-            <div class="col-lg-3 col-md-4">
-                <label class="form-label small fw-semibold">Sort By</label>
-                <select name="sort_by" class="form-select">
-                    <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>🎯 Matched First & Fresh</option>
-                    <option value="match" {% if sort_by == 'match' %}selected{% endif %}>🔥 Highest Match Score</option>
-                    <option value="salary" {% if sort_by == 'salary' %}selected{% endif %}>💰 Highest Salary</option>
-                    <option value="all_fresh" {% if sort_by == 'all_fresh' %}selected{% endif %}>🕒 All Freshest First</option>
-                </select>
-            </div>
-            <div class="col-lg-3 col-md-4">
-                <label class="form-label small fw-semibold">Source Platform</label>
-                <select name="platform" class="form-select">
-                    <option value="all" {% if platform == 'all' %}selected{% endif %}>All Sources (16+ ATS)</option>
-                    {% for p in available_platforms %}
-                        <option value="{{ p }}" {% if platform == p %}selected{% endif %}>{{ p|title }}</option>
-                    {% endfor %}
-                </select>
+            <!-- Active Filter Quick Chips (Only visible when filters are applied) -->
+            {% if active_filter_count > 0 or keyword or location %}
+                <div class="d-flex flex-wrap align-items-center gap-1 mt-2 pt-2 border-top">
+                    <small class="text-muted me-1 fs-8"><i class="bi bi-check2-circle text-primary me-1"></i>Active:</small>
+                    {% if keyword %}
+                        <span class="badge bg-light text-dark border">
+                            Keyword: {{ keyword }}
+                            <a href="{{ url_for('jobs.list_jobs', location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    {% endif %}
+                    {% if location %}
+                        <span class="badge bg-light text-dark border">
+                            Location: {{ location }}
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    {% endif %}
+                    {% if experience_level and experience_level != 'all' %}
+                        <span class="badge bg-light text-dark border">
+                            Exp: {{ experience_level|title }}
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, platform=platform, date_posted=date_posted, sort_by=sort_by) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    {% endif %}
+                    {% if work_mode and work_mode != 'all' %}
+                        <span class="badge bg-light text-dark border">
+                            Mode: {{ work_mode|title }}
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    {% endif %}
+                    {% if date_posted and date_posted != 'all' %}
+                        <span class="badge bg-light text-dark border">
+                            Posted: {{ date_posted }}
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, sort_by=sort_by) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    {% endif %}
+                    {% if platform and platform != 'all' %}
+                        <span class="badge bg-light text-dark border">
+                            Platform: {{ platform|title }}
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    {% endif %}
+                    {% if sort_by and sort_by != 'fresh' %}
+                        <span class="badge bg-light text-dark border">
+                            Sort: {{ sort_by|title }}
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    {% endif %}
+                    <a href="{{ url_for('jobs.list_jobs') }}" class="small text-danger ms-2 text-decoration-none">Clear all</a>
+                </div>
+            {% endif %}
+
+            <!-- Collapsible Filters Section (Hidden by default, occupies 0 vertical space until toggled) -->
+            <div class="collapse mt-3 pt-3 border-top" id="filtersSection">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="fw-bold small text-muted text-uppercase letter-spacing-1">
+                        <i class="bi bi-sliders me-1"></i> Filter By Experience, Work Mode, Platform & Time
+                    </span>
+                    <button type="button" class="btn btn-sm btn-link text-muted text-decoration-none p-0" data-bs-toggle="collapse" data-bs-target="#filtersSection">
+                        <i class="bi bi-chevron-up me-1"></i> Hide Filters
+                    </button>
+                </div>
+                <div class="row g-3">
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label small fw-semibold text-secondary">Experience Level</label>
+                        <select name="experience_level" class="form-select form-select-sm">
+                            <option value="all" {% if experience_level == 'all' or not experience_level %}selected{% endif %}>All Experience Levels</option>
+                            <option value="entry" {% if experience_level == 'entry' %}selected{% endif %}>💼 Entry Level (0–2 Yrs)</option>
+                            <option value="mid" {% if experience_level == 'mid' %}selected{% endif %}>💼 Mid Level (2–5 Yrs)</option>
+                            <option value="senior" {% if experience_level == 'senior' %}selected{% endif %}>💼 Senior Level (5–8 Yrs)</option>
+                            <option value="lead" {% if experience_level == 'lead' %}selected{% endif %}>💼 Lead / Staff (8+ Yrs)</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label small fw-semibold text-secondary">Work Mode</label>
+                        <select name="work_mode" class="form-select form-select-sm">
+                            <option value="all" {% if work_mode == 'all' or not work_mode %}selected{% endif %}>All Work Modes</option>
+                            <option value="remote" {% if work_mode == 'remote' %}selected{% endif %}>🌐 Remote</option>
+                            <option value="hybrid" {% if work_mode == 'hybrid' %}selected{% endif %}>🏢 Hybrid</option>
+                            <option value="on-site" {% if work_mode == 'on-site' %}selected{% endif %}>📍 On-site</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <label class="form-label small fw-semibold text-secondary">Date Posted</label>
+                        <select name="date_posted" class="form-select form-select-sm">
+                            <option value="all" {% if date_posted == 'all' or not date_posted %}selected{% endif %}>Any Time</option>
+                            <option value="24h" {% if date_posted == '24h' or date_posted == '1d' %}selected{% endif %}>⚡ Past 24 Hours (1 Day)</option>
+                            <option value="3d" {% if date_posted == '3d' %}selected{% endif %}>Past 3 Days</option>
+                            <option value="7d" {% if date_posted == '7d' or date_posted == '1w' %}selected{% endif %}>Past Week (7 Days)</option>
+                            <option value="14d" {% if date_posted == '14d' or date_posted == '2w' %}selected{% endif %}>Past 2 Weeks</option>
+                            <option value="30d" {% if date_posted == '30d' or date_posted == '1m' %}selected{% endif %}>Past Month (30 Days)</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <label class="form-label small fw-semibold text-secondary">Source Platform</label>
+                        <select name="platform" class="form-select form-select-sm">
+                            <option value="all" {% if platform == 'all' %}selected{% endif %}>All Sources (16+ ATS)</option>
+                            {% for p in available_platforms %}
+                                <option value="{{ p }}" {% if platform == p %}selected{% endif %}>{{ p|title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <label class="form-label small fw-semibold text-secondary">Sort By</label>
+                        <select name="sort_by" class="form-select form-select-sm">
+                            <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>🎯 Matched First & Fresh</option>
+                            <option value="match" {% if sort_by == 'match' %}selected{% endif %}>🔥 Highest Match Score</option>
+                            <option value="salary" {% if sort_by == 'salary' %}selected{% endif %}>💰 Highest Salary</option>
+                            <option value="all_fresh" {% if sort_by == 'all_fresh' %}selected{% endif %}>🕒 All Freshest First</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
+                    <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location) }}" class="btn btn-sm btn-outline-secondary">
+                        <i class="bi bi-x me-1"></i> Reset Filters
+                    </a>
+                    <button type="submit" class="btn btn-sm btn-primary-custom px-3">
+                        <i class="bi bi-check2 me-1"></i> Apply Filters
+                    </button>
+                </div>
             </div>
         </form>
     </div>
@@ -108,6 +193,15 @@
                 {% if current_user.candidate_profile and current_user.candidate_profile.experience_years is not none %}
                     <span class="badge bg-light text-dark border ms-2">
                         <i class="bi bi-person-workspace text-primary me-1"></i>Your Experience: <strong>{{ current_user.candidate_profile.experience_years }} Yrs</strong>
+                    </span>
+                {% endif %}
+                {% if current_user.candidate_profile and current_user.candidate_profile.preferred_cities %}
+                    <span class="badge bg-light text-dark border ms-2" title="Preferred target work cities">
+                        <i class="bi bi-geo-alt-fill text-success me-1"></i>Target Locations: <strong>{{ current_user.candidate_profile.preferred_cities[:3]|join(', ') }}</strong>
+                    </span>
+                {% elif current_user.candidate_profile and current_user.candidate_profile.location %}
+                    <span class="badge bg-light text-muted border ms-2" title="Present residence address (Open to relocation)">
+                        <i class="bi bi-house me-1"></i>Residence: <strong>{{ current_user.candidate_profile.location.split(',')[0] }}</strong> (Open to Relocation)
                     </span>
                 {% endif %}
             {% endif %}

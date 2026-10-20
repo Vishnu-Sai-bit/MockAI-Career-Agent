@@ -189,18 +189,33 @@ class JobMatcher:
         pref_countries = [c.lower() for c in (profile.preferred_countries or [])]
         pref_cities = [c.lower() for c in (profile.preferred_cities or [])]
         job_loc = (job.location or "").lower()
+        open_to_reloc = getattr(profile, "open_to_relocation", True)
 
-        is_match = False
-        if cand_loc and (cand_loc in job_loc or job_loc in cand_loc):
-            is_match = True
-        elif any(c in job_loc for c in pref_countries if c) or any(c in job_loc for c in pref_cities if c):
-            is_match = True
-
-        if is_match:
+        # 1. Direct match with candidate's preferred work cities
+        if pref_cities and any(c in job_loc for c in pref_cities if c):
+            flags.append(f"🎯 Matches preferred work city: {job.location or 'office'}.")
             return 100.0, flags
-        else:
-            flags.append(f"Requires {job_mode} presence in {job.location or 'employer office'}.")
-            return 50.0, flags
+
+        # 2. Direct match with candidate's present address
+        if cand_loc and (cand_loc in job_loc or job_loc in cand_loc):
+            flags.append(f"📍 Matches present residential location: {job.location or 'office'}.")
+            return 100.0, flags
+
+        # 3. Same country or Open to Relocation (e.g. Candidate present address is hometown, open to major tech hubs)
+        country_match = any(c in job_loc for c in pref_countries if c) or (
+            "india" in cand_loc and ("india" in job_loc or not job.country or job.country.lower() == "india")
+        ) or (
+            "united states" in cand_loc and ("united states" in job_loc or "usa" in job_loc or "us" in job_loc)
+        )
+
+        if country_match or open_to_reloc or not pref_cities:
+            if job.location:
+                flags.append(f"💼 {job_mode.title()} in {job.location} (Open to relocation from present address).")
+            return 95.0, flags
+
+        # 4. Strictly restricted to other locations without relocation
+        flags.append(f"Requires {job_mode} presence in {job.location or 'employer office'}.")
+        return 50.0, flags
 
     def _score_qualifications(self, education: List[Any], job: Job) -> Tuple[float, str]:
         if not education:

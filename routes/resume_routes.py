@@ -120,6 +120,15 @@ def upload_resume():
             profile.phone = parsed_data["phone"]
         if not profile.location and parsed_data.get("location"):
             profile.location = parsed_data["location"]
+        # Sync preferred locations and relocation flexibility (present address != preferred work locations)
+        if parsed_data.get("preferred_locations") and not profile.preferred_cities:
+            profile.preferred_cities = parsed_data["preferred_locations"]
+        elif not profile.preferred_cities:
+            profile.preferred_cities = ["Bengaluru", "Hyderabad", "Remote"]
+        
+        if not profile.preferred_countries:
+            profile.preferred_countries = ["India", "Worldwide"]
+        profile.open_to_relocation = True
         if not profile.headline and parsed_data.get("headline"):
             profile.headline = parsed_data["headline"]
         if not profile.summary and parsed_data.get("summary"):
@@ -174,6 +183,11 @@ def update_parsed_profile():
     profile.location = request.form.get("location", profile.location)
     profile.summary = request.form.get("summary", profile.summary)
     
+    cities_raw = request.form.get("preferred_cities", "")
+    if cities_raw:
+        profile.preferred_cities = [c.strip() for c in cities_raw.split(",") if c.strip()]
+    profile.open_to_relocation = ("open_to_relocation" in request.form)
+
     skills_raw = request.form.get("skills", "")
     profile.skills = [s.strip() for s in skills_raw.split(",") if s.strip()]
 

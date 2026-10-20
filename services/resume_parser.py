@@ -56,6 +56,9 @@ class ResumeParser:
             "email": contact_info["email"],
             "phone": contact_info["phone"],
             "location": contact_info["location"],
+            "present_address": contact_info.get("present_address", contact_info["location"]),
+            "preferred_locations": contact_info.get("preferred_locations", []),
+            "open_to_relocation": contact_info.get("open_to_relocation", True),
             "headline": contact_info["headline"],
             "summary": summary,
             "skills": skills,
@@ -89,17 +92,34 @@ class ResumeParser:
                 headline = line
                 break
 
-        # Location heuristic
+        # Location / Address heuristic: explicitly distinguish present/current residential address from preferred locations
         location = ""
-        loc_match = re.search(r"\b([A-Z][a-zA-Z]+(?:[\s-][A-Z][a-zA-Z]+)?),\s*([A-Z]{2}|[A-Za-z]+)\b", text)
-        if loc_match:
-            location = loc_match.group(0)
+        # 1. Check explicit present address patterns
+        addr_match = re.search(r"(?:present\s+address|current\s+address|permanent\s+address|residential\s+address|address|location)\s*[:\-]\s*([^\n\r\|]+)", text, re.IGNORECASE)
+        if addr_match:
+            location = addr_match.group(1).strip()
+        else:
+            loc_match = re.search(r"\b([A-Z][a-zA-Z]+(?:[\s-][A-Z][a-zA-Z]+)?),\s*([A-Z]{2}|[A-Za-z]+(?:\s*,\s*[A-Za-z]+)?)\b", text)
+            if loc_match:
+                location = loc_match.group(0)
+
+        # 2. Check for explicit preferred work locations stated in resume
+        preferred_locations = []
+        pref_match = re.search(r"(?:preferred\s+locations?|target\s+locations?|preferred\s+cities?|desired\s+locations?)\s*[:\-]\s*([^\n\r\|]+)", text, re.IGNORECASE)
+        if pref_match:
+            preferred_locations = [p.strip() for p in re.split(r"[,/|;]", pref_match.group(1)) if p.strip()]
+
+        # 3. Check for relocation willingness
+        open_to_relocation = bool(re.search(r"\b(?:open\s+to\s+relocat|willing\s+to\s+relocat|relocation\s*:\s*yes)\b", text, re.IGNORECASE)) or True
 
         return {
             "name": name or "Candidate",
             "email": email,
             "phone": phone,
             "location": location,
+            "present_address": location,
+            "preferred_locations": preferred_locations,
+            "open_to_relocation": open_to_relocation,
             "headline": headline
         }
 

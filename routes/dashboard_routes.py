@@ -103,6 +103,7 @@ def settings():
 
         cities_raw = request.form.get("preferred_cities", "")
         profile.preferred_cities = [c.strip() for c in cities_raw.split(",") if c.strip()]
+        profile.open_to_relocation = ("open_to_relocation" in request.form)
 
         # Work modes
         modes = request.form.getlist("work_modes")

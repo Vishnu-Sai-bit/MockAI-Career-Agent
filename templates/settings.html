@@ -24,8 +24,12 @@
                             <input type="text" name="phone" class="form-control" value="{{ profile.phone }}">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Current Location (City, Country)</label>
-                            <input type="text" name="location" class="form-control" value="{{ profile.location }}">
+                            <label class="form-label small fw-semibold d-flex justify-content-between">
+                                <span>Present Address (Current Residence)</span>
+                                <span class="badge bg-light text-muted border">From Resume</span>
+                            </label>
+                            <input type="text" name="location" class="form-control" value="{{ profile.location }}" placeholder="e.g. Dharmavaram, Andhra Pradesh, India">
+                            <div class="form-text fs-8 text-muted">Your current residential city/town from resume contact info.</div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Professional Headline</label>
@@ -49,7 +53,13 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Preferred Cities (Comma-separated)</label>
-                            <input type="text" name="preferred_cities" class="form-control" value="{{ profile.preferred_cities|join(', ') }}" placeholder="e.g. Bengaluru, San Francisco, London, Berlin">
+                            <input type="text" name="preferred_cities" class="form-control" value="{{ profile.preferred_cities|join(', ') }}" placeholder="e.g. Bengaluru, Hyderabad, Pune, London">
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="open_to_relocation" id="setReloc" {% if profile.open_to_relocation %}checked{% endif %}>
+                                <label class="form-check-label small" for="setReloc">
+                                    <i class="bi bi-airplane-engines text-primary me-1"></i> Open to relocation / work across India & globally
+                                </label>
+                            </div>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Experience Level</label>

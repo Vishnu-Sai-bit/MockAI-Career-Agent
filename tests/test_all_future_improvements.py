@@ -385,3 +385,99 @@ def test_job_search_and_card_experience_level(client, test_setup):
     assert "Target Seniority" in details_html
     assert "0 – 2 Years (Freshers &amp; Interns)" in details_html or "0 – 2 Years (Freshers & Interns)" in details_html
 
+
+def test_collapsible_filter_controls_and_chips(client, test_setup):
+    user = test_setup["user"]
+    with client.session_transaction() as sess:
+        sess["_user_id"] = str(user.id)
+
+    # When no filters active, compact search bar renders with collapsible filter toggle
+    resp = client.get("/jobs")
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+    assert 'id="filtersSection"' in html
+    assert 'data-bs-target="#filtersSection"' in html
+    assert 'id="toggleFiltersBtn"' in html
+
+    # When multiple filters active, badge count and quick chips render
+    resp_filtered = client.get("/jobs?experience_level=entry&work_mode=remote&date_posted=24h")
+    assert resp_filtered.status_code == 200
+    f_html = resp_filtered.get_data(as_text=True)
+    assert 'Active:' in f_html
+    assert 'Exp: Entry' in f_html
+    assert 'Mode: Remote' in f_html
+
+
+def test_present_address_vs_preferred_locations_matching():
+    from services.job_matcher import JobMatcher
+    from services.resume_parser import ResumeParser
+
+    # 1. Verify parser extracts present address without mistaking it for restrictive preferred cities
+    parser = ResumeParser()
+    resume_text = """
+    BEERE VISHNU SAI
+    Email: vishnu@example.com | Phone: 9182679641
+    Present Address: Dharmavaram, Andhra Pradesh, India
+    Preferred Locations: Bengaluru, Hyderabad, Remote
+    
+    WORK EXPERIENCE
+    Data Analyst Intern | SmartBridge (Oct 2025 - Mar 2026)
+    - Python, SQL data cleaning and analytics workflows.
+    
+    SKILLS
+    Python, SQL, Tableau, Pandas
+    """
+    parsed = parser.parse(resume_text)
+    assert "Dharmavaram" in parsed["location"]
+    assert "Dharmavaram" in parsed["present_address"]
+    assert "Bengaluru" in parsed["preferred_locations"]
+
+    # 2. Verify JobMatcher does NOT penalize a candidate whose present address is a hometown
+    # when applying for a job in a major tech hub (e.g. Bengaluru)
+    matcher = JobMatcher()
+    user = User(id=99, email="reloc@example.com")
+    profile = CandidateProfile(
+        user_id=99,
+        full_name="Vishnu",
+        location="Dharmavaram, Andhra Pradesh, India", # Present address
+        preferred_cities=["Bengaluru", "Hyderabad", "Remote"],
+        preferred_countries=["India"],
+        open_to_relocation=True,
+        work_modes=["remote", "hybrid", "on-site"],
+        skills=["Python", "SQL", "Tableau", "Pandas"],
+        experience_years=0.5
+    )
+    user.candidate_profile = profile
+    resume = Resume(
+        id=99,
+        user_id=99,
+        raw_text=resume_text,
+        parsed_data=parsed
+    )
+
+    job_bengaluru = Job(
+        id=501,
+        source_id=1,
+        source_platform="greenhouse",
+        source_company_key="techcorp",
+        source_job_id="beng-01",
+        title="Junior Data Analyst",
+        company="TechCorp",
+        location="Bengaluru, Karnataka, India",
+        work_mode="on-site",
+        experience_level="entry",
+        required_skills=["Python", "SQL"],
+        description="Entry level data analyst in Bengaluru office.",
+        original_url="https://example.com/beng-01",
+        apply_url="https://example.com/beng-01",
+        status="active"
+    )
+
+    result = matcher.compute_match(resume, profile, job_bengaluru)
+    # Location must match candidate's preferred cities (100%) and not be penalized
+    assert result["match_score"] >= 65.0
+    # Flag must clearly indicate relocation / preferred city match
+    flag_text = " ".join(result["eligibility_flags"])
+    assert "preferred work city" in flag_text.lower() or "open to relocation" in flag_text.lower()
+
+
