@@ -481,3 +481,56 @@ def test_present_address_vs_preferred_locations_matching():
     assert "preferred work city" in flag_text.lower() or "open to relocation" in flag_text.lower()
 
 
+def test_job_deduplicator_cross_platform_and_profile_skills():
+    from services.job_deduplicator import JobDeduplicator
+
+    dedup = JobDeduplicator()
+    existing = [
+        Job(
+            id=1,
+            source_id=1,
+            source_platform="greenhouse",
+            source_job_id="gh-101",
+            title="Senior Backend Engineer",
+            company="GitLab",
+            location="Remote, United States",
+            original_url="https://jobs.example.com/gh-101",
+            apply_url="https://jobs.example.com/gh-101#app"
+        )
+    ]
+
+    # 1. Exact platform ID match
+    match1 = dedup.find_duplicate({
+        "source_platform": "greenhouse",
+        "source_job_id": "gh-101",
+        "title": "Senior Backend Engineer",
+        "company": "GitLab",
+        "location": "Remote",
+        "apply_url": "https://jobs.example.com/gh-101-other"
+    }, existing)
+    assert match1 is not None
+
+    # 2. Cross-platform duplicate with matching title, company, and remote location
+    match2 = dedup.find_duplicate({
+        "source_platform": "remotive",
+        "source_job_id": "remotive-999",
+        "title": "Senior Backend Engineer",
+        "company": "GitLab",
+        "location": "Remote",
+        "apply_url": "https://remotive.com/gitlab-senior-backend"
+    }, existing)
+    assert match2 is not None
+
+    # 3. Different job title at same company should NOT be marked duplicate
+    match3 = dedup.find_duplicate({
+        "source_platform": "greenhouse",
+        "source_job_id": "gh-202",
+        "title": "Director of Product Management",
+        "company": "GitLab",
+        "location": "Remote",
+        "apply_url": "https://jobs.example.com/gh-202"
+    }, existing)
+    assert match3 is None
+
+
+

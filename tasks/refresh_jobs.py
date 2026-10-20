@@ -72,7 +72,7 @@ def run_job_refresh(limit_per_source: int = 25) -> Dict[str, Any]:
             raw_records = collector.fetch_jobs(source.company_key, limit=limit_per_source)
             total_fetched += len(raw_records)
 
-            existing_jobs = Job.query.filter_by(source_platform=source.platform).all()
+            existing_jobs = Job.query.filter_by(status="active").all()
 
             for raw in raw_records:
                 normalized = normalizer.normalize(raw)
