@@ -79,11 +79,9 @@ Return ONLY a single valid JSON object matching this schema:
   "ats_keywords_targeted": ["Keyword 1", "Keyword 2", "Keyword 3"]
 }}
 """
-        raw_resp = self.gemini.generate_text(prompt, timeout=25)
-        if raw_resp:
-            parsed_json = self.gemini._clean_and_parse_json(raw_resp)
-            if parsed_json and isinstance(parsed_json, dict) and "tailored_summary" in parsed_json:
-                return parsed_json
+        parsed_json = self.gemini.generate_json(prompt, timeout=8)
+        if parsed_json and isinstance(parsed_json, dict) and "tailored_summary" in parsed_json:
+            return parsed_json
 
         # Deterministic Fallback if AI offline
         return {
@@ -136,11 +134,9 @@ Format the response as a single valid JSON object:
   ]
 }}
 """
-        raw_resp = self.gemini.generate_text(prompt, timeout=25)
-        if raw_resp:
-            parsed_json = self.gemini._clean_and_parse_json(raw_resp)
-            if parsed_json and isinstance(parsed_json, dict) and "letter_body" in parsed_json:
-                return parsed_json
+        parsed_json = self.gemini.generate_json(prompt, timeout=8)
+        if parsed_json and isinstance(parsed_json, dict) and "letter_body" in parsed_json:
+            return parsed_json
 
         # Deterministic Fallback
         body = f"""Dear Hiring Team at {job.company},

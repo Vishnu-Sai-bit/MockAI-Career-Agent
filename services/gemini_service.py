@@ -10,7 +10,15 @@ from utils.logging_config import logger
 load_dotenv()
 
 class GeminiService:
-    DEFAULT_MODELS = ["gemini-3.8-flash", "gemini-3.5-flash", "gemini-flash-latest"]
+    # Prioritize fast, high-availability models with instant fallback
+    DEFAULT_MODELS = [
+        "gemini-3-flash-preview",
+        "gemini-3.1-flash-lite-preview",
+        "gemma-4-26b-a4b-it",
+    ]
+    
+    # Class-level rate-limit backoff tracker across threads
+    _rate_limit_backoff_until = 0.0
 
     def __init__(self, api_key: Optional[str] = None):
         self._explicit_key = api_key
@@ -29,11 +37,14 @@ class GeminiService:
         key = self.get_api_key()
         return bool(key and len(key.strip()) > 5)
 
-    def generate_text(self, prompt: str, timeout: int = 20) -> Optional[str]:
+    def generate_text(self, prompt: str, timeout: int = 8, response_mime_type: Optional[str] = None) -> Optional[str]:
         """
         Invokes Google Gemini REST API with the active key.
-        Falls back across available model versions.
+        Falls back across available fast model versions with strict low timeouts
+        so requests never freeze or hang the user experience.
         """
+        import time
+
         if os.environ.get("PYTEST_CURRENT_TEST") and not self._explicit_key:
             return None
 
@@ -43,38 +54,87 @@ class GeminiService:
         except Exception:
             pass
 
+        # If temporarily quota rate-limited, skip network wait and return None immediately
+        if time.time() < GeminiService._rate_limit_backoff_until:
+            logger.info("GeminiService: rate-limit active, using grounded deterministic fallback.")
+            return None
+
         api_key = self.get_api_key()
         if not api_key:
             return None
 
-        payload = {
-            "contents": [{"parts": [{"text": prompt}]}]
-        }
+        per_model_timeout = min(max(timeout, 3), 6)
+        start_time = time.time()
+        max_total_wait = 10.0  # Max 10s wait across all attempts
+        models_attempted = 0
 
         for model_name in self.DEFAULT_MODELS:
+            if (time.time() - start_time) > max_total_wait or models_attempted >= 2:
+                break
+            models_attempted += 1
+
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
+            
+            payload: Dict[str, Any] = {
+                "contents": [{"parts": [{"text": prompt}]}]
+            }
+            if response_mime_type:
+                payload["generationConfig"] = {"responseMimeType": response_mime_type}
+
             try:
-                resp = requests.post(url, json=payload, headers={"Content-Type": "application/json"}, timeout=timeout)
+                resp = requests.post(
+                    url,
+                    json=payload,
+                    headers={"Content-Type": "application/json"},
+                    timeout=per_model_timeout
+                )
+                
+                # If model rejected generationConfig (400), retry once without it for that model
+                if resp.status_code == 400 and response_mime_type:
+                    payload.pop("generationConfig", None)
+                    resp = requests.post(
+                        url,
+                        json=payload,
+                        headers={"Content-Type": "application/json"},
+                        timeout=per_model_timeout
+                    )
+
                 if resp.status_code == 200:
                     data = resp.json()
                     candidates = data.get("candidates", [])
                     if candidates:
                         parts = candidates[0].get("content", {}).get("parts", [])
                         if parts:
-                            return parts[0].get("text", "")
+                            text = parts[0].get("text", "")
+                            if text and text.strip():
+                                return text
+                elif resp.status_code == 429:
+                    # Rate limited: all models under this API key are throttled. Set 20s backoff and break immediately!
+                    logger.warning(f"Gemini API quota rate-limit (429) hit. Backing off for 20s; returning immediate fallback.")
+                    GeminiService._rate_limit_backoff_until = time.time() + 20.0
+                    break
+                elif resp.status_code in (503, 404):
+                    logger.warning(f"Gemini model {model_name} unavailable (status {resp.status_code}): trying next model...")
+                    continue
                 else:
-                    logger.warning(f"Gemini model {model_name} returned status {resp.status_code}: {resp.text[:150]}")
+                    logger.warning(f"Gemini model {model_name} status {resp.status_code}: {resp.text[:120]}")
+            except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                logger.warning(f"Gemini timeout/connection error on model {model_name}: {e}")
+                continue
             except Exception as e:
-                logger.warning(f"Gemini REST error on model {model_name}: {e}")
+                logger.warning(f"Gemini unexpected error on model {model_name}: {e}")
                 continue
 
         return None
 
-    def generate_json(self, prompt: str, timeout: int = 25) -> Optional[Dict[str, Any]]:
+    def generate_json(self, prompt: str, timeout: int = 8) -> Optional[Any]:
         """
-        Invokes Gemini and cleans and parses the response into a JSON object.
+        Invokes Gemini with JSON response preference, cleans and parses into JSON object or array.
         """
-        raw = self.generate_text(prompt, timeout=timeout)
+        raw = self.generate_text(prompt, timeout=timeout, response_mime_type="application/json")
+        if not raw:
+            # Retry without response_mime_type in case models prefer standard text
+            raw = self.generate_text(prompt, timeout=timeout)
         if raw:
             return self._clean_and_parse_json(raw)
         return None
@@ -161,12 +221,14 @@ Output MUST be a single, valid JSON object (and nothing else) adhering exactly t
   }}
 }}
 """
-        raw_resp = self.generate_text(prompt, timeout=25)
+        raw_resp = self.generate_text(prompt, timeout=10, response_mime_type="application/json")
+        if not raw_resp:
+            raw_resp = self.generate_text(prompt, timeout=10)
         if raw_resp:
             return self._clean_and_parse_json(raw_resp)
         return None
 
-    def _clean_and_parse_json(self, raw_resp: str) -> Optional[Dict[str, Any]]:
+    def _clean_and_parse_json(self, raw_resp: str) -> Optional[Any]:
         text = raw_resp.strip()
         # Remove markdown code fences if present e.g. ```json ... ```
         if text.startswith("```"):
@@ -174,14 +236,21 @@ Output MUST be a single, valid JSON object (and nothing else) adhering exactly t
             text = re.sub(r"\s*```$", "", text)
 
         try:
-            data = json.loads(text.strip())
-            return data
+            return json.loads(text.strip())
         except json.JSONDecodeError as ex:
-            logger.error(f"JSON decode error from Gemini response: {ex}. Raw snippet: {text[:200]}")
-            m = re.search(r"(\{.*\})", text, re.DOTALL)
-            if m:
+            logger.warning(f"JSON direct decode error: {ex}. Attempting regex extraction.")
+            # Try to find JSON object { ... }
+            m_obj = re.search(r"(\{.*\})", text, re.DOTALL)
+            if m_obj:
                 try:
-                    return json.loads(m.group(1))
+                    return json.loads(m_obj.group(1))
+                except Exception:
+                    pass
+            # Try to find JSON array [ ... ]
+            m_arr = re.search(r"(\[.*\])", text, re.DOTALL)
+            if m_arr:
+                try:
+                    return json.loads(m_arr.group(1))
                 except Exception:
                     pass
         return None

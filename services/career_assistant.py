@@ -8,12 +8,14 @@ from models.application import Application
 from services.job_search_service import JobSearchService
 from services.cover_letter_service import CoverLetterService
 from services.ats_scorer import ATSScorer
+from services.gemini_service import GeminiService
 
 class CareerAssistant:
-    def __init__(self):
+    def __init__(self, gemini_service: Optional[GeminiService] = None):
         self.search_service = JobSearchService()
         self.cover_letter_service = CoverLetterService()
         self.ats_scorer = ATSScorer()
+        self.gemini = gemini_service or GeminiService()
 
     def process_message(self, user: User, message: str, context_job_id: Optional[int] = None) -> Dict[str, Any]:
         """
@@ -22,6 +24,11 @@ class CareerAssistant:
         msg = message.strip()
         lowered = msg.lower()
         active_resume = user.get_active_resume()
+
+        # 0. Greetings / Help / Identity
+        greetings = {"hi", "hello", "hey", "hola", "namaste", "help", "who are you", "what can you do", "good morning", "good evening", "good afternoon"}
+        if lowered in greetings or (re.match(r"^(hi|hello|hey|greetings)\b", lowered) and not any(k in lowered for k in ["find", "search", "show", "jobs", "job", "openings"])):
+            return self._handle_greeting(user, active_resume)
 
         # 1. Saved Jobs query
         if "saved job" in lowered or "my saved" in lowered or "bookmarked" in lowered:
@@ -47,8 +54,85 @@ class CareerAssistant:
         if "interview" in lowered or "questions" in lowered:
             return self._handle_interview_prep(user, active_resume, context_job_id)
 
-        # 7. Job Search commands
+        # 7. General career questions and advisory
+        is_career_question = any(lowered.startswith(k) for k in ["how to", "how do i", "how can i", "what should i", "what is", "can you advise", "advice", "tips for", "explain", "tell me about", "should i"]) or ("?" in msg and not any(k in lowered for k in ["job", "jobs", "opening", "openings", "hire", "hiring", "vacancy", "vacancies"]))
+        if is_career_question:
+            return self._handle_career_coaching_gemini(user, active_resume, msg, context_job_id)
+
+        # 8. Job Search commands
         return self._handle_conversational_search(user, msg)
+
+    def _handle_greeting(self, user: User, active_resume) -> Dict[str, Any]:
+        profile = user.candidate_profile
+        name = (profile.full_name if profile else None) or user.email.split('@')[0]
+        headline = (profile.headline if profile else None) or (active_resume.profile_title if active_resume else "Job Seeker")
+        skills = profile.skills if profile and profile.skills else []
+        skills_str = f" with skills in {', '.join(skills[:3])}" if skills else ""
+
+        reply = (
+            f"👋 Hello **{name}**! I'm your AI Career Assistant & Job Search Copilot.\n\n"
+            f"I have full context of your profile as a **{headline}**{skills_str}.\n\n"
+            f"Here is what you can ask me anytime:\n"
+            f"- 🔍 **Job Search**: *\"Find Python developer jobs with 80%+ match\"* or *\"Show remote developer openings\"*\n"
+            f"- 📄 **Resume Critique**: *\"How can I improve my resume for ATS?\"*\n"
+            f"- ✉️ **Cover Letter**: *\"Draft a tailored cover letter for this job\"*\n"
+            f"- 🎯 **Skill Gaps**: *\"Which skills am I missing for this position?\"*\n"
+            f"- 🎙️ **Interview Prep**: *\"Help me prepare for technical interviews\"*\n"
+            f"- 📊 **Pipeline Tracking**: *\"Show my saved jobs and application status\"*"
+        )
+        return {
+            "reply": reply,
+            "type": "text",
+            "cards": []
+        }
+
+    def _handle_career_coaching_gemini(self, user: User, active_resume, msg: str, context_job_id: Optional[int] = None) -> Dict[str, Any]:
+        profile = user.candidate_profile
+        name = (profile.full_name if profile else None) or user.email.split('@')[0]
+        skills = profile.skills if profile and profile.skills else []
+        years = profile.experience_years if profile else 0.0
+        headline = profile.headline if profile else "Software Professional"
+
+        target_job_context = ""
+        if context_job_id:
+            job = db.session.get(Job, context_job_id)
+            if job:
+                target_job_context = f"Candidate is targeting this job: {job.title} at {job.company}."
+
+        prompt = f"""You are a principal executive career coach and technical hiring advisor.
+Answer this candidate's question with actionable, highly practical, and motivating advice.
+
+CANDIDATE CONTEXT:
+Name: {name}
+Title: {headline}
+Experience: {years} years
+Core Skills: {', '.join(skills[:8]) if skills else 'General Software Engineering'}
+{target_job_context}
+
+USER QUESTION / PROMPT:
+"{msg}"
+
+Provide an insightful, concise answer (under 180 words) formatted cleanly with markdown bullet points where appropriate.
+"""
+        resp = self.gemini.generate_text(prompt, timeout=8)
+        if resp and resp.strip():
+            return {
+                "reply": resp.strip(),
+                "type": "text",
+                "cards": []
+            }
+
+        fallback = (
+            f"As a **{headline}** specializing in {', '.join(skills[:3]) if skills else 'software engineering'}:\n\n"
+            f"1. **Quantify Your Value**: Lead with measurable outcomes using the Google XYZ framework (e.g. reduced load time by 30%).\n"
+            f"2. **Target Technical Depth**: Emphasize hands-on architecture and clean problem solving in your technical interviews.\n"
+            f"3. **Practice Regularly**: Try our interactive **AI Mock Interview Simulator** and **Technical Coding Sandbox** to hone your responses."
+        )
+        return {
+            "reply": fallback,
+            "type": "text",
+            "cards": []
+        }
 
     def _handle_saved_jobs(self, user: User) -> Dict[str, Any]:
         saved_items = user.saved_jobs.all()

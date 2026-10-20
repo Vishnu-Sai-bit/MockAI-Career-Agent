@@ -37,11 +37,14 @@ Format output as a valid JSON array of objects:
   }}
 ]
 """
-        raw_resp = self.gemini.generate_text(prompt, timeout=25)
-        if raw_resp:
-            parsed = self.gemini._clean_and_parse_json(raw_resp)
-            if isinstance(parsed, list) and len(parsed) > 0:
-                return parsed
+        parsed = self.gemini.generate_json(prompt, timeout=8)
+        if isinstance(parsed, dict):
+            for k in ["questions", "interview_questions", "items", "data"]:
+                if isinstance(parsed.get(k), list):
+                    parsed = parsed[k]
+                    break
+        if isinstance(parsed, list) and len(parsed) > 0:
+            return parsed
 
         # Deterministic fallback
         return [
@@ -135,12 +138,10 @@ Output MUST be a single valid JSON object adhering to this schema:
   "improved_exemplar_answer": "A revised, highly polished version of the candidate's answer demonstrating ideal STAR formulation."
 }}
 """
-        raw_resp = self.gemini.generate_text(prompt, timeout=25)
-        if raw_resp:
-            parsed = self.gemini._clean_and_parse_json(raw_resp)
-            if isinstance(parsed, dict) and "overall_score" in parsed:
-                parsed["speech_analytics"] = speech_analytics
-                return parsed
+        parsed = self.gemini.generate_json(prompt, timeout=8)
+        if isinstance(parsed, dict) and "overall_score" in parsed:
+            parsed["speech_analytics"] = speech_analytics
+            return parsed
 
         # Deterministic fallback evaluation
         length = len(user_answer.split())

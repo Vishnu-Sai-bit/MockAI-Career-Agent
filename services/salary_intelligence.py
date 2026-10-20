@@ -35,11 +35,9 @@ Format output as a valid JSON object:
   "negotiation_leverage_summary": "1-2 sentence assessment of candidate leverage in this market segment."
 }}
 """
-        raw_resp = self.gemini.generate_text(prompt, timeout=20)
-        if raw_resp:
-            parsed = self.gemini._clean_and_parse_json(raw_resp)
-            if isinstance(parsed, dict) and "median" in parsed:
-                return parsed
+        parsed = self.gemini.generate_json(prompt, timeout=8)
+        if isinstance(parsed, dict) and "median" in parsed:
+            return parsed
 
         # Deterministic benchmark calculation
         base_usd = 85000.0 + min(experience_years * 12000.0, 100000.0)
@@ -93,11 +91,9 @@ Output MUST be a single valid JSON object:
   ]
 }}
 """
-        raw_resp = self.gemini.generate_text(prompt, timeout=20)
-        if raw_resp:
-            parsed = self.gemini._clean_and_parse_json(raw_resp)
-            if isinstance(parsed, dict) and "email_body" in parsed:
-                return parsed
+        parsed = self.gemini.generate_json(prompt, timeout=8)
+        if isinstance(parsed, dict) and "email_body" in parsed:
+            return parsed
 
         # Deterministic Fallback
         body = f"""Dear Hiring Team at {company},

@@ -36,3 +36,17 @@ def test_gemini_json_cleaning():
     assert parsed_md["parsed_data"]["name"] == "Jordan Doe"
     assert "Docker" in parsed_md["parsed_data"]["skills"]
     assert "Strong backend skills" in parsed_md["ai_critique"]["key_strengths"]
+
+    # Test array JSON
+    array_json = '[{"id": 1, "question": "Explain closures in Python"}]'
+    parsed_arr = service._clean_and_parse_json(array_json)
+    assert isinstance(parsed_arr, list)
+    assert len(parsed_arr) == 1
+    assert parsed_arr[0]["id"] == 1
+
+    # Test regex recovery when text is wrapped with commentary
+    wrapped_json = 'Here is your JSON response: {"status": "ok", "count": 5} Hope this helps!'
+    parsed_wrapped = service._clean_and_parse_json(wrapped_json)
+    assert isinstance(parsed_wrapped, dict)
+    assert parsed_wrapped["status"] == "ok"
+    assert parsed_wrapped["count"] == 5

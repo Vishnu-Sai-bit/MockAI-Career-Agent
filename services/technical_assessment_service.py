@@ -41,11 +41,9 @@ Return a valid JSON object:
   "hints": ["Hint 1", "Hint 2"]
 }}
 """
-        raw = self.gemini.generate_text(prompt, timeout=20)
-        if raw:
-            parsed = self.gemini._clean_and_parse_json(raw)
-            if isinstance(parsed, dict) and "title" in parsed:
-                return parsed
+        parsed = self.gemini.generate_json(prompt, timeout=8)
+        if isinstance(parsed, dict) and "title" in parsed:
+            return parsed
 
         # Deterministic fallback based on job title
         is_sql = any(k in job.title.lower() for k in ["data", "analyst", "sql", "analytics"])
