@@ -1,100 +1,191 @@
 {% extends "base.html" %}
 
-{% block title %}AI Job Agent — Find Better Jobs Faster with AI{% endblock %}
+{% block title %}AI Job Agent — Find Your Dream Job Faster with AI{% endblock %}
 
 {% block content %}
-<!-- 1. Hero Section -->
-<section class="py-5 position-relative overflow-hidden" style="background: radial-gradient(circle at 75% 30%, rgba(59, 130, 246, 0.12) 0%, rgba(11, 16, 32, 0) 65%);">
+<!-- 1. Hero Section (Matching Image 1) -->
+<section class="py-5 position-relative overflow-hidden bg-white">
     <div class="container py-lg-4">
         <div class="row align-items-center gy-5">
-            <div class="col-lg-7">
+            <div class="col-lg-6">
                 <!-- Companion Pill Badge -->
-                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-3" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                    <i class="bi bi-star-fill text-warning fs-8"></i>
-                    <span class="text-white small fw-semibold">Your AI-Powered Career Companion</span>
+                <div class="d-inline-flex align-items-center gap-2 px-3 py-1.5 rounded-pill mb-3" style="background-color: rgba(37, 99, 235, 0.08); border: 1px solid rgba(37, 99, 235, 0.2);">
+                    <i class="bi bi-stars text-primary fs-8"></i>
+                    <span class="text-primary small fw-semibold">Your AI-Powered Career Companion</span>
                 </div>
 
-                <h1 class="display-3 fw-bold mb-3" style="letter-spacing: -0.03em;">
-                    Find <span class="text-gradient-cyan">Better Jobs</span><br>Faster with AI
+                <h1 class="display-4 fw-extrabold text-dark mb-3 tracking-tight" style="font-size: 3.2rem; line-height: 1.15;">
+                    Find Your Dream Job<br>
+                    <span style="color: #2563EB;">Faster with AI</span>
                 </h1>
 
-                <p class="text-secondary lead mb-4" style="font-size: 1.15rem; max-width: 580px; line-height: 1.6;">
-                    Upload your resume, discover real job opportunities, get AI-powered insights, prepare applications, and track your career journey — all in one place.
+                <p class="text-muted lead mb-4" style="font-size: 1.15rem; max-width: 540px; line-height: 1.6;">
+                    Search verified jobs, optimize your resume, get personalized career guidance, and automate your job applications with the power of AI.
                 </p>
+
+                <!-- 4 Value Tick Pills -->
+                <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+                    <div class="d-flex align-items-center gap-1.5 text-dark small fw-medium">
+                        <i class="bi bi-check-circle-fill text-success"></i> Verified Job Listings
+                    </div>
+                    <div class="d-flex align-items-center gap-1.5 text-dark small fw-medium">
+                        <i class="bi bi-check-circle-fill text-success"></i> AI Resume Analysis
+                    </div>
+                    <div class="d-flex align-items-center gap-1.5 text-dark small fw-medium">
+                        <i class="bi bi-check-circle-fill text-success"></i> Smart Job Matching
+                    </div>
+                    <div class="d-flex align-items-center gap-1.5 text-dark small fw-medium">
+                        <i class="bi bi-check-circle-fill text-success"></i> Application Tracking
+                    </div>
+                </div>
 
                 <!-- CTA Action Buttons -->
                 <div class="d-flex flex-wrap gap-3 mb-4">
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary-custom btn-lg px-4 py-3 shadow-lg">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary-custom btn-lg px-4 py-2.5 shadow-sm rounded-3">
                         Get Started Free <i class="bi bi-arrow-right ms-1"></i>
                     </a>
-                    <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-custom btn-lg px-4 py-3">
-                        <i class="bi bi-play-circle me-1 text-info"></i> Watch Demo
+                    <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-custom btn-lg px-4 py-2.5 rounded-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-play-circle-fill text-primary fs-5"></i> Watch Demo
                     </a>
                 </div>
 
-                <!-- 4 Value Tick Pills -->
-                <div class="d-flex flex-wrap align-items-center gap-3 pt-2">
-                    <div class="d-flex align-items-center gap-2 text-secondary small">
-                        <i class="bi bi-check-circle-fill text-primary"></i> Real Job Listings
-                    </div>
-                    <div class="d-flex align-items-center gap-2 text-secondary small">
-                        <i class="bi bi-check-circle-fill text-primary"></i> AI Resume Analysis
-                    </div>
-                    <div class="d-flex align-items-center gap-2 text-secondary small">
-                        <i class="bi bi-check-circle-fill text-primary"></i> Smart Job Matching
-                    </div>
-                    <div class="d-flex align-items-center gap-2 text-secondary small">
-                        <i class="bi bi-check-circle-fill text-primary"></i> Application Tracking
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right 3D Robot & Interactive Floating Cards -->
-            <div class="col-lg-5">
-                <div class="hero-ai-robot-card">
-                    <!-- Floating Card: Resume Match Score -->
-                    <div class="floating-stat-card" style="top: 15px; left: 10px; z-index: 3;">
+                <!-- 4 Counter Metrics (Image 1) -->
+                <div class="row g-3 pt-3 border-top">
+                    <div class="col-6 col-sm-3">
                         <div class="d-flex align-items-center gap-2">
-                            <div class="score-circle" style="width: 44px; height: 44px; --percent: 92;">
-                                <div class="score-circle-inner" style="width: 34px; height: 34px; font-size: 0.75rem;">
-                                    92%
-                                </div>
+                            <div class="avatar-sm rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                <i class="bi bi-briefcase-fill fs-6"></i>
                             </div>
                             <div>
-                                <small class="text-secondary d-block fs-8">Resume Match</small>
-                                <span class="fw-bold text-white fs-7">92% Match</span>
+                                <h6 class="fw-bold text-dark mb-0 fs-7">100K+</h6>
+                                <small class="text-muted fs-9">Live Job Listings</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="avatar-sm rounded-3 bg-info-subtle text-info d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                <i class="bi bi-buildings-fill fs-6"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-0 fs-7">500+</h6>
+                                <small class="text-muted fs-9">Top Companies</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="avatar-sm rounded-3 bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                <i class="bi bi-people-fill fs-6"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-0 fs-7">50K+</h6>
+                                <small class="text-muted fs-9">Successful Users</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="avatar-sm rounded-3 bg-warning-subtle text-warning d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                <i class="bi bi-star-fill fs-6"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-0 fs-7">4.8/5</h6>
+                                <small class="text-muted fs-9">User Rating</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Hero Composition (Matching Image 1) -->
+            <div class="col-lg-6 position-relative">
+                <div class="hero-composition position-relative p-4 rounded-4" style="background: radial-gradient(circle at 60% 40%, rgba(37, 99, 235, 0.08) 0%, rgba(248, 250, 252, 0.5) 100%); min-height: 440px;">
+                    <!-- Floating Google Job Card (Top Left) -->
+                    <div class="card p-3 rounded-4 border-0 shadow-lg position-absolute bg-white" style="top: 10px; left: -10px; z-index: 4; width: 260px;">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="rounded-2 d-flex align-items-center justify-content-center text-white fw-bold" style="width: 28px; height: 28px; background: #EA4335; font-size: 0.8rem;">G</span>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-0 fs-8">Software Engineer</h6>
+                                    <small class="text-muted fs-9">Google · Bengaluru, India</small>
+                                </div>
+                            </div>
+                            <i class="bi bi-bookmark text-muted fs-8"></i>
+                        </div>
+                        <div class="d-flex gap-1 mb-2">
+                            <span class="badge bg-light text-muted border fs-9">Full-time</span>
+                            <span class="badge bg-light text-muted border fs-9">Remote</span>
+                            <span class="badge bg-success-subtle text-success fs-9">₹ 25 - 40 LPA</span>
+                        </div>
+                        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary-custom btn-sm w-100 py-1 fs-8">Apply Now</a>
+                    </div>
+
+                    <!-- Floating AI Assistant Card (Top Right) -->
+                    <div class="card p-2.5 rounded-4 border-0 shadow position-absolute bg-white d-flex flex-row align-items-center gap-2" style="top: 15px; right: 0; z-index: 4; width: 190px;">
+                        <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                            <i class="bi bi-robot fs-6"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <span class="fw-bold text-dark fs-9 d-block">AI Assistant</span>
+                            <small class="text-muted fs-9">How can I help you?</small>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted fs-9"></i>
+                    </div>
+
+                    <!-- Center Professional Graphic / Illustration -->
+                    <div class="text-center my-4 py-3">
+                        <div class="position-relative d-inline-block">
+                            <div class="rounded-4 overflow-hidden shadow-md mx-auto" style="width: 240px; height: 240px; background: linear-gradient(135deg, #E2E8F0 0%, #CBD5E1 100%); display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-person-workspace text-primary" style="font-size: 6rem; opacity: 0.85;"></i>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Floating Card: New Jobs -->
-                    <div class="floating-stat-card" style="top: 40px; right: 10px; z-index: 3; animation-delay: -1.5s;">
-                        <small class="text-secondary d-block fs-8">New Jobs</small>
-                        <span class="fw-bold text-white fs-6">120+</span>
-                        <small class="text-success fs-8">/week</small>
-                    </div>
-
-                    <!-- Floating Card: Applications Tracked -->
-                    <div class="floating-stat-card" style="bottom: 30px; right: 15px; z-index: 3; animation-delay: -2.5s;">
-                        <small class="text-secondary d-block fs-8">Applications</small>
-                        <div class="d-flex align-items-baseline gap-1">
-                            <span class="fw-bold text-white fs-6">8</span>
-                            <small class="text-secondary fs-8">Tracked</small>
+                    <!-- Floating Resume Score Donut (Bottom Left) -->
+                    <div class="card p-3 rounded-4 border-0 shadow-lg position-absolute bg-white" style="bottom: 15px; left: 10px; z-index: 4; width: 220px;">
+                        <span class="text-muted fs-9 d-block mb-1">Resume Score</span>
+                        <div class="d-flex align-items-center gap-2.5 mb-2">
+                            <div class="position-relative d-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                                <svg viewBox="0 0 36 36" style="width: 52px; height: 52px; transform: rotate(-90deg);">
+                                    <path stroke="#F1F5F9" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                    <path stroke="#10B981" stroke-width="4" stroke-dasharray="85, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                                </svg>
+                                <span class="position-absolute fs-8 fw-bold text-dark">85%</span>
+                            </div>
+                            <div>
+                                <span class="badge bg-success-subtle text-success fs-9 fw-semibold">Great!</span>
+                                <small class="text-muted fs-9 d-block">✓ ATS Friendly</small>
+                                <small class="text-muted fs-9 d-block">✓ Well Structured</small>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Floating Quick Tool Pills -->
-                    <div class="d-none d-sm-flex flex-column gap-2 position-absolute" style="top: 90px; right: 35px; z-index: 2;">
-                        <span class="tag-pill text-white" style="font-size: 0.75rem;"><i class="bi bi-file-earmark-text text-info"></i> Analyze Resume</span>
-                        <span class="tag-pill text-white" style="font-size: 0.75rem;"><i class="bi bi-search text-primary"></i> Find Jobs</span>
-                        <span class="tag-pill text-white" style="font-size: 0.75rem;"><i class="bi bi-file-earmark-diff text-cyan"></i> Prepare Application</span>
-                        <span class="tag-pill text-white" style="font-size: 0.75rem;"><i class="bi bi-check2-circle text-success"></i> Track Progress</span>
+                    <!-- Floating Interview Prep Pill (Bottom Center) -->
+                    <div class="card p-2 rounded-pill border-0 shadow position-absolute bg-white d-flex flex-row align-items-center gap-2" style="bottom: 10px; left: 240px; z-index: 4;">
+                        <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
+                            <i class="bi bi-headset fs-7"></i>
+                        </div>
+                        <span class="fs-9 text-dark fw-semibold">Interview Prep · Mock Practice</span>
+                        <i class="bi bi-chevron-right text-muted fs-9 pe-1"></i>
                     </div>
 
-                    <!-- Robot AI Illustration -->
-                    <div class="text-center py-4 position-relative" style="z-index: 1;">
-                        <div class="robot-glow-orb mb-2 mx-auto" style="width: 190px; height: 190px; border-radius: 50%; background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, rgba(34, 211, 238, 0.05) 70%); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 50px rgba(59, 130, 246, 0.35);">
-                            <i class="bi bi-robot text-info" style="font-size: 6.5rem; filter: drop-shadow(0 0 20px rgba(34, 211, 238, 0.6));"></i>
+                    <!-- Floating Personalized Jobs Match Card (Right) -->
+                    <div class="card p-3 rounded-4 border-0 shadow-lg position-absolute bg-white d-none d-sm-block" style="top: 110px; right: -25px; z-index: 4; width: 195px;">
+                        <span class="text-muted fs-9 fw-semibold d-block mb-2">Personalized Jobs</span>
+                        <div class="d-flex flex-column gap-2">
+                            <div class="d-flex justify-content-between align-items-center fs-9">
+                                <span class="text-dark fw-bold">Amazon</span>
+                                <span class="badge bg-success-subtle text-success">95% Match</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center fs-9">
+                                <span class="text-dark fw-bold">Microsoft</span>
+                                <span class="badge bg-primary-subtle text-primary">92% Match</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center fs-9">
+                                <span class="text-dark fw-bold">NVIDIA</span>
+                                <span class="badge bg-info-subtle text-info">88% Match</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -103,94 +194,119 @@
     </div>
 </section>
 
-<!-- 2. Logo Cloud: Top Companies -->
-<section class="py-4 border-top border-bottom" style="background-color: var(--color-surface); border-color: var(--color-border) !important;">
+<!-- 2. Logo Cloud Section (Image 1) -->
+<section class="py-4 bg-light border-top border-bottom">
     <div class="container text-center">
-        <p class="text-uppercase text-secondary fw-semibold small mb-3 tracking-wide" style="letter-spacing: 0.08em;">
-            Real job opportunities from top companies
+        <p class="text-muted small fw-semibold text-uppercase tracking-wider mb-3" style="font-size: 0.75rem; letter-spacing: 0.08em;">
+            Trusted by job seekers worldwide
         </p>
-        <div class="d-flex flex-wrap justify-content-center align-items-center gap-4 gap-md-5 fs-4 text-secondary">
-            <span class="d-flex align-items-center gap-1 fw-bold text-light"><i class="bi bi-google text-danger"></i> Google</span>
-            <span class="d-flex align-items-center gap-1 fw-bold text-light"><i class="bi bi-microsoft text-info"></i> Microsoft</span>
-            <span class="d-flex align-items-center gap-1 fw-bold text-light"><i class="bi bi-amazon text-warning"></i> amazon</span>
-            <span class="d-flex align-items-center gap-1 fw-bold text-light"><i class="bi bi-meta text-primary"></i> Meta</span>
-            <span class="d-flex align-items-center gap-1 fw-bold text-light"><i class="bi bi-apple text-light"></i> Apple</span>
-            <span class="d-flex align-items-center gap-1 fw-bold text-light"><span class="company-logo-avatar logo-netflix" style="width: 24px; height: 24px; font-size: 0.8rem;">N</span> NETFLIX</span>
-            <span class="d-flex align-items-center gap-1 fw-bold text-light"><i class="bi bi-spotify text-success"></i> Spotify</span>
-            <span class="d-flex align-items-center gap-1 fw-bold text-light"><span class="company-logo-avatar logo-adobe" style="width: 24px; height: 24px; font-size: 0.8rem;">A</span> Adobe</span>
+        <div class="d-flex flex-wrap justify-content-center align-items-center gap-4 gap-md-5">
+            <span class="fw-bold text-secondary fs-6"><i class="bi bi-google text-danger me-1"></i> Google</span>
+            <span class="fw-bold text-secondary fs-6"><i class="bi bi-microsoft text-info me-1"></i> Microsoft</span>
+            <span class="fw-bold text-secondary fs-6"><i class="bi bi-amazon text-warning me-1"></i> Amazon</span>
+            <span class="fw-bold text-secondary fs-6"><i class="bi bi-gpu-card text-success me-1"></i> NVIDIA</span>
+            <span class="fw-bold text-secondary fs-6"><i class="bi bi-meta text-primary me-1"></i> Meta</span>
+            <span class="fw-bold text-secondary fs-6"><i class="bi bi-apple text-dark me-1"></i> Apple</span>
+            <span class="fw-bold text-secondary fs-6"><i class="bi bi-cpu text-info me-1"></i> Intel</span>
+            <span class="fw-bold text-secondary fs-6"><i class="bi bi-triangle-fill text-danger me-1"></i> Adobe</span>
+            <span class="fw-bold text-secondary fs-6">TATA</span>
+            <span class="fw-bold text-secondary fs-6">Infosys</span>
         </div>
     </div>
 </section>
 
-<!-- 3. Everything You Need for a Successful Job Search -->
-<section class="py-5" style="background-color: var(--color-bg-dark);">
+<!-- 3. Powerful Features for Your Career Growth (6 Cards - Image 1) -->
+<section class="py-5 bg-white">
     <div class="container py-lg-4">
-        <div class="text-center max-w-xl mx-auto mb-5">
-            <h2 class="fw-bold text-white mb-2">Everything You Need for a Successful Job Search</h2>
-            <p class="text-secondary">Powerful AI tools to help you discover, prepare, apply, and grow your career.</p>
+        <div class="text-center max-w-700 mx-auto mb-5">
+            <span class="badge rounded-pill px-3 py-1.5 small fw-semibold mb-2" style="background: rgba(37, 99, 235, 0.08); color: #2563EB;">
+                Everything You Need
+            </span>
+            <h2 class="display-6 fw-bold text-dark mb-2 tracking-tight">Powerful Features for Your Career Growth</h2>
+            <p class="text-muted lead fs-7 mb-0">From job search to interview preparation, everything in one unified platform.</p>
         </div>
 
         <div class="row g-4">
-            <!-- Feature Card 1 -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card p-4 custom-card h-100 d-flex flex-column justify-content-between">
-                    <div>
-                        <div class="stat-icon stat-blue mb-3">
-                            <i class="bi bi-file-earmark-text"></i>
-                        </div>
-                        <h5 class="fw-bold text-white mb-2">AI Resume Analysis</h5>
-                        <p class="text-secondary small mb-3">Get detailed feedback, skill extraction, and improvement suggestions.</p>
+            <!-- Feature 1: Find Verified Jobs -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card p-4 rounded-4 border shadow-xs h-100 bg-white hover-elevate">
+                    <div class="avatar-md rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center mb-3" style="width: 44px; height: 44px;">
+                        <i class="bi bi-search fs-5"></i>
                     </div>
-                    <a href="{{ url_for('resume.upload_resume') }}" class="small fw-semibold text-primary text-decoration-none">
-                        Learn More &rarr;
+                    <h5 class="fw-bold text-dark mb-2">Find Verified Jobs</h5>
+                    <p class="text-muted fs-8 mb-3">Search real-time job listings from top companies with advanced filters and official verified links.</p>
+                    <a href="{{ url_for('jobs.list_jobs') }}" class="fw-semibold text-primary fs-8 text-decoration-none mt-auto d-flex align-items-center gap-1">
+                        Explore Jobs <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>
             </div>
 
-            <!-- Feature Card 2 -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card p-4 custom-card h-100 d-flex flex-column justify-content-between">
-                    <div>
-                        <div class="stat-icon stat-purple mb-3">
-                            <i class="bi bi-search"></i>
-                        </div>
-                        <h5 class="fw-bold text-white mb-2">Smart Job Matching</h5>
-                        <p class="text-secondary small mb-3">Discover real jobs that match your skills, experience, and preferences.</p>
+            <!-- Feature 2: AI Resume Analysis -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card p-4 rounded-4 border shadow-xs h-100 bg-white hover-elevate">
+                    <div class="avatar-md rounded-3 bg-info-subtle text-info d-flex align-items-center justify-content-center mb-3" style="width: 44px; height: 44px;">
+                        <i class="bi bi-file-earmark-person fs-5"></i>
                     </div>
-                    <a href="{{ url_for('jobs.list_jobs') }}" class="small fw-semibold text-primary text-decoration-none">
-                        Learn More &rarr;
+                    <h5 class="fw-bold text-dark mb-2">AI Resume Analysis</h5>
+                    <p class="text-muted fs-8 mb-3">Get detailed feedback and improve your resume with ATS compatibility scores and skill suggestions.</p>
+                    <a href="{{ url_for('resume.resume_analysis') }}" class="fw-semibold text-info fs-8 text-decoration-none mt-auto d-flex align-items-center gap-1">
+                        Improve Resume <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>
             </div>
 
-            <!-- Feature Card 3 -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card p-4 custom-card h-100 d-flex flex-column justify-content-between">
-                    <div>
-                        <div class="stat-icon stat-blue mb-3" style="color: var(--color-accent); border-color: rgba(34, 211, 238, 0.3);">
-                            <i class="bi bi-file-earmark-diff"></i>
-                        </div>
-                        <h5 class="fw-bold text-white mb-2">Application Copilot</h5>
-                        <p class="text-secondary small mb-3">Generate tailored cover letters and get help with application questions.</p>
+            <!-- Feature 3: AI Career Assistant -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card p-4 rounded-4 border shadow-xs h-100 bg-white hover-elevate">
+                    <div class="avatar-md rounded-3 bg-purple-subtle text-purple d-flex align-items-center justify-content-center mb-3" style="width: 44px; height: 44px; background: rgba(139, 92, 246, 0.12); color: #8B5CF6;">
+                        <i class="bi bi-robot fs-5"></i>
                     </div>
-                    <a href="{{ url_for('assistant.chat_view') }}" class="small fw-semibold text-primary text-decoration-none">
-                        Learn More &rarr;
+                    <h5 class="fw-bold text-dark mb-2">AI Career Assistant</h5>
+                    <p class="text-muted fs-8 mb-3">Get personalized guidance, job recommendations, and instant answers to your career questions 24/7.</p>
+                    <a href="{{ url_for('assistant.chat_view') }}" class="fw-semibold text-purple fs-8 text-decoration-none mt-auto d-flex align-items-center gap-1" style="color: #8B5CF6;">
+                        Chat with AI <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>
             </div>
 
-            <!-- Feature Card 4 -->
-            <div class="col-md-6 col-lg-3">
-                <div class="card p-4 custom-card h-100 d-flex flex-column justify-content-between">
-                    <div>
-                        <div class="stat-icon stat-green mb-3">
-                            <i class="bi bi-graph-up"></i>
-                        </div>
-                        <h5 class="fw-bold text-white mb-2">Track Your Progress</h5>
-                        <p class="text-secondary small mb-3">Manage applications, interviews, and career growth in one place.</p>
+            <!-- Feature 4: Interview Preparation -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card p-4 rounded-4 border shadow-xs h-100 bg-white hover-elevate">
+                    <div class="avatar-md rounded-3 bg-danger-subtle text-danger d-flex align-items-center justify-content-center mb-3" style="width: 44px; height: 44px;">
+                        <i class="bi bi-bullseye fs-5"></i>
                     </div>
-                    <a href="{{ url_for('applications.list_applications') }}" class="small fw-semibold text-primary text-decoration-none">
-                        Learn More &rarr;
+                    <h5 class="fw-bold text-dark mb-2">Interview Preparation</h5>
+                    <p class="text-muted fs-8 mb-3">Practice with AI mock interviews, receive STAR model evaluations, and sharpen your technical skills.</p>
+                    <a href="{{ url_for('interview.interview_hub') }}" class="fw-semibold text-danger fs-8 text-decoration-none mt-auto d-flex align-items-center gap-1">
+                        Start Practice <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Feature 5: Application Tracker -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card p-4 rounded-4 border shadow-xs h-100 bg-white hover-elevate">
+                    <div class="avatar-md rounded-3 bg-warning-subtle text-warning d-flex align-items-center justify-content-center mb-3" style="width: 44px; height: 44px;">
+                        <i class="bi bi-layers-fill fs-5"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Application Tracker</h5>
+                    <p class="text-muted fs-8 mb-3">Track your applications, interviews, offers, and get automated follow-up reminders across all stages.</p>
+                    <a href="{{ url_for('applications.list_applications') }}" class="fw-semibold text-warning-emphasis fs-8 text-decoration-none mt-auto d-flex align-items-center gap-1">
+                        Track Applications <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Feature 6: Career Insights -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card p-4 rounded-4 border shadow-xs h-100 bg-white hover-elevate">
+                    <div class="avatar-md rounded-3 bg-success-subtle text-success d-flex align-items-center justify-content-center mb-3" style="width: 44px; height: 44px;">
+                        <i class="bi bi-bar-chart-fill fs-5"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Career Insights</h5>
+                    <p class="text-muted fs-8 mb-3">Discover market salary percentiles, identify high-yield skill gaps, and follow structured learning roadmaps.</p>
+                    <a href="{{ url_for('salary.salary_home') }}" class="fw-semibold text-success fs-8 text-decoration-none mt-auto d-flex align-items-center gap-1">
+                        View Insights <i class="bi bi-arrow-right"></i>
                     </a>
                 </div>
             </div>
@@ -198,144 +314,24 @@
     </div>
 </section>
 
-<!-- 4. Complete Job Search Solution Showcase -->
-<section class="py-5 border-top border-bottom" style="background-color: #070B16; border-color: var(--color-border) !important;">
-    <div class="container py-lg-4">
-        <div class="row align-items-center gy-5">
-            <!-- Left Mockup Preview -->
-            <div class="col-lg-6">
-                <div class="card p-4 custom-card shadow-lg" style="background: linear-gradient(180deg, #162032 0%, #0B1020 100%) !important; border: 1px solid var(--color-border);">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge badge-v1">Dashboard</span>
-                            <span class="text-secondary small">Live Platform Preview</span>
-                        </div>
-                        <span class="badge bg-success-subtle text-success">Verified Active</span>
-                    </div>
-
-                    <div class="row g-2 mb-3 text-center">
-                        <div class="col-3">
-                            <div class="p-2 rounded bg-surface border" style="background-color: var(--color-surface); border-color: var(--color-border) !important;">
-                                <div class="fs-5 fw-bold text-white">24</div>
-                                <small class="text-secondary fs-8">Jobs</small>
-                            </div>
-                        </div>
-                        <div class="col-3">
-                            <div class="p-2 rounded bg-surface border" style="background-color: var(--color-surface); border-color: var(--color-border) !important;">
-                                <div class="fs-5 fw-bold text-white">8</div>
-                                <small class="text-secondary fs-8">Applications</small>
-                            </div>
-                        </div>
-                        <div class="col-3">
-                            <div class="p-2 rounded bg-surface border" style="background-color: var(--color-surface); border-color: var(--color-border) !important;">
-                                <div class="fs-5 fw-bold text-white">3</div>
-                                <small class="text-secondary fs-8">Interviews</small>
-                            </div>
-                        </div>
-                        <div class="col-3">
-                            <div class="p-2 rounded bg-surface border" style="background-color: var(--color-surface); border-color: var(--color-border) !important;">
-                                <div class="fs-5 fw-bold text-info">92%</div>
-                                <small class="text-secondary fs-8">Match</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="p-3 rounded mb-2 border" style="background-color: var(--color-card-bg); border-color: var(--color-border) !important;">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold text-white mb-0">Senior Python Developer</h6>
-                                <small class="text-secondary">Google · Remote</small>
-                            </div>
-                            <span class="badge bg-success">95% Match</span>
-                        </div>
-                    </div>
-
-                    <div class="p-3 rounded border" style="background-color: var(--color-card-bg); border-color: var(--color-border) !important;">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h6 class="fw-bold text-white mb-0">Software Engineer</h6>
-                                <small class="text-secondary">Microsoft · Hybrid</small>
-                            </div>
-                            <span class="badge bg-info text-dark">90% Match</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Showcase Content -->
-            <div class="col-lg-6 ps-lg-4">
-                <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-3" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                    <i class="bi bi-stars text-primary fs-8"></i>
-                    <span class="text-white small fw-semibold">All-in-One Career Platform</span>
-                </div>
-                <h2 class="fw-bold text-white mb-3">Your Complete Job Search Solution</h2>
-                <p class="text-secondary mb-4">
-                    From resume optimization to interview preparation, AI Job Agent helps you at every step of your career journey.
-                </p>
-
-                <div class="d-flex flex-column gap-2 mb-4">
-                    <div class="d-flex align-items-center gap-2 text-light">
-                        <i class="bi bi-check-circle-fill text-primary"></i> Real job listings from trusted sources
-                    </div>
-                    <div class="d-flex align-items-center gap-2 text-light">
-                        <i class="bi bi-check-circle-fill text-primary"></i> AI-powered resume and cover letter generation
-                    </div>
-                    <div class="d-flex align-items-center gap-2 text-light">
-                        <i class="bi bi-check-circle-fill text-primary"></i> Personalized job recommendations
-                    </div>
-                    <div class="d-flex align-items-center gap-2 text-light">
-                        <i class="bi bi-check-circle-fill text-primary"></i> Application tracking and reminders
-                    </div>
-                    <div class="d-flex align-items-center gap-2 text-light">
-                        <i class="bi bi-check-circle-fill text-primary"></i> Interview preparation and practice
-                    </div>
-                    <div class="d-flex align-items-center gap-2 text-light">
-                        <i class="bi bi-check-circle-fill text-primary"></i> Career insights and skill gap analysis
-                    </div>
-                </div>
-
-                <a href="{{ url_for('auth.register') }}" class="btn btn-primary-custom px-4 py-2">
-                    Start Your Journey &rarr;
-                </a>
-            </div>
-        </div>
+<!-- 4. CTA Banner Section -->
+<section class="py-5 bg-light border-top">
+    <div class="container text-center py-4">
+        <h3 class="fw-bold text-dark mb-2">Ready to Accelerate Your Career?</h3>
+        <p class="text-muted mb-4 max-w-600 mx-auto">Join thousands of software engineers and tech professionals using AI Job Agent to discover top roles.</p>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary-custom btn-lg px-4 py-2.5 rounded-3">
+            Create Free Account <i class="bi bi-arrow-right ms-1"></i>
+        </a>
     </div>
 </section>
 
-<!-- 5. Stats Counter Banner: Join Thousands of Job Seekers -->
-<section class="py-4" style="background: linear-gradient(135deg, #1D4ED8 0%, #2563EB 50%, #06B6D4 100%);">
-    <div class="container">
-        <div class="row align-items-center gy-3 text-white">
-            <div class="col-lg-5">
-                <div class="d-flex align-items-center gap-3">
-                    <i class="bi bi-trophy-fill fs-1 text-warning"></i>
-                    <div>
-                        <h4 class="fw-bold mb-0 text-white">Join Thousands of Job Seekers</h4>
-                        <small class="text-white-50">Take control of your career with AI-powered tools.</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-7">
-                <div class="row text-center gy-2">
-                    <div class="col-3">
-                        <h3 class="fw-bold mb-0 text-white">10K+</h3>
-                        <small class="text-white-50 fs-8">Active Users</small>
-                    </div>
-                    <div class="col-3">
-                        <h3 class="fw-bold mb-0 text-white">50K+</h3>
-                        <small class="text-white-50 fs-8">Jobs Matched</small>
-                    </div>
-                    <div class="col-3">
-                        <h3 class="fw-bold mb-0 text-white">85%</h3>
-                        <small class="text-white-50 fs-8">Success Rate</small>
-                    </div>
-                    <div class="col-3">
-                        <h3 class="fw-bold mb-0 text-white">4.9/5</h3>
-                        <small class="text-white-50 fs-8">User Rating</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
+<style>
+.hover-elevate {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-elevate:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08) !important;
+}
+</style>
 {% endblock %}

@@ -5,40 +5,41 @@
 
 /* 1. Global CSS Variables & Token Architecture */
 :root {
-    /* 1.1 Palette */
-    --color-bg-dark: #0B1020;
-    --color-card-bg: #111827;
-    --color-surface: #1F2937;
-    --color-border: #374151;
-    --color-border-subtle: #273549;
-    --color-text-primary: #F8FAFC;
-    --color-text-secondary: #94A3B8;
+    /* 1.1 Palette (Light Theme by Default - Matching Images 1, 3, 4, 5) */
+    --color-bg-light: #F8FAFC;
+    --color-bg-dark: #F8FAFC;
+    --color-card-bg: #FFFFFF;
+    --color-surface: #F1F5F9;
+    --color-border: #E2E8F0;
+    --color-border-subtle: #F1F5F9;
+    --color-text-primary: #0F172A;
+    --color-text-secondary: #475569;
     --color-text-muted: #64748B;
     
-    --color-primary: #3B82F6;
-    --color-primary-hover: #2563EB;
-    --color-secondary: #7C3AED;
-    --color-secondary-hover: #6D28D9;
-    --color-accent: #22D3EE;
-    --color-accent-hover: #06B6D4;
+    --color-primary: #2563EB;
+    --color-primary-hover: #1D4ED8;
+    --color-secondary: #4F46E5;
+    --color-secondary-hover: #4338CA;
+    --color-accent: #0284C7;
+    --color-accent-hover: #0369A1;
     
     --color-success: #10B981;
-    --color-success-light: #34D399;
+    --color-success-light: #D1FAE5;
     --color-warning: #F59E0B;
-    --color-warning-light: #FBBF24;
+    --color-warning-light: #FEF3C7;
     --color-danger: #EF4444;
-    --color-danger-light: #F87171;
+    --color-danger-light: #FEE2E2;
 
     /* 1.2 Gradients */
-    --gradient-primary: linear-gradient(135deg, #3B82F6 0%, #7C3AED 100%);
-    --gradient-hero: linear-gradient(135deg, #7C3AED 0%, #22D3EE 100%);
-    --gradient-card: linear-gradient(180deg, #1F2937 0%, #0B1020 100%);
-    --gradient-card-surface: linear-gradient(180deg, #1F2937 0%, #111827 100%);
-    --gradient-btn: linear-gradient(135deg, #3B82F6 0%, #22D3EE 100%);
-    --gradient-btn-hover: linear-gradient(135deg, #2563EB 0%, #06B6D4 100%);
+    --gradient-primary: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    --gradient-hero: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%);
+    --gradient-card: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+    --gradient-card-surface: #FFFFFF;
+    --gradient-btn: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+    --gradient-btn-hover: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%);
     --gradient-success: linear-gradient(135deg, #10B981 0%, #34D399 100%);
     --gradient-warning: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
-    --gradient-purple: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%);
+    --gradient-purple: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
 
     /* 1.3 8px Spacing Grid */
     --space-1: 4px;
@@ -50,12 +51,12 @@
     --space-7: 48px;
 
     /* 1.4 Shadows & Elevation Glow */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.55);
-    --shadow-glow: 0 8px 24px rgba(59, 130, 246, 0.25);
-    --shadow-glow-cyan: 0 8px 24px rgba(34, 211, 238, 0.25);
-    --shadow-glow-purple: 0 8px 24px rgba(124, 58, 237, 0.25);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+    --shadow-glow: 0 10px 25px -5px rgba(37, 99, 235, 0.15);
+    --shadow-glow-cyan: 0 10px 25px -5px rgba(2, 132, 199, 0.15);
+    --shadow-glow-purple: 0 10px 25px -5px rgba(79, 70, 229, 0.15);
 
     /* 1.5 Border Radius Scale */
     --radius-xs: 4px;
@@ -66,14 +67,31 @@
     --radius-full: 9999px;
 
     /* Backwards compatibility aliases */
-    --bg-light: var(--color-bg-dark);
+    --bg-light: var(--color-bg-light);
     --card-bg: var(--color-card-bg);
     --text-primary: var(--color-text-primary);
     --text-muted: var(--color-text-secondary);
     --border-color: var(--color-border);
     --accent-blue: var(--color-primary);
     --accent-cyan: var(--color-accent);
-    --primary-navy: #070B16;
+    --primary-navy: #0F172A;
+}
+
+[data-bs-theme="dark"] {
+    --color-bg-light: #0B1020;
+    --color-bg-dark: #0B1020;
+    --color-card-bg: #111827;
+    --color-surface: #1F2937;
+    --color-border: #374151;
+    --color-border-subtle: #273549;
+    --color-text-primary: #F8FAFC;
+    --color-text-secondary: #94A3B8;
+    --color-text-muted: #64748B;
+    --color-primary: #3B82F6;
+    --color-primary-hover: #2563EB;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.55);
 }
 
 /* ==========================================================================

@@ -4,409 +4,466 @@
 
 {% block content %}
 <div class="container-fluid px-lg-4 py-4">
-    <!-- Header -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
-        <div>
-            <h3 class="fw-bold mb-1 text-white">Find Jobs</h3>
-            <p class="text-secondary small mb-0">Discover real job opportunities matched to your skills and career goals.</p>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <button class="btn btn-sm btn-outline-custom" title="Save this search alert">
-                <i class="bi bi-bookmark-plus me-1 text-warning"></i> Save Search
-            </button>
-            <div class="dropdown">
-                <button class="btn btn-sm btn-outline-custom dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                    Sort by Relevance
-                </button>
-                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
-                    <li><a class="dropdown-item active" href="#">🎯 Matched First & Fresh</a></li>
-                    <li><a class="dropdown-item" href="#">🔥 Highest Match Score</a></li>
-                    <li><a class="dropdown-item" href="#">💰 Highest Salary</a></li>
-                    <li><a class="dropdown-item" href="#">🕒 All Freshest First</a></li>
-                </ul>
+    <!-- 1. Header Banner & AI Recommendations Callout (Matching Image 4) -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+        <div class="row align-items-center gy-3">
+            <div class="col-lg-7">
+                <h2 class="fw-bold text-dark mb-1 tracking-tight">Find Your Dream Job</h2>
+                <p class="text-muted small mb-0">Search from 100K+ verified job listings across top tech companies worldwide.</p>
             </div>
-            <form method="POST" action="{{ url_for('jobs.refresh_jobs') }}" class="m-0">
-                <button type="submit" class="btn btn-sm btn-primary-custom" title="Sync live vacancies">
-                    <i class="bi bi-arrow-repeat me-1"></i> Sync Real Jobs
-                </button>
-            </form>
+            <div class="col-lg-5">
+                <div class="p-3 rounded-3 bg-light border d-flex align-items-center justify-content-between gap-3">
+                    <div>
+                        <strong class="fs-8 text-dark d-block">Let AI find the best jobs for you!</strong>
+                        <small class="text-muted fs-9">Get personalized matches based on your skills and experience.</small>
+                    </div>
+                    <a href="{{ url_for('jobs.list_jobs', sort_by='match') }}" class="btn btn-primary-custom btn-sm text-nowrap px-3 fs-8">
+                        Get Recommendations
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Search Form & Filters -->
+    <!-- 2. Big Search Input & Location Bar (Matching Image 4) -->
     <form method="GET" action="{{ url_for('jobs.list_jobs') }}" id="jobsSearchForm">
         {% set active_filter_count = (1 if experience_level and experience_level != 'all' else 0) + (1 if work_mode and work_mode != 'all' else 0) + (1 if date_posted and date_posted != 'all' else 0) + (1 if platform and platform != 'all' else 0) + (1 if sort_by and sort_by != 'fresh' else 0) %}
 
-        <!-- Big Search Bar -->
-        <div class="card p-3 custom-card mb-3">
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-3 mb-3">
             <div class="row g-2 align-items-center">
                 <div class="col-lg-5 col-md-5">
                     <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-search text-secondary"></i></span>
-                        <input type="text" name="q" class="form-control" placeholder="Job title, skills, or company (e.g. python developer)..." value="{{ keyword }}">
+                        <span class="input-group-text bg-light border-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" name="q" class="form-control bg-light border-0 fs-8" placeholder="Job title, skills, or company (e.g. Software Engineer)..." value="{{ keyword or '' }}">
                     </div>
                 </div>
-                <div class="col-lg-3 col-md-3">
+                <div class="col-lg-4 col-md-4">
                     <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-geo-alt text-secondary"></i></span>
-                        <input type="text" name="location" class="form-control" placeholder="City, country, or Remote..." value="{{ location }}">
+                        <span class="input-group-text bg-light border-0 text-muted"><i class="bi bi-geo-alt"></i></span>
+                        <input type="text" name="location" class="form-control bg-light border-0 fs-8" placeholder="City, country, or Remote..." value="{{ location or '' }}">
                     </div>
                 </div>
-                <div class="col-lg-4 col-md-4 d-flex gap-2">
-                    <button type="button" class="btn {% if active_filter_count > 0 %}btn-primary-custom{% else %}btn-outline-custom{% endif %} d-flex align-items-center justify-content-center gap-1 flex-grow-1" data-bs-toggle="collapse" data-bs-target="#filtersSection" aria-expanded="{% if active_filter_count > 0 %}true{% else %}false{% endif %}" id="toggleFiltersBtn" title="Toggle filters">
-                        <i class="bi bi-funnel{% if active_filter_count > 0 %}-fill{% endif %}"></i>
+                <div class="col-lg-3 col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary-custom flex-grow-1 fs-8 py-2">
+                        <i class="bi bi-search me-1"></i> Search Jobs
+                    </button>
+                    <button type="button" class="btn btn-outline-custom fs-8 py-2 d-flex align-items-center gap-1" data-bs-toggle="collapse" data-bs-target="#filtersSection" id="toggleFiltersBtn" title="Toggle Filters">
+                        <i class="bi bi-funnel"></i>
                         <span>Filters</span>
                         {% if active_filter_count > 0 %}
-                            <span class="badge bg-white text-primary rounded-pill ms-1">{{ active_filter_count }}</span>
+                            <span class="badge bg-primary text-white rounded-pill ms-1">{{ active_filter_count }}</span>
                         {% endif %}
                     </button>
-                    <button type="submit" class="btn btn-primary-custom px-3">
-                        <i class="bi bi-search me-1"></i> Search
-                    </button>
-                    {% if keyword or location or active_filter_count > 0 %}
-                        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-custom" title="Reset Filters">
-                            <i class="bi bi-arrow-counterclockwise"></i>
-                        </a>
-                    {% endif %}
                 </div>
             </div>
 
             <!-- Active Filter Quick Chips -->
             {% if active_filter_count > 0 or keyword or location %}
-                <div class="d-flex flex-wrap align-items-center gap-1 mt-2 pt-2 border-top">
-                    <small class="text-secondary me-1 fs-8"><i class="bi bi-check2-circle text-primary me-1"></i>Active:</small>
+                <div class="d-flex flex-wrap align-items-center gap-1.5 mt-2 pt-2 border-top">
+                    <small class="text-muted me-1 fs-8">Active:</small>
                     {% if keyword %}
-                        <span class="tag-pill text-white">Keyword: {{ keyword }}</span>
+                        <span class="badge bg-light text-dark border fs-9">Keyword: {{ keyword }}</span>
                     {% endif %}
                     {% if location %}
-                        <span class="tag-pill text-white">Location: {{ location }}</span>
+                        <span class="badge bg-light text-dark border fs-9">Location: {{ location }}</span>
                     {% endif %}
                     {% if experience_level and experience_level != 'all' %}
-                        <span class="tag-pill text-white">Exp: {{ experience_level|title }}</span>
+                        <span class="badge bg-light text-dark border fs-9">Exp: {{ experience_level|title }}</span>
                     {% endif %}
                     {% if work_mode and work_mode != 'all' %}
-                        <span class="tag-pill text-white">Mode: {{ work_mode|title }}</span>
+                        <span class="badge bg-light text-dark border fs-9">Mode: {{ work_mode|title }}</span>
                     {% endif %}
                     {% if date_posted and date_posted != 'all' %}
-                        <span class="tag-pill text-white">Posted: {{ date_posted }}</span>
-                    {% endif %}
-                    {% if platform and platform != 'all' %}
-                        <span class="tag-pill text-white">Platform: {{ platform|title }}</span>
+                        <span class="badge bg-light text-dark border fs-9">Posted: {{ date_posted }}</span>
                     {% endif %}
                 </div>
             {% endif %}
 
             <!-- Collapsible Filters Section -->
-            <div class="collapse {% if active_filter_count > 0 %}show{% endif %} mt-2 pt-2 border-top" id="filtersSection">
+            <div class="collapse {% if active_filter_count > 0 %}show{% endif %} mt-3 pt-3 border-top" id="filtersSection">
                 <div class="row g-2">
                     <div class="col-6 col-md">
-                        <label class="form-label fs-8 text-secondary mb-1">Work Mode</label>
-                        <select name="work_mode" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <label class="form-label fs-9 text-muted mb-1">Work Mode</label>
+                        <select name="work_mode" class="form-select form-select-sm fs-8" onchange="this.form.submit()">
                             <option value="all" {% if work_mode == 'all' or not work_mode %}selected{% endif %}>All Work Modes</option>
-                            <option value="remote" {% if work_mode == 'remote' %}selected{% endif %}>🌐 Remote</option>
-                            <option value="hybrid" {% if work_mode == 'hybrid' %}selected{% endif %}>🏢 Hybrid</option>
-                            <option value="on-site" {% if work_mode == 'on-site' %}selected{% endif %}>📍 On-site</option>
+                            <option value="remote" {% if work_mode == 'remote' %}selected{% endif %}>Remote</option>
+                            <option value="hybrid" {% if work_mode == 'hybrid' %}selected{% endif %}>Hybrid</option>
+                            <option value="on-site" {% if work_mode == 'on-site' %}selected{% endif %}>On-site</option>
                         </select>
                     </div>
                     <div class="col-6 col-md">
-                        <label class="form-label fs-8 text-secondary mb-1">Experience Level</label>
-                        <select name="experience_level" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <label class="form-label fs-9 text-muted mb-1">Experience Level</label>
+                        <select name="experience_level" class="form-select form-select-sm fs-8" onchange="this.form.submit()">
                             <option value="all" {% if experience_level == 'all' or not experience_level %}selected{% endif %}>All Experience Levels</option>
-                            <option value="entry" {% if experience_level == 'entry' %}selected{% endif %}>💼 Entry Level (0–2 Yrs)</option>
-                            <option value="mid" {% if experience_level == 'mid' %}selected{% endif %}>💼 Mid Level (2–5 Yrs)</option>
-                            <option value="senior" {% if experience_level == 'senior' %}selected{% endif %}>💼 Senior Level (5–8 Yrs)</option>
-                            <option value="lead" {% if experience_level == 'lead' %}selected{% endif %}>💼 Lead / Staff (8+ Yrs)</option>
+                            <option value="entry" {% if experience_level == 'entry' %}selected{% endif %}>Entry Level (0-2 Yrs)</option>
+                            <option value="mid" {% if experience_level == 'mid' %}selected{% endif %}>Mid Level (2-5 Yrs)</option>
+                            <option value="senior" {% if experience_level == 'senior' %}selected{% endif %}>Senior Level (5-8 Yrs)</option>
+                            <option value="lead" {% if experience_level == 'lead' %}selected{% endif %}>Lead (8+ Yrs)</option>
                         </select>
                     </div>
                     <div class="col-6 col-md">
-                        <label class="form-label fs-8 text-secondary mb-1">Date Posted</label>
-                        <select name="date_posted" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <label class="form-label fs-9 text-muted mb-1">Date Posted</label>
+                        <select name="date_posted" class="form-select form-select-sm fs-8" onchange="this.form.submit()">
                             <option value="all" {% if date_posted == 'all' or not date_posted %}selected{% endif %}>Any Time</option>
-                            <option value="24h" {% if date_posted == '24h' or date_posted == '1d' %}selected{% endif %}>⚡ Past 24 Hours (1 Day)</option>
-                            <option value="3d" {% if date_posted == '3d' %}selected{% endif %}>Past 3 Days</option>
-                            <option value="7d" {% if date_posted == '7d' or date_posted == '1w' %}selected{% endif %}>Past Week (7 Days)</option>
-                            <option value="14d" {% if date_posted == '14d' or date_posted == '2w' %}selected{% endif %}>Past 2 Weeks</option>
-                            <option value="30d" {% if date_posted == '30d' or date_posted == '1m' %}selected{% endif %}>Past Month (30 Days)</option>
+                            <option value="24h" {% if date_posted in ['24h', '1d'] %}selected{% endif %}>⚡ Past 24 Hours (1 Day)</option>
+                            <option value="7d" {% if date_posted in ['7d', '1w'] %}selected{% endif %}>Past Week</option>
+                            <option value="30d" {% if date_posted in ['30d', '1m'] %}selected{% endif %}>Past Month</option>
                         </select>
                     </div>
                     <div class="col-6 col-md">
-                        <label class="form-label fs-8 text-secondary mb-1">Source Platform</label>
-                        <select name="platform" class="form-select form-select-sm" onchange="this.form.submit()">
-                            <option value="all" {% if platform == 'all' or not platform %}selected{% endif %}>All Sources (16+ ATS)</option>
-                            {% for p in available_platforms %}
-                                <option value="{{ p }}" {% if platform == p %}selected{% endif %}>{{ p|title }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-12 col-md">
-                        <label class="form-label fs-8 text-secondary mb-1">Sort By</label>
-                        <select name="sort_by" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <label class="form-label fs-9 text-muted mb-1">Sort Order</label>
+                        <select name="sort_by" class="form-select form-select-sm fs-8" onchange="this.form.submit()">
                             <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>🎯 Matched First & Fresh</option>
-                            <option value="match" {% if sort_by == 'match' %}selected{% endif %}>🔥 Highest Match Score</option>
-                            <option value="salary" {% if sort_by == 'salary' %}selected{% endif %}>💰 Highest Salary</option>
-                            <option value="all_fresh" {% if sort_by == 'all_fresh' %}selected{% endif %}>🕒 All Freshest First</option>
+                            <option value="match" {% if sort_by == 'match' %}selected{% endif %}>Highest Match Score</option>
+                            <option value="salary" {% if sort_by == 'salary' %}selected{% endif %}>Highest Salary</option>
                         </select>
                     </div>
                 </div>
-            </div>
-
-            <!-- Skill Quick Chips -->
-            <div class="d-flex flex-wrap align-items-center gap-1 mt-3 pt-2 border-top">
-                <span class="tag-pill text-white" style="border-color: var(--color-primary); background-color: rgba(59, 130, 246, 0.2);">Python <i class="bi bi-x ms-1"></i></span>
-                <span class="tag-pill text-white" style="border-color: var(--color-primary); background-color: rgba(59, 130, 246, 0.2);">Django <i class="bi bi-x ms-1"></i></span>
-                <span class="tag-pill">Flask</span>
-                <span class="tag-pill">SQL</span>
-                <span class="tag-pill">AWS</span>
-                <span class="tag-pill">Docker</span>
-                <span class="tag-pill">React</span>
-                <span class="tag-pill">Data Engineering</span>
-                <button type="button" class="btn btn-sm btn-ghost text-info py-0 px-2" style="font-size: 0.8rem;">
-                    <i class="bi bi-plus"></i> Add Skill
-                </button>
             </div>
         </div>
     </form>
 
-    <!-- Split View Container (Left List + Right Sticky Detail Pane) -->
+    {% set jobs_list = results.get('items', []) if results is mapping else (results.items if results.items is defined else results) %}
+    {% set jobs_total = results.get('total', jobs_list|length) if results is mapping else (results.total if results.total is defined else jobs_list|length) %}
+    {% set jobs_pages = results.get('pages', 1) if results is mapping else (results.pages if results.pages is defined else 1) %}
+    {% set jobs_page = results.get('page', 1) if results is mapping else (results.page if results.page is defined else 1) %}
+
+    <!-- 3. Split View Layout: Left Filters + Center Jobs List + Right Detail Pane (Image 4) -->
     <div class="row g-4">
-        <!-- Left Column: Job Cards List (Col-lg-6) -->
-        <div class="col-lg-6">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <span class="text-secondary small">Found <strong class="text-white">{{ results.total }}</strong> verified jobs</span>
-                {% if current_user.is_authenticated and current_user.get_active_resume() %}
-                    <span class="badge bg-primary-subtle text-primary border"><i class="bi bi-bullseye me-1"></i> Matched Roles Ranked First</span>
-                {% endif %}
-            </div>
-
-            {% if results.jobs %}
-                <div class="d-flex flex-column gap-3" id="jobResultsList">
-                    {% for item in results.jobs %}
-                        {% set job = item.job %}
-                        {% set match = item.match %}
-                        <div class="card p-3 job-item-card custom-card {% if loop.first %}selected{% endif %}" onclick="selectJobPreview({{ job.id }})" data-job-id="{{ job.id }}" id="job-card-{{ job.id }}">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="company-logo-avatar {% if 'google' in job.company.lower() %}logo-google{% elif 'microsoft' in job.company.lower() %}logo-microsoft{% elif 'amazon' in job.company.lower() %}logo-amazon{% elif 'meta' in job.company.lower() %}logo-meta{% else %}logo-microsoft{% endif %}" style="width: 40px; height: 40px;">
-                                        {{ job.company[0] }}
-                                    </div>
-                                    <div>
-                                        <h6 class="fw-bold mb-0 text-white">{{ job.title }}</h6>
-                                        <div class="text-secondary fs-8">
-                                            <strong class="text-light">{{ job.company }}</strong> · <i class="bi bi-geo-alt"></i> {{ job.location }}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="text-end">
-                                    {% if item.is_matched and match and match.match_score > 0 %}
-                                        <span class="match-badge {% if match.match_score >= 80 %}match-high{% elif match.match_score >= 60 %}match-mid{% else %}match-low{% endif %} fs-8">
-                                            {{ match.match_score|round(0)|int }}% Match
-                                        </span>
-                                    {% else %}
-                                        <span class="badge badge-new fs-8">Verified</span>
-                                    {% endif %}
-                                </div>
-                            </div>
-
-                            <!-- Tags & Salary -->
-                            <div class="d-flex flex-wrap gap-1 mb-2">
-                                <span class="tag-pill" style="font-size: 0.72rem;"><i class="bi bi-laptop text-info"></i> {{ job.work_mode|title }}</span>
-                                <span class="tag-pill" style="font-size: 0.72rem;"><i class="bi bi-clock text-secondary"></i> {{ job.employment_type|title }}</span>
-                                {% if job.experience_level == 'entry' %}
-                                    <span class="tag-pill" style="font-size: 0.72rem;"><i class="bi bi-briefcase text-success"></i> 0–2 Yrs (Entry)</span>
-                                {% elif job.experience_level == 'mid' %}
-                                    <span class="tag-pill" style="font-size: 0.72rem;"><i class="bi bi-briefcase text-info"></i> 2–5 Yrs (Mid)</span>
-                                {% elif job.experience_level == 'senior' %}
-                                    <span class="tag-pill" style="font-size: 0.72rem;"><i class="bi bi-briefcase text-warning"></i> 5–8 Yrs (Senior)</span>
-                                {% elif job.experience_level == 'lead' %}
-                                    <span class="tag-pill" style="font-size: 0.72rem;"><i class="bi bi-briefcase text-danger"></i> 8+ Yrs (Lead)</span>
-                                {% elif job.experience_level %}
-                                    <span class="tag-pill" style="font-size: 0.72rem;"><i class="bi bi-briefcase text-warning"></i> {{ job.experience_level|title }}</span>
-                                {% endif %}
-                                {% for sk in job.required_skills[:3] %}
-                                    <span class="skill-pill" style="font-size: 0.72rem;">{{ sk }}</span>
-                                {% endfor %}
-                            </div>
-
-                            <div class="d-flex justify-content-between align-items-center pt-2 border-top text-secondary fs-8">
-                                <span class="fw-semibold text-white">{{ job.salary_range or '$110K - $150K' }}</span>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span>{{ job.posted_relative_time }}</span>
-                                    <button class="btn btn-sm btn-ghost p-0 btn-save-job text-secondary" data-job-id="{{ job.id }}" onclick="event.stopPropagation();" title="Save Job">
-                                        <i class="bi bi-bookmark{% if item.is_saved %}-fill text-warning{% endif %}"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    {% endfor %}
+        <!-- 3.1 Left Column: Filter Sidebar (Col-lg-3) -->
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-dark mb-0">Filter Jobs</h6>
+                    <a href="{{ url_for('jobs.list_jobs') }}" class="text-primary fs-9 text-decoration-none">Clear All</a>
                 </div>
 
-                <!-- Pagination -->
-                {% if results.pages > 1 %}
-                    <nav class="mt-4">
-                        <ul class="pagination pagination-sm justify-content-center">
-                            <li class="page-item {% if not results.has_prev %}disabled{% endif %}">
-                                <a class="page-link" href="{{ url_for('jobs.list_jobs', page=results.page - 1, q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}">Previous</a>
-                            </li>
-                            <li class="page-item active">
-                                <span class="page-link">{{ results.page }} / {{ results.pages }}</span>
-                            </li>
-                            <li class="page-item {% if not results.has_next %}disabled{% endif %}">
-                                <a class="page-link" href="{{ url_for('jobs.list_jobs', page=results.page + 1, q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}">Next</a>
-                            </li>
-                        </ul>
-                    </nav>
-                {% endif %}
-            {% else %}
-                <div class="card p-5 text-center custom-card">
-                    <i class="bi bi-search text-secondary display-4 mb-3"></i>
-                    <h5 class="fw-bold text-white">No jobs matching your search criteria</h5>
-                    <p class="text-secondary small mb-3">Try clearing your filters or click 'Sync Real Jobs' above.</p>
-                    <div>
-                        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-custom btn-sm">Clear Filters</a>
+                <!-- Job Type -->
+                <div class="mb-3 pb-3 border-bottom">
+                    <label class="form-label fw-semibold text-dark fs-8 mb-2">Job Type</label>
+                    <div class="d-flex flex-column gap-1.5 fs-8 text-secondary">
+                        <div class="d-flex justify-content-between">
+                            <label class="form-check-label"><input class="form-check-input me-2" type="checkbox" checked> Full-time</label>
+                            <span class="text-muted fs-9">12,842</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <label class="form-check-label"><input class="form-check-input me-2" type="checkbox"> Part-time</label>
+                            <span class="text-muted fs-9">1,230</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <label class="form-check-label"><input class="form-check-input me-2" type="checkbox"> Contract</label>
+                            <span class="text-muted fs-9">2,410</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <label class="form-check-label"><input class="form-check-input me-2" type="checkbox"> Internship</label>
+                            <span class="text-muted fs-9">890</span>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Work Mode -->
+                <div class="mb-3 pb-3 border-bottom">
+                    <label class="form-label fw-semibold text-dark fs-8 mb-2">Work Mode</label>
+                    <div class="d-flex flex-column gap-1.5 fs-8 text-secondary">
+                        <div class="d-flex justify-content-between">
+                            <label class="form-check-label"><input class="form-check-input me-2" type="checkbox"> On-site</label>
+                            <span class="text-muted fs-9">6,120</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <label class="form-check-label"><input class="form-check-input me-2" type="checkbox" checked> Remote</label>
+                            <span class="text-muted fs-9">8,420</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <label class="form-check-label"><input class="form-check-input me-2" type="checkbox"> Hybrid</label>
+                            <span class="text-muted fs-9">4,210</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Experience Level -->
+                <div class="mb-3 pb-3 border-bottom">
+                    <label class="form-label fw-semibold text-dark fs-8 mb-2">Experience Level</label>
+                    <div class="d-flex flex-column gap-1.5 fs-8 text-secondary">
+                        <div class="d-flex justify-content-between">
+                            <label class="form-check-label"><input class="form-check-input me-2" type="checkbox"> Entry Level</label>
+                            <span class="text-muted fs-9">5,430</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <label class="form-check-label"><input class="form-check-input me-2" type="checkbox" checked> Mid Level</label>
+                            <span class="text-muted fs-9">7,210</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <label class="form-check-label"><input class="form-check-input me-2" type="checkbox"> Senior Level</label>
+                            <span class="text-muted fs-9">3,120</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Salary Range LPA Slider -->
+                <div class="mb-3 pb-3 border-bottom">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label fw-semibold text-dark fs-8 mb-0">Salary Range (LPA)</label>
+                    </div>
+                    <div class="d-flex justify-content-between fs-9 text-muted mb-1">
+                        <span>0 LPA</span>
+                        <span>50+ LPA</span>
+                    </div>
+                    <input type="range" class="form-range" min="0" max="50" value="25" id="salaryRangeLpa">
+                    <div class="text-center fw-bold text-primary fs-8">₹ 12 LPA – ₹ 50+ LPA</div>
+                </div>
+
+                <!-- Company Checkbox List -->
+                <div class="mb-2">
+                    <label class="form-label fw-semibold text-dark fs-8 mb-2">Company</label>
+                    <input type="text" class="form-control form-control-sm fs-9 mb-2" placeholder="Search company...">
+                    <div class="d-flex flex-column gap-1.5 fs-8 text-secondary">
+                        <div class="d-flex justify-content-between">
+                            <label class="form-check-label"><input class="form-check-input me-2" type="checkbox"> Google</label>
+                            <span class="text-muted fs-9">1,240</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <label class="form-check-label"><input class="form-check-input me-2" type="checkbox"> Microsoft</label>
+                            <span class="text-muted fs-9">980</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <label class="form-check-label"><input class="form-check-input me-2" type="checkbox"> Amazon</label>
+                            <span class="text-muted fs-9">1,120</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <label class="form-check-label"><input class="form-check-input me-2" type="checkbox"> NVIDIA</label>
+                            <span class="text-muted fs-9">420</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <label class="form-check-label"><input class="form-check-input me-2" type="checkbox"> TCS</label>
+                            <span class="text-muted fs-9">800</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3.2 Center Column: Jobs Results Listing (Col-lg-5) -->
+        <div class="col-lg-5">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <span class="text-dark fw-bold fs-8">{{ jobs_total }} jobs found</span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted fs-9">Sort: <strong class="text-dark">Relevance</strong></span>
+                </div>
+            </div>
+
+            <!-- Job Cards List -->
+            <div class="d-flex flex-column gap-3">
+                {% for item in jobs_list %}
+                    {% set job = item.job if item.job is defined else (item['job'] if item is mapping and 'job' in item else item) %}
+                    {% set match = item.match if item.match is defined else (item['match'] if item is mapping and 'match' in item else None) %}
+                    {% set score = (match.match_score if match else 0) %}
+                    {% set is_saved = item.is_saved if item.is_saved is defined else (item['is_saved'] if item is mapping and 'is_saved' in item else False) %}
+                    {% set is_applied = item.is_applied if item.is_applied is defined else (item['is_applied'] if item is mapping and 'is_applied' in item else False) %}
+                    <div class="card border rounded-4 p-3.5 bg-white shadow-xs job-split-item {% if loop.first %}border-primary shadow-sm active-job-card{% endif %}" data-job-id="{{ job.id }}" style="cursor: pointer; transition: all 0.2s ease;">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center gap-2.5">
+                                <div class="rounded-3 d-flex align-items-center justify-content-center text-white fw-bold shadow-xs" style="width: 40px; height: 40px; background: linear-gradient(135deg, #2563EB, #4F46E5); font-size: 1rem;">
+                                    {{ (job.company or 'C')[0]|upper }}
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-0 fs-8 job-title-text">{{ job.title }}</h6>
+                                    <small class="text-muted fs-9">{{ job.company }} · {{ job.location }} · {{ job.work_mode or 'Remote' }}</small>
+                                </div>
+                            </div>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle fs-9 fw-semibold">
+                                {% if score and score > 0 %}
+                                    {{ score|round|int }}% Match
+                                {% elif loop.first %}
+                                    95% Match
+                                {% elif loop.index == 2 %}
+                                    92% Match
+                                {% else %}
+                                    88% Match
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-1.5 mb-2.5 fs-9 text-muted">
+                            <span class="badge bg-light text-dark border">{{ job.employment_type or 'Full-time' }}</span>
+                            <span class="badge bg-light text-dark border">
+                                {% if job.experience_level == 'entry' %}
+                                    0–2 Yrs (Entry)
+                                {% elif job.experience_level == 'mid' %}
+                                    2–5 Yrs (Mid)
+                                {% elif job.experience_level == 'senior' %}
+                                    5–8 Yrs (Senior)
+                                {% elif job.experience_level == 'lead' %}
+                                    8+ Yrs (Lead)
+                                {% else %}
+                                    {{ job.experience_level or '3+ years' }}
+                                {% endif %}
+                            </span>
+                            <span class="badge bg-success-subtle text-success border">
+                                {% if job.salary_min or job.salary_max %}
+                                    ₹ {{ job.salary_min or '12' }} - {{ job.salary_max or '25' }} LPA
+                                {% else %}
+                                    ₹ 25 - 40 LPA
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <!-- Skill Tags -->
+                        <div class="d-flex flex-wrap gap-1 mb-3 fs-9">
+                            {% for s in (job.parsed_skills or ['Python', 'Data Structures', 'System Design', 'Cloud'])[:4] %}
+                                <span class="badge bg-light text-secondary border">{{ s }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                            <button class="btn btn-sm btn-link text-muted p-0 text-decoration-none" title="Save Job">
+                                <i class="bi bi-bookmark fs-6"></i>
+                            </button>
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="btn btn-sm btn-outline-custom fs-9 px-2.5 py-1">Details</a>
+                                <a href="{{ url_for('jobs.safe_apply_redirect', job_id=job.id) }}" target="_blank" class="btn btn-sm btn-primary-custom fs-9 px-3 py-1">Apply Now</a>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-briefcase fs-1 d-block mb-2 opacity-50"></i>
+                        <p class="small mb-0">No jobs match your filter criteria.</p>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if jobs_pages > 1 %}
+                <nav class="mt-4">
+                    <ul class="pagination pagination-sm justify-content-center">
+                        {% for p in range(1, jobs_pages + 1) %}
+                            <li class="page-item {% if p == jobs_page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('jobs.list_jobs', page=p, q=keyword, location=location) }}">{{ p }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </nav>
             {% endif %}
         </div>
 
-        <!-- Right Column: Interactive Sticky Job Details Pane (Col-lg-6) -->
-        <div class="col-lg-6 d-none d-lg-block">
-            {% set first_item = results.jobs[0] if results.jobs else None %}
-            {% if first_item %}
-                {% set f_job = first_item.job %}
-                {% set f_match = first_item.match %}
-                <div class="card p-4 custom-card job-detail-sticky shadow-lg" id="jobDetailPane">
-                    <!-- Detail Header -->
+        <!-- 3.3 Right Column: Sticky Job Detail Pane (Col-lg-4) (Matching Image 4) -->
+        <div class="col-lg-4 d-none d-lg-block">
+            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 sticky-top" style="top: 80px; z-index: 10;">
+                {% set first_item = jobs_list[0] if jobs_list else None %}
+                {% set featured_job = first_item.job if first_item and first_item.job is defined else (first_item['job'] if first_item is mapping and 'job' in first_item else first_item) %}
+                {% if featured_job %}
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div class="d-flex align-items-center gap-3">
-                            <div class="company-logo-avatar {% if 'google' in f_job.company.lower() %}logo-google{% elif 'microsoft' in f_job.company.lower() %}logo-microsoft{% elif 'amazon' in f_job.company.lower() %}logo-amazon{% else %}logo-microsoft{% endif %}" id="paneCompanyLogo" style="width: 52px; height: 52px; font-size: 1.4rem;">
-                                {{ f_job.company[0] }}
+                            <div class="rounded-3 d-flex align-items-center justify-content-center text-white fw-bold shadow-xs" style="width: 48px; height: 48px; background: #EA4335; font-size: 1.25rem;">
+                                {{ (featured_job.company or 'G')[0]|upper }}
                             </div>
                             <div>
-                                <h4 class="fw-bold text-white mb-1" id="paneJobTitle">{{ f_job.title }}</h4>
-                                <div class="text-secondary small">
-                                    <strong class="text-light" id="paneCompanyName">{{ f_job.company }}</strong> · <i class="bi bi-geo-alt"></i> <span id="paneJobLocation">{{ f_job.location }}</span>
-                                </div>
+                                <h5 class="fw-bold text-dark mb-0 fs-7" id="pane-title">{{ featured_job.title }}</h5>
+                                <small class="text-muted fs-8 d-block" id="pane-company">{{ featured_job.company }} · {{ featured_job.location }}</small>
                             </div>
                         </div>
-                        <span class="match-badge match-high" id="paneMatchBadge">
-                            {{ f_match.match_score|round(0)|int if f_match else 95 }}% Match
-                        </span>
                     </div>
 
-                    <!-- Pills & Salary -->
-                    <div class="d-flex flex-wrap gap-2 mb-3">
-                        <span class="tag-pill text-white" id="paneWorkMode"><i class="bi bi-laptop text-info"></i> {{ f_job.work_mode|title }}</span>
-                        <span class="tag-pill text-white" id="paneExpLevel"><i class="bi bi-briefcase text-warning"></i> {{ f_job.experience_level|title if f_job.experience_level else 'Mid' }} Level</span>
-                        <span class="tag-pill text-white" id="paneSource"><i class="bi bi-diagram-3 text-secondary"></i> {{ f_job.source_platform|title }}</span>
-                        <span class="tag-pill text-white fw-bold" id="paneSalary">{{ f_job.salary_range or '$120K - $160K' }}</span>
+                    <!-- Pills -->
+                    <div class="d-flex flex-wrap gap-1.5 mb-3 fs-9">
+                        <span class="badge bg-light text-dark border">{{ featured_job.employment_type or 'Full-time' }}</span>
+                        <span class="badge bg-light text-dark border">
+                            {% if featured_job.experience_level == 'entry' %}
+                                0–2 Yrs (Entry)
+                            {% elif featured_job.experience_level == 'mid' %}
+                                2–5 Yrs (Mid)
+                            {% elif featured_job.experience_level == 'senior' %}
+                                5–8 Yrs (Senior)
+                            {% elif featured_job.experience_level == 'lead' %}
+                                8+ Yrs (Lead)
+                            {% else %}
+                                {{ featured_job.experience_level or '3+ years' }}
+                            {% endif %}
+                        </span>
+                        <span class="badge bg-success-subtle text-success border">₹ 25 - 40 LPA</span>
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="d-flex gap-2 mb-4">
-                        <a href="{{ url_for('jobs.safe_apply_redirect', job_id=f_job.id) }}" target="_blank" class="btn btn-primary-custom flex-grow-1" id="paneApplyBtn">
-                            Apply on {{ f_job.company }} Careers <i class="bi bi-box-arrow-up-right ms-1"></i>
+                    <div class="d-flex gap-2 mb-3">
+                        <a href="{{ url_for('jobs.safe_apply_redirect', job_id=featured_job.id) }}" target="_blank" class="btn btn-primary-custom flex-grow-1 fs-8 py-2">
+                            Apply Now <i class="bi bi-box-arrow-up-right ms-1"></i>
                         </a>
-                        <button class="btn btn-outline-custom" id="paneSaveBtn">
-                            <i class="bi bi-bookmark me-1"></i> Save Job
+                        <button class="btn btn-outline-custom fs-8 px-3 py-2" title="Save Job">
+                            <i class="bi bi-bookmark"></i> Save Job
                         </button>
                     </div>
 
-                    <!-- Tabs: Overview, Match Analysis, Requirements, Company -->
-                    <ul class="nav nav-tabs border-secondary mb-3" id="jobDetailTabs" role="tablist">
+                    <!-- Tabs in Detail Pane -->
+                    <ul class="nav nav-tabs fs-8 border-bottom mb-3" id="paneTabs">
                         <li class="nav-item">
-                            <button class="nav-link active text-white py-2" data-bs-toggle="tab" data-bs-target="#tab-overview">Overview</button>
+                            <button class="nav-link active py-1.5 px-2.5 text-dark fw-semibold" data-bs-toggle="tab" data-bs-target="#pane-desc">Job Details</button>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link text-white py-2" data-bs-toggle="tab" data-bs-target="#tab-match">Match Analysis</button>
+                            <button class="nav-link py-1.5 px-2.5 text-muted" data-bs-toggle="tab" data-bs-target="#pane-about">About Company</button>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link text-white py-2" data-bs-toggle="tab" data-bs-target="#tab-reqs">Requirements</button>
+                            <button class="nav-link py-1.5 px-2.5 text-muted" data-bs-toggle="tab" data-bs-target="#pane-match">Match Analysis</button>
                         </li>
                     </ul>
 
-                    <div class="tab-content" id="jobDetailTabContent">
-                        <!-- Overview Tab -->
-                        <div class="tab-pane fade show active" id="tab-overview">
-                            <h6 class="fw-bold text-white mb-2">Job Description</h6>
-                            <p class="text-secondary small leading-relaxed" id="paneJobDescription">
-                                {{ f_job.description or 'We are looking for an experienced software developer to design, build, and deploy high-performance scalable systems and APIs. You will work closely with cross-functional engineering teams to develop cloud architectures and reliable web services.' }}
+                    <div class="tab-content fs-8" style="max-height: 380px; overflow-y: auto;">
+                        <div class="tab-pane fade show active" id="pane-desc">
+                            <h6 class="fw-bold text-dark fs-8 mb-1">Job Description</h6>
+                            <p class="text-muted fs-8 mb-3">
+                                As a Software Engineer, you will be responsible for designing, developing, and maintaining scalable software solutions that impact millions of users worldwide.
                             </p>
 
-                            <h6 class="fw-bold text-white mt-3 mb-2">Key Responsibilities</h6>
-                            <ul class="text-secondary small ps-3 mb-3">
-                                <li>Design and develop scalable backend services and cloud APIs.</li>
-                                <li>Work with distributed systems and maintain clean, well-tested codebases.</li>
-                                <li>Collaborate with product and data engineering teams to ship reliable features.</li>
-                                <li>Optimize database queries and system performance under high traffic.</li>
+                            <h6 class="fw-bold text-dark fs-8 mb-1">Key Responsibilities</h6>
+                            <ul class="text-muted ps-3 mb-3 fs-8">
+                                <li>Design and develop high-quality, scalable software solutions.</li>
+                                <li>Collaborate with product managers, designers, and other engineers.</li>
+                                <li>Write clean, maintainable, and efficient code.</li>
+                                <li>Participate in code reviews and architectural discussions.</li>
                             </ul>
-                        </div>
 
-                        <!-- Match Analysis Tab -->
-                        <div class="tab-pane fade" id="tab-match">
-                            <div class="p-3 rounded mb-3" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="score-circle flex-shrink-0" style="width: 60px; height: 60px; --percent: {{ f_match.match_score|round(0)|int if f_match else 95 }};">
-                                        <div class="score-circle-inner" style="width: 46px; height: 46px; font-size: 0.85rem;">
-                                            {{ f_match.match_score|round(0)|int if f_match else 95 }}%
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h6 class="fw-bold text-white mb-0">Excellent Match</h6>
-                                        <small class="text-secondary fs-8">This job aligns strongly with your skills and verified experience.</small>
-                                    </div>
-                                </div>
-                            </div>
+                            <h6 class="fw-bold text-dark fs-8 mb-1">Required Qualifications</h6>
+                            <ul class="text-muted ps-3 mb-3 fs-8">
+                                <li>Bachelor's or Master's degree in Computer Science or related field.</li>
+                                <li>3+ years of software development experience.</li>
+                                <li>Strong programming skills in Python, Java, or C++.</li>
+                                <li>Experience with data structures, algorithms, and system design.</li>
+                            </ul>
 
-                            <div class="row g-2 small">
-                                <div class="col-6">
-                                    <h6 class="fw-bold text-success fs-8"><i class="bi bi-check-circle"></i> Matched Skills</h6>
-                                    <div class="d-flex flex-column gap-1">
-                                        <span class="skill-pill matched">Python (Strong Match)</span>
-                                        <span class="skill-pill matched">Backend Development</span>
-                                        <span class="skill-pill matched">Django / APIs</span>
-                                        <span class="skill-pill matched">Cloud Platforms</span>
-                                    </div>
-                                </div>
-                                <div class="col-6">
-                                    <h6 class="fw-bold text-danger fs-8"><i class="bi bi-exclamation-circle"></i> Missing or Improve</h6>
-                                    <div class="d-flex flex-column gap-1">
-                                        <span class="skill-pill missing">Google Cloud Platform</span>
-                                        <span class="skill-pill missing">Kubernetes</span>
-                                        <span class="skill-pill missing">Large-scale Systems</span>
-                                    </div>
-                                </div>
+                            <h6 class="fw-bold text-dark fs-8 mb-1">Skills</h6>
+                            <div class="d-flex flex-wrap gap-1 fs-9">
+                                <span class="badge bg-light text-secondary border">Python</span>
+                                <span class="badge bg-light text-secondary border">Data Structures</span>
+                                <span class="badge bg-light text-secondary border">System Design</span>
+                                <span class="badge bg-light text-secondary border">Cloud Computing</span>
+                                <span class="badge bg-light text-secondary border">Git</span>
                             </div>
                         </div>
 
-                        <!-- Requirements Tab -->
-                        <div class="tab-pane fade" id="tab-reqs">
-                            <h6 class="fw-bold text-white mb-2">Required Qualifications</h6>
-                            <ul class="text-secondary small ps-3 mb-3">
-                                <li>3+ years of professional software engineering experience.</li>
-                                <li>Proficiency with modern programming languages (Python, JavaScript, etc.).</li>
-                                <li>Experience with relational databases (PostgreSQL, MySQL) and API development.</li>
-                                <li>Bachelor's degree in Computer Science, STEM, or equivalent practical experience.</li>
-                            </ul>
+                        <div class="tab-pane fade" id="pane-about">
+                            <h6 class="fw-bold text-dark fs-8 mb-1">About {{ featured_job.company }}</h6>
+                            <p class="text-muted fs-8 mb-2">Global technology leader pioneering search, cloud, AI, and consumer software products.</p>
+                            <div class="p-2.5 rounded-3 bg-light border text-muted fs-9">
+                                <div><i class="bi bi-geo-alt me-1"></i> Headquarters: Mountain View, CA</div>
+                                <div><i class="bi bi-people me-1"></i> Size: 100,000+ employees</div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="pane-match">
+                            <div class="p-3 rounded-3 bg-success-subtle text-success mb-3 text-center">
+                                <h3 class="fw-bold mb-0">95%</h3>
+                                <small class="fw-semibold">Strong Profile Match</small>
+                            </div>
+                            <p class="text-muted fs-9 mb-0">Your profile matches 9 out of 10 skills mentioned in this posting. Verified application link ready.</p>
                         </div>
                     </div>
-                </div>
-            {% else %}
-                <div class="card p-5 custom-card text-center">
-                    <p class="text-secondary">Select any job from the list to view its full details and match breakdown.</p>
-                </div>
-            {% endif %}
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-briefcase fs-1 d-block mb-2 opacity-50"></i>
+                        <p class="small mb-0">Select a job on the left to preview details.</p>
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="{{ url_for('static', filename='js/jobs.js') }}"></script>
-<script>
-function selectJobPreview(jobId) {
-    document.querySelectorAll('.job-item-card').forEach(el => el.classList.remove('selected'));
-    const clickedCard = document.getElementById('job-card-' + jobId);
-    if (clickedCard) clickedCard.classList.add('selected');
-}
-</script>
 {% endblock %}

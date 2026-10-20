@@ -4,340 +4,410 @@
 
 {% block content %}
 <div class="container-fluid px-lg-4 py-4">
-    <!-- Header -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-        <div>
-            <h3 class="fw-bold mb-1 text-white">Resume Analysis</h3>
-            <p class="text-secondary small mb-0">Upload, analyze and improve your resume with AI-powered insights.</p>
-        </div>
-        <div class="d-flex align-items-center gap-2">
-            <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-sm btn-primary-custom">
-                <i class="bi bi-cloud-arrow-up-fill me-1"></i> Upload New Resume
-            </a>
-            <a href="{{ url_for('resume.export_resume', resume_id=resume.id) if resume else '#' }}" class="btn btn-sm btn-outline-custom">
-                <i class="bi bi-download me-1"></i> Download
-            </a>
-        </div>
-    </div>
+    {% set candidate_name = (profile.full_name if profile and profile.full_name else None) or 'Vishnu Sai' %}
+    {% set resume_score = resume.ats_quality_score|round(0)|int if (resume and resume.ats_quality_score) else 85 %}
+    {% set parsed = resume.parsed_data if (resume and resume.parsed_data) else {} %}
 
-    <!-- Top 3 Cards Row: Upload Dropzone, Active Resume, Overall Score -->
-    <div class="row g-4 mb-4">
-        <!-- 1. Upload Dropzone -->
-        <div class="col-lg-4">
-            <div class="card p-4 custom-card h-100 d-flex flex-column justify-content-center align-items-center text-center">
-                <div class="rounded-circle bg-primary bg-opacity-15 p-3 text-info mb-2" style="width: 56px; height: 56px;">
-                    <i class="bi bi-cloud-arrow-up fs-3"></i>
-                </div>
-                <h6 class="fw-bold text-white mb-1">Upload Your Resume</h6>
-                <p class="text-secondary fs-8 mb-2">Drag and drop your PDF or DOCX file here</p>
-                <span class="text-secondary fs-9 mb-2">or</span>
-                <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-sm btn-primary-custom px-3 py-1 mb-2">
-                    Choose File
-                </a>
-                <small class="text-secondary fs-9">Supported formats: PDF, DOCX (Max 5MB)</small>
+    <!-- 1. Header Banner & Quote Callout (Matching Image 5) -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+        <div class="row align-items-center gy-3">
+            <div class="col-lg-7">
+                <h2 class="fw-bold text-dark mb-1 tracking-tight">Resume Analysis</h2>
+                <p class="text-muted small mb-0">Get detailed feedback and improve your resume with AI-powered suggestions.</p>
             </div>
-        </div>
-
-        <!-- 2. Active Resume Card -->
-        <div class="col-lg-4">
-            <div class="card p-4 custom-card h-100 d-flex flex-column justify-content-between">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="p-2 rounded bg-surface border" style="background-color: var(--color-surface); border-color: var(--color-border) !important;">
-                            <i class="bi bi-file-earmark-pdf-fill text-danger fs-3"></i>
-                        </div>
-                        <div>
-                            <h6 class="fw-bold text-white mb-0 text-truncate" style="max-width: 170px;">{{ resume.filename if resume else 'Alex_Resume.pdf' }}</h6>
-                            <small class="text-secondary fs-8">Uploaded on {{ resume.uploaded_at.strftime('%b %d, %Y') if resume else 'Apr 28, 2025' }} • 1.2 MB</small>
-                        </div>
+            <div class="col-lg-5 text-lg-end">
+                <div class="d-inline-flex align-items-center gap-2.5 p-2.5 rounded-3 bg-light border text-start">
+                    <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                        <i class="bi bi-chat-quote-fill text-primary fs-6"></i>
                     </div>
-                    <span class="badge bg-success-subtle text-success fs-8">Analyzed</span>
-                </div>
-
-                <div class="p-3 rounded mb-2" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                    <div class="d-flex justify-content-between align-items-center mb-1 fs-8">
-                        <span class="text-secondary">Readability Score:</span>
-                        <strong class="text-white">{{ resume.readability_score|round(0)|int if resume else 90 }}%</strong>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center fs-8">
-                        <span class="text-secondary">Completeness:</span>
-                        <strong class="text-white">{{ resume.completeness_score|round(0)|int if resume else 94 }}%</strong>
-                    </div>
-                </div>
-
-                <div class="d-flex gap-2">
-                    <a href="{{ url_for('ats.ats_report') }}" class="btn btn-sm btn-outline-custom w-100">
-                        View Full ATS Report
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3. Overall Resume Score Gauge & Bars -->
-        <div class="col-lg-4">
-            <div class="card p-4 custom-card h-100 d-flex flex-column justify-content-between">
-                <div>
-                    <h6 class="fw-bold text-white mb-2">Overall Resume Score</h6>
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="score-circle flex-shrink-0" style="width: 72px; height: 72px; --percent: {{ resume.ats_quality_score|round(0)|int if resume else 92 }};">
-                            <div class="score-circle-inner" style="width: 56px; height: 56px; font-size: 1rem;">
-                                {{ resume.ats_quality_score|round(0)|int if resume else 92 }}%
-                            </div>
-                        </div>
-                        <div>
-                            <h6 class="fw-bold text-white mb-0">Excellent</h6>
-                            <small class="text-secondary fs-8">Your resume is well-structured and ATS-friendly.</small>
-                        </div>
-                    </div>
-
-                    <!-- Progress Breakdown Bars -->
-                    <div class="d-flex flex-column gap-2 small fs-8">
-                        <div>
-                            <div class="d-flex justify-content-between text-secondary mb-1">
-                                <span>Content Quality</span>
-                                <strong class="text-white">90%</strong>
-                            </div>
-                            <div class="progress" style="height: 5px; background-color: var(--color-surface);">
-                                <div class="progress-bar bg-primary" style="width: 90%;"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="d-flex justify-content-between text-secondary mb-1">
-                                <span>Skills Match</span>
-                                <strong class="text-white">95%</strong>
-                            </div>
-                            <div class="progress" style="height: 5px; background-color: var(--color-surface);">
-                                <div class="progress-bar bg-info" style="width: 95%;"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="d-flex justify-content-between text-secondary mb-1">
-                                <span>Formatting</span>
-                                <strong class="text-white">88%</strong>
-                            </div>
-                            <div class="progress" style="height: 5px; background-color: var(--color-surface);">
-                                <div class="progress-bar bg-warning" style="width: 88%;"></div>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="d-flex justify-content-between text-secondary mb-1">
-                                <span>ATS Compatibility</span>
-                                <strong class="text-white">92%</strong>
-                            </div>
-                            <div class="progress" style="height: 5px; background-color: var(--color-surface);">
-                                <div class="progress-bar bg-success" style="width: 92%;"></div>
-                            </div>
-                        </div>
+                    <div>
+                        <small class="fw-semibold text-dark d-block fs-8">"A strong resume gets more interviews."</small>
+                        <span class="text-muted fs-9">Let AI analyze your resume and provide personalized improvement suggestions.</span>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Category Tabs -->
-    <div class="mb-4">
-        <ul class="nav nav-pills gap-2 p-1 rounded border" style="background-color: var(--color-card-bg); border-color: var(--color-border) !important;">
+    <!-- 2. Navigation Tabs (Matching Image 5) -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-2 mb-4">
+        <ul class="nav nav-pills gap-1 flex-nowrap overflow-x-auto" id="resumeTabs" role="tablist">
             <li class="nav-item">
-                <a class="nav-link active py-1 px-3 text-white fs-8" href="#">Overview</a>
+                <button class="nav-link active py-2 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-upload">
+                    Upload & Analyze
+                </button>
             </li>
             <li class="nav-item">
-                <a class="nav-link py-1 px-3 text-secondary fs-8" href="#">Skills</a>
+                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-score">
+                    Resume Score
+                </button>
             </li>
             <li class="nav-item">
-                <a class="nav-link py-1 px-3 text-secondary fs-8" href="#">Experience</a>
+                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-skills">
+                    Skills Analysis
+                </button>
             </li>
             <li class="nav-item">
-                <a class="nav-link py-1 px-3 text-secondary fs-8" href="#">Education</a>
+                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-suggestions">
+                    Improvement Suggestions
+                </button>
             </li>
             <li class="nav-item">
-                <a class="nav-link py-1 px-3 text-secondary fs-8" href="#">Projects</a>
+                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-rewrite">
+                    AI Rewrite
+                </button>
             </li>
             <li class="nav-item">
-                <a class="nav-link py-1 px-3 text-secondary fs-8" href="#">Improvement Suggestions</a>
+                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-cover">
+                    Cover Letter
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-ats">
+                    ATS Check
+                </button>
             </li>
         </ul>
     </div>
 
-    <!-- 4-Column Layout: Extracted Info, Skills & Suggestions, Experience Timeline, Preview -->
-    <div class="row g-4">
-        <!-- Col 1: Extracted Information -->
-        <div class="col-lg-3">
-            <div class="card p-3 custom-card h-100">
-                <h6 class="fw-bold text-white mb-3">Extracted Information</h6>
-                <div class="d-flex flex-column gap-2 small">
-                    <div class="p-2 rounded d-flex justify-content-between align-items-start" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                        <div>
-                            <div class="fw-semibold text-white fs-8">Contact Information</div>
-                            <div class="text-secondary fs-9">{{ current_user.candidate_profile.full_name or 'Alex Johnson' }}</div>
-                            <div class="text-secondary fs-9">{{ current_user.email }}</div>
-                        </div>
-                        <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-8 text-decoration-none">Edit</a>
-                    </div>
+    <!-- 3. Top Row Cards (Image 5: Upload Dropzone + Active Resume + ATS Compatibility + Target Job Match) -->
+    <div class="row g-4 mb-4">
+        <!-- 3.1 Upload Your Resume Dropzone Card -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card p-4 rounded-4 border shadow-sm bg-white h-100 text-center d-flex flex-column justify-content-center align-items-center">
+                <h6 class="fw-bold text-dark mb-1">Upload Your Resume</h6>
+                <small class="text-muted fs-9 mb-3">Upload your resume in PDF or DOCX format (Max 5 MB)</small>
 
-                    <div class="p-2 rounded d-flex justify-content-between align-items-start" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                        <div>
-                            <div class="fw-semibold text-white fs-8">Professional Summary</div>
-                            <div class="text-secondary fs-9 text-truncate" style="max-width: 170px;">{{ current_user.candidate_profile.headline or '3+ years of experience in Python development...' }}</div>
-                        </div>
-                        <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-8 text-decoration-none">Edit</a>
+                <div class="p-4 rounded-4 border-2 border-dashed w-100 mb-3 bg-light d-flex flex-column align-items-center justify-content-center" style="border-style: dashed; border-color: #CBD5E1 !important;">
+                    <div class="avatar-md rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center mb-2" style="width: 48px; height: 48px;">
+                        <i class="bi bi-cloud-arrow-up-fill fs-4"></i>
                     </div>
+                    <span class="fs-9 text-muted mb-2">Drag & drop your resume here</span>
+                    <span class="fs-9 text-muted mb-2">or</span>
+                    <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-primary-custom btn-sm px-3 py-1 fs-8">
+                        Choose File
+                    </a>
+                </div>
+                <span class="text-muted fs-9">Supported formats: PDF, DOCX</span>
+            </div>
+        </div>
 
-                    <div class="p-2 rounded d-flex justify-content-between align-items-start" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+        <!-- 3.2 Active Resume Card (Vishnu_Sai_Resume.pdf + 85% Score) -->
+        <div class="col-lg-4 col-md-6">
+            <div class="card p-4 rounded-4 border shadow-sm bg-white h-100">
+                <div class="p-2.5 rounded-3 bg-light border d-flex justify-content-between align-items-center mb-3">
+                    <div class="d-flex align-items-center gap-2.5">
+                        <i class="bi bi-file-earmark-pdf-fill text-danger fs-3"></i>
                         <div>
-                            <div class="fw-semibold text-white fs-8">Work Experience</div>
-                            <div class="text-secondary fs-9">3 positions • {{ current_user.candidate_profile.experience_years or 3.2 }} years</div>
+                            <strong class="fs-8 text-dark d-block">{{ resume.filename if resume else 'Vishnu_Sai_Resume.pdf' }}</strong>
+                            <small class="text-muted fs-9">Uploaded on Oct 18, 2026 · 425 KB</small>
                         </div>
-                        <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-8 text-decoration-none">Edit</a>
                     </div>
+                    <a href="{{ url_for('resume.upload_resume') }}" class="text-muted hover-danger" title="Replace Resume">
+                        <i class="bi bi-trash fs-6"></i>
+                    </a>
+                </div>
 
-                    <div class="p-2 rounded d-flex justify-content-between align-items-start" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                        <div>
-                            <div class="fw-semibold text-white fs-8">Education</div>
-                            <div class="text-secondary fs-9">B.Tech in Computer Science</div>
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="position-relative d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                        <svg viewBox="0 0 36 36" style="width: 80px; height: 80px; transform: rotate(-90deg);">
+                            <path stroke="#F1F5F9" stroke-width="3.8" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                            <path stroke="#10B981" stroke-width="3.8" stroke-dasharray="{{ resume_score }}, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        </svg>
+                        <div class="position-absolute text-center">
+                            <span class="fs-5 fw-bold text-dark d-block lh-1">{{ resume_score }}%</span>
+                            <small class="text-muted fs-9">Overall</small>
                         </div>
-                        <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-8 text-decoration-none">Edit</a>
                     </div>
-
-                    <div class="p-2 rounded d-flex justify-content-between align-items-start" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                        <div>
-                            <div class="fw-semibold text-white fs-8">Skills</div>
-                            <div class="text-secondary fs-9">{{ resume.parsed_data.get('skills', [])|length if resume else 12 }} technical skills identified</div>
-                        </div>
-                        <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-8 text-decoration-none">Edit</a>
+                    <div>
+                        <h6 class="fw-bold text-dark mb-1 fs-8">Great Resume!</h6>
+                        <small class="text-muted fs-9 d-block">Your resume is well-structured and ATS-friendly. A few improvements can make it even stronger.</small>
                     </div>
+                </div>
 
-                    <div class="p-2 rounded d-flex justify-content-between align-items-start" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                        <div>
-                            <div class="fw-semibold text-white fs-8">Projects</div>
-                            <div class="text-secondary fs-9">4 projects found</div>
+                <div class="d-flex flex-column gap-1 fs-9 text-muted">
+                    <div><i class="bi bi-check-circle-fill text-success me-1.5"></i> Good structure</div>
+                    <div><i class="bi bi-check-circle-fill text-success me-1.5"></i> Relevant skills found</div>
+                    <div><i class="bi bi-check-circle-fill text-success me-1.5"></i> ATS friendly format</div>
+                    <div><i class="bi bi-check-circle-fill text-success me-1.5"></i> Clear work experience</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3.3 ATS Compatibility Card -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card p-4 rounded-4 border shadow-sm bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-dark mb-0 fs-8">ATS Compatibility</h6>
+                    <span class="badge bg-success-subtle text-success fs-9 border border-success-subtle">
+                        <i class="bi bi-check-circle-fill me-1"></i> Passed
+                    </span>
+                </div>
+
+                <div class="d-flex flex-column gap-2.5 mb-2">
+                    <div>
+                        <div class="d-flex justify-content-between fs-9 mb-1">
+                            <span class="text-muted">Formatting</span>
+                            <strong class="text-dark">92%</strong>
                         </div>
-                        <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-8 text-decoration-none">Edit</a>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" style="width: 92%;"></div>
+                        </div>
                     </div>
-
-                    <div class="p-2 rounded d-flex justify-content-between align-items-start" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                        <div>
-                            <div class="fw-semibold text-white fs-8">Certifications</div>
-                            <div class="text-secondary fs-9">2 certifications</div>
+                    <div>
+                        <div class="d-flex justify-content-between fs-9 mb-1">
+                            <span class="text-muted">Keywords</span>
+                            <strong class="text-dark">80%</strong>
                         </div>
-                        <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-8 text-decoration-none">Edit</a>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" style="width: 80%;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between fs-9 mb-1">
+                            <span class="text-muted">Skills Match</span>
+                            <strong class="text-dark">85%</strong>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" style="width: 85%;"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="d-flex justify-content-between fs-9 mb-1">
+                            <span class="text-muted">Content Quality</span>
+                            <strong class="text-dark">88%</strong>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-primary" style="width: 88%;"></div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Col 2: Top Skills Detected & AI Suggestions -->
-        <div class="col-lg-3">
-            <div class="card p-3 custom-card h-100 d-flex flex-column justify-content-between">
-                <div>
-                    <h6 class="fw-bold text-white mb-2">Top Skills Detected</h6>
-                    <div class="d-flex flex-wrap gap-1 mb-4">
-                        {% if resume and resume.parsed_data.get('skills') %}
-                            {% for sk in resume.parsed_data['skills'][:10] %}
-                                <span class="tag-pill">{{ sk }}</span>
-                            {% endfor %}
-                        {% else %}
-                            <span class="tag-pill">Python</span>
-                            <span class="tag-pill">Django</span>
-                            <span class="tag-pill">Flask</span>
-                            <span class="tag-pill">SQL</span>
-                            <span class="tag-pill">PostgreSQL</span>
-                            <span class="tag-pill">REST APIs</span>
-                            <span class="tag-pill">AWS</span>
-                            <span class="tag-pill">Docker</span>
-                            <span class="tag-pill">Git</span>
-                            <span class="tag-pill">JavaScript</span>
-                        {% endif %}
-                        <button class="btn btn-sm btn-ghost text-info py-0 px-1 fs-9">+ Add Skill</button>
+        <!-- 3.4 Target Job Match Card -->
+        <div class="col-lg-2 col-md-6">
+            <div class="card p-4 rounded-4 border shadow-sm bg-white h-100 text-center">
+                <label class="form-label fw-semibold text-dark fs-9 mb-1">Target Job Match</label>
+                <select class="form-select form-select-sm fs-9 mb-3">
+                    <option selected>Software Engineer</option>
+                    <option>Full Stack Developer</option>
+                    <option>Backend Developer</option>
+                </select>
+
+                <div class="position-relative d-inline-flex align-items-center justify-content-center mx-auto mb-2" style="width: 64px; height: 64px;">
+                    <svg viewBox="0 0 36 36" style="width: 64px; height: 64px; transform: rotate(-90deg);">
+                        <path stroke="#F1F5F9" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        <path stroke="#10B981" stroke-width="4" stroke-dasharray="92, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    </svg>
+                    <span class="position-absolute fs-8 fw-bold text-dark">92%</span>
+                </div>
+                <strong class="fs-9 text-success d-block mb-1">Strong Match</strong>
+                <small class="text-muted fs-9 d-block">Your resume matches well with Software Engineer roles.</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Bottom Row Cards (Image 5: Extracted Info + Skills Bar Chart + Top Suggestions) -->
+    <div class="row g-4 mb-4">
+        <!-- 4.1 Extracted Information Card -->
+        <div class="col-lg-4">
+            <div class="card p-4 rounded-4 border shadow-sm bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-dark mb-0 fs-8">Extracted Information</h6>
+                    <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-9 text-decoration-none"><i class="bi bi-pencil me-1"></i>Edit</a>
+                </div>
+
+                <div class="d-flex flex-column gap-2.5 fs-8">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-person text-primary"></i>
+                        <span class="text-muted" style="min-width: 90px;">Name:</span>
+                        <strong class="text-dark">{{ candidate_name }}</strong>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-envelope text-primary"></i>
+                        <span class="text-muted" style="min-width: 90px;">Email:</span>
+                        <span class="text-dark">{{ current_user.email }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-telephone text-primary"></i>
+                        <span class="text-muted" style="min-width: 90px;">Phone:</span>
+                        <span class="text-dark">{{ profile.phone or '+91 98765 43210' }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-geo-alt text-primary"></i>
+                        <span class="text-muted" style="min-width: 90px;">Location:</span>
+                        <span class="text-dark">{{ profile.location or 'Bengaluru, India' }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-briefcase text-primary"></i>
+                        <span class="text-muted" style="min-width: 90px;">Experience:</span>
+                        <span class="text-dark">{{ profile.experience_years or '3+' }} years</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-mortarboard text-primary"></i>
+                        <span class="text-muted" style="min-width: 90px;">Education:</span>
+                        <span class="text-dark">B.Tech in Computer Science</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-person-badge text-primary"></i>
+                        <span class="text-muted" style="min-width: 90px;">Current Role:</span>
+                        <span class="text-dark">{{ profile.headline or 'Software Engineer' }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4.2 Key Skills Found & Skill Match Analysis Bar Chart -->
+        <div class="col-lg-4">
+            <div class="card p-4 rounded-4 border shadow-sm bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold text-dark mb-0 fs-8">Key Skills Found</h6>
+                    <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-9 text-decoration-none">Edit Skills</a>
+                </div>
+
+                <!-- Skill Pills (Image 5) -->
+                <div class="d-flex flex-wrap gap-1 mb-3 fs-9">
+                    <span class="badge bg-primary-subtle text-primary border">Python</span>
+                    <span class="badge bg-primary-subtle text-primary border">JavaScript</span>
+                    <span class="badge bg-primary-subtle text-primary border">Flask</span>
+                    <span class="badge bg-light text-dark border">HTML</span>
+                    <span class="badge bg-light text-dark border">CSS</span>
+                    <span class="badge bg-light text-dark border">SQL</span>
+                    <span class="badge bg-light text-dark border">MySQL</span>
+                    <span class="badge bg-light text-dark border">React</span>
+                    <span class="badge bg-light text-dark border">Machine Learning</span>
+                    <span class="badge bg-light text-dark border">AWS</span>
+                    <span class="badge bg-light text-dark border">Docker</span>
+                    <span class="badge bg-light text-dark border">Git</span>
+                    <span class="badge bg-light text-dark border">Problem Solving</span>
+                    <span class="badge bg-light text-dark border">Team Collaboration</span>
+                </div>
+
+                <!-- Skill Match Analysis Comparison Bar Chart (Your Skills vs Industry Demand) -->
+                <div class="pt-2 border-top">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold text-dark fs-9">Skill Match Analysis</span>
+                        <div class="d-flex gap-2 fs-9">
+                            <span class="d-flex align-items-center gap-1"><span class="rounded-circle" style="width: 8px; height: 8px; background: #2563EB;"></span> Your Skills</span>
+                            <span class="d-flex align-items-center gap-1"><span class="rounded-circle" style="width: 8px; height: 8px; background: #93C5FD;"></span> Industry Demand</span>
+                        </div>
                     </div>
 
-                    <h6 class="fw-bold text-white mb-2">AI Suggestions</h6>
-                    <div class="d-flex flex-column gap-2 small">
-                        <div class="p-2 rounded" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                            <div class="fw-semibold text-primary fs-8 mb-1">Improve bullet points</div>
-                            <div class="text-secondary fs-9">Add measurable metrics and numbers (e.g. "Reduced API latency by 40%").</div>
+                    <!-- CSS Bar Chart -->
+                    <div class="d-flex justify-content-between align-items-end h-100 pt-2" style="height: 110px;">
+                        <div class="text-center flex-grow-1">
+                            <div class="d-flex justify-content-center align-items-end gap-1" style="height: 80px;">
+                                <div class="bg-primary rounded-top" style="width: 12px; height: 90%;"></div>
+                                <div class="bg-primary-subtle rounded-top" style="width: 12px; height: 75%;"></div>
+                            </div>
+                            <small class="text-muted fs-9 d-block mt-1">Python</small>
                         </div>
-                        <div class="p-2 rounded" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                            <div class="fw-semibold text-warning fs-8 mb-1">Add relevant keywords</div>
-                            <div class="text-secondary fs-9">Incorporate Kubernetes, CI/CD, and Cloud pipelines for higher ATS match.</div>
+                        <div class="text-center flex-grow-1">
+                            <div class="d-flex justify-content-center align-items-end gap-1" style="height: 80px;">
+                                <div class="bg-primary rounded-top" style="width: 12px; height: 70%;"></div>
+                                <div class="bg-primary-subtle rounded-top" style="width: 12px; height: 85%;"></div>
+                            </div>
+                            <small class="text-muted fs-9 d-block mt-1">JS</small>
                         </div>
-                        <div class="p-2 rounded" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                            <div class="fw-semibold text-info fs-8 mb-1">Enhance project details</div>
-                            <div class="text-secondary fs-9">Clarify system architecture and technologies used in your portfolio.</div>
+                        <div class="text-center flex-grow-1">
+                            <div class="d-flex justify-content-center align-items-end gap-1" style="height: 80px;">
+                                <div class="bg-primary rounded-top" style="width: 12px; height: 60%;"></div>
+                                <div class="bg-primary-subtle rounded-top" style="width: 12px; height: 70%;"></div>
+                            </div>
+                            <small class="text-muted fs-9 d-block mt-1">SQL</small>
+                        </div>
+                        <div class="text-center flex-grow-1">
+                            <div class="d-flex justify-content-center align-items-end gap-1" style="height: 80px;">
+                                <div class="bg-primary rounded-top" style="width: 12px; height: 75%;"></div>
+                                <div class="bg-primary-subtle rounded-top" style="width: 12px; height: 80%;"></div>
+                            </div>
+                            <small class="text-muted fs-9 d-block mt-1">React</small>
+                        </div>
+                        <div class="text-center flex-grow-1">
+                            <div class="d-flex justify-content-center align-items-end gap-1" style="height: 80px;">
+                                <div class="bg-primary rounded-top" style="width: 12px; height: 50%;"></div>
+                                <div class="bg-primary-subtle rounded-top" style="width: 12px; height: 65%;"></div>
+                            </div>
+                            <small class="text-muted fs-9 d-block mt-1">AWS</small>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Col 3: Experience Timeline -->
-        <div class="col-lg-3">
-            <div class="card p-3 custom-card h-100">
-                <h6 class="fw-bold text-white mb-3">Experience Timeline</h6>
-                <div class="ps-2">
-                    <div class="timeline-item">
-                        <div class="timeline-dot"></div>
-                        <h6 class="fw-bold text-white mb-0 fs-8">Software Developer</h6>
-                        <div class="text-light fs-9">TechCorp Pvt Ltd</div>
-                        <div class="text-secondary fs-9">Jan 2023 - Present • 2.3 years</div>
-                        <p class="text-secondary fs-9 mt-1 mb-0">Built scalable APIs and microservices using Python and AWS.</p>
-                    </div>
-
-                    <div class="timeline-item">
-                        <div class="timeline-dot" style="background-color: var(--color-accent); box-shadow: 0 0 6px var(--color-accent);"></div>
-                        <h6 class="fw-bold text-white mb-0 fs-8">Backend Developer</h6>
-                        <div class="text-light fs-9">Innova Solutions</div>
-                        <div class="text-secondary fs-9">Jun 2021 - Dec 2022 • 1.5 years</div>
-                        <p class="text-secondary fs-9 mt-1 mb-0">Developed REST endpoints and optimized database performance.</p>
-                    </div>
-
-                    <div class="timeline-item">
-                        <div class="timeline-dot" style="background-color: var(--color-secondary); box-shadow: 0 0 6px var(--color-secondary);"></div>
-                        <h6 class="fw-bold text-white mb-0 fs-8">Intern</h6>
-                        <div class="text-light fs-9">ABC Technologies</div>
-                        <div class="text-secondary fs-9">Jan 2021 - May 2021 • 5 months</div>
-                        <p class="text-secondary fs-9 mt-1 mb-0">Assisted with frontend and backend automation scripts.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Col 4: Resume Preview & Tailoring -->
-        <div class="col-lg-3">
-            <div class="card p-3 custom-card h-100 d-flex flex-column justify-content-between">
-                <div>
-                    <h6 class="fw-bold text-white mb-2">Resume Preview</h6>
-                    <div class="d-flex gap-1 mb-2">
-                        <button class="btn btn-sm btn-primary-custom py-0 px-2 fs-9">Original</button>
-                        <button class="btn btn-sm btn-outline-secondary py-0 px-2 fs-9">AI Enhanced</button>
-                        <button class="btn btn-sm btn-outline-secondary py-0 px-2 fs-9">Tailored</button>
-                    </div>
-
-                    <!-- Clean Mockup Document Preview -->
-                    <div class="p-3 rounded bg-white text-dark mb-3" style="min-height: 240px; font-size: 0.65rem; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
-                        <div class="text-center border-bottom pb-1 mb-2">
-                            <strong class="fs-8 text-uppercase">{{ current_user.candidate_profile.full_name or 'ALEX JOHNSON' }}</strong>
-                            <div class="text-muted fs-9">{{ current_user.email }} · +91 98765 43210 · India</div>
-                        </div>
-                        <div class="mb-1">
-                            <strong class="text-primary fs-9">PROFESSIONAL SUMMARY</strong>
-                            <p class="mb-1 text-muted" style="font-size: 0.6rem;">Python developer with 3+ years of experience building scalable backend services and web applications.</p>
-                        </div>
-                        <div>
-                            <strong class="text-primary fs-9">WORK EXPERIENCE</strong>
-                            <div class="text-dark fw-bold">Software Developer — TechCorp</div>
-                            <div class="text-muted" style="font-size: 0.6rem;">Designed REST APIs and managed cloud pipelines.</div>
-                        </div>
-                    </div>
+        <!-- 4.3 Top Improvement Suggestions Card (Image 5) -->
+        <div class="col-lg-4">
+            <div class="card p-4 rounded-4 border shadow-sm bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-dark mb-0 fs-8"><i class="bi bi-stars text-primary me-1"></i>Top Improvement Suggestions</h6>
                 </div>
 
                 <div class="d-flex flex-column gap-2">
-                    <a href="{{ url_for('resume.export_resume', resume_id=resume.id) if resume else '#' }}" class="btn btn-sm btn-outline-custom w-100">
-                        <i class="bi bi-download me-1"></i> Download PDF
-                    </a>
-                    <a href="{{ url_for('applications.view_tailored_resume', job_id=1) }}" class="btn btn-sm btn-primary-custom w-100">
-                        Generate Tailored Resume
-                    </a>
+                    <div class="p-2.5 rounded-3 bg-light border d-flex justify-content-between align-items-center text-dark hover-card" style="cursor: pointer;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-graph-up text-primary fs-5"></i>
+                            <div>
+                                <span class="fw-bold fs-8 d-block">Add Quantifiable Achievements</span>
+                                <small class="text-muted fs-9">Include metrics to showcase impact (e.g. "Improved performance by 40%").</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted fs-9"></i>
+                    </div>
+
+                    <div class="p-2.5 rounded-3 bg-light border d-flex justify-content-between align-items-center text-dark hover-card" style="cursor: pointer;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-bullseye text-danger fs-5"></i>
+                            <div>
+                                <span class="fw-bold fs-8 d-block">Include Relevant Keywords</span>
+                                <small class="text-muted fs-9">Add more industry-relevant keywords for better ATS matching.</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted fs-9"></i>
+                    </div>
+
+                    <div class="p-2.5 rounded-3 bg-light border d-flex justify-content-between align-items-center text-dark hover-card" style="cursor: pointer;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-folder-check text-warning fs-5"></i>
+                            <div>
+                                <span class="fw-bold fs-8 d-block">Highlight Key Projects</span>
+                                <small class="text-muted fs-9">Showcase tech stack architecture and production outcomes.</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted fs-9"></i>
+                    </div>
+
+                    <div class="p-2.5 rounded-3 bg-light border d-flex justify-content-between align-items-center text-dark hover-card" style="cursor: pointer;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-file-earmark-text text-success fs-5"></i>
+                            <div>
+                                <span class="fw-bold fs-8 d-block">Improve Summary Section</span>
+                                <small class="text-muted fs-9">Write a strong professional summary tailored to your target role.</small>
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-right text-muted fs-9"></i>
+                    </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Bottom Action Buttons Bar (Matching Image 5) -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <a href="{{ url_for('resume.export_resume', resume_id=resume.id) if resume else '#' }}" class="btn btn-primary-custom fs-8 px-4 py-2">
+                <i class="bi bi-download me-1"></i> Download Improved Resume
+            </a>
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('assistant.chat_view', initial_query='Improve my resume') }}" class="btn btn-outline-custom fs-8 px-3 py-2">
+                    <i class="bi bi-stars text-primary me-1"></i> Get AI Suggestions
+                </a>
+                <a href="{{ url_for('applications.list_applications') }}" class="btn btn-outline-custom fs-8 px-3 py-2">
+                    <i class="bi bi-envelope-paper text-info me-1"></i> Generate Cover Letter
+                </a>
+                <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-outline-custom fs-8 px-3 py-2">
+                    <i class="bi bi-grid text-secondary me-1"></i> Try Different Templates
+                </a>
             </div>
         </div>
     </div>
