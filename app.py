@@ -26,7 +26,10 @@ def create_app(config_name=None):
         config_name = os.getenv("FLASK_ENV", "development")
 
     app = Flask(__name__)
-    app.config.from_object(config.get(config_name, config["default"]))
+    cfg_class = config.get(config_name, config["default"])
+    app.config.from_object(cfg_class)
+    if hasattr(cfg_class, "init_app"):
+        cfg_class.init_app(app)
 
     # Initialize extensions
     db.init_app(app)

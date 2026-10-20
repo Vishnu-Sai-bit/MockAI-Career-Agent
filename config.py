@@ -69,9 +69,22 @@ class Config:
 class DevelopmentConfig(Config):
     DEBUG = True
 
+    @classmethod
+    def init_app(cls, app):
+        pass
+
 
 class ProductionConfig(Config):
     DEBUG = False
+
+    @classmethod
+    def init_app(cls, app):
+        secret = os.getenv("SECRET_KEY", "")
+        if not secret or secret == "dev-ai-job-agent-secret-key-change-in-production-2026":
+            raise RuntimeError(
+                "CRITICAL SECURITY CONFIGURATION ERROR: "
+                "Production startup aborted. You MUST set a strong, unique SECRET_KEY in your production environment variables."
+            )
 
 
 class TestingConfig(Config):
@@ -79,6 +92,10 @@ class TestingConfig(Config):
     WTF_CSRF_ENABLED = False
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
     UPLOAD_FOLDER = str(BASE_DIR / "uploads" / "test_resumes")
+
+    @classmethod
+    def init_app(cls, app):
+        pass
 
 
 config = {

@@ -13,8 +13,9 @@ class USAJobsCollector(BaseCollector):
 
     def __init__(self, timeout: int = 10):
         super().__init__(timeout=timeout)
+        user_agent = os.getenv("USAJOBS_USER_AGENT", "ai-job-agent@career-platform.local")
         self.session.headers.update({
-            "User-Agent": "beerevishnusai776600@gmail.com",
+            "User-Agent": user_agent,
             "Accept": "application/json"
         })
 
@@ -28,10 +29,11 @@ class USAJobsCollector(BaseCollector):
             logger.info("USAJOBS_API_KEY not provided. USAJobs requires an Authorization-Key header.")
             return []
 
+        user_agent = os.getenv("USAJOBS_USER_AGENT", "ai-job-agent@career-platform.local")
         url = "https://data.usajobs.gov/api/search"
         headers = {
             "Host": "data.usajobs.gov",
-            "User-Agent": "beerevishnusai776600@gmail.com",
+            "User-Agent": user_agent,
             "Authorization-Key": api_key
         }
         params = {

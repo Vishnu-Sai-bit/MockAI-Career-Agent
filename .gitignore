@@ -51,3 +51,6 @@ uploads/test_resumes/*
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Release archives
+*.zip

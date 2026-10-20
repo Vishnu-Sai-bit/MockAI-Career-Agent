@@ -76,6 +76,10 @@
     .btn:hover {
       background: #1d4ed8;
     }
+    .btn:disabled {
+      background: #94a3b8;
+      cursor: not-allowed;
+    }
     .btn-secondary {
       background: #ffffff;
       color: #334155;
@@ -91,6 +95,16 @@
       text-align: center;
       color: #64748b;
     }
+    .auth-warning {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+      padding: 8px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      margin-bottom: 10px;
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -99,18 +113,22 @@
     <h4>AI Job Agent Auto-Fill</h4>
   </div>
 
-  <div class="card">
+  <div id="auth-alert" class="auth-warning">
+    ⚠️ <strong>Not Logged In:</strong> Please sign in to your AI Job Agent account to autofill official applications.
+  </div>
+
+  <div class="card" id="profile-card">
     <div class="card-row">
       <span class="card-label">Active Candidate:</span>
-      <span class="card-val" id="cand-name">Beere Vishnu Sai</span>
+      <span class="card-val" id="cand-name">Checking status...</span>
     </div>
     <div class="card-row">
       <span class="card-label">Email:</span>
-      <span class="card-val" id="cand-email">beerevishnusai...</span>
+      <span class="card-val" id="cand-email">--</span>
     </div>
     <div class="card-row">
-      <span class="card-label">ATS Ready Score:</span>
-      <span class="card-val" style="color: #16a34a;">85.5% (Optimal)</span>
+      <span class="card-label">Active Resume:</span>
+      <span class="card-val" id="cand-resume" style="color: #2563eb;">--</span>
     </div>
   </div>
 

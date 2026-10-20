@@ -128,25 +128,21 @@ def settings():
 
 
 @dashboard_bp.route("/api/candidate-profile")
+@login_required
 def candidate_profile_api():
-    if current_user.is_authenticated and current_user.candidate_profile:
-        p = current_user.candidate_profile
-        return {
-            "full_name": p.full_name or "Beere Vishnu Sai",
-            "email": current_user.email,
-            "phone": p.phone or "",
-            "location": p.location or "",
-            "headline": p.headline or "Data Science & AI Engineer",
-            "skills": p.skills or []
-        }
-    return {
-        "full_name": "Beere Vishnu Sai",
-        "email": "beerevishnusai776600@gmail.com",
-        "phone": "+91-9876543210",
-        "location": "Bengaluru, India",
-        "headline": "Data Science & AI Engineer",
-        "skills": ["Python", "Flask", "Machine Learning", "SQL"]
-    }
+    p = current_user.candidate_profile
+    resume = current_user.get_active_resume()
+    parsed = resume.parsed_data if resume else {}
+    full_name = (p.full_name if p else None) or parsed.get("name") or current_user.email.split("@")[0].title()
+    return jsonify({
+        "success": True,
+        "full_name": full_name,
+        "email": current_user.email,
+        "phone": (p.phone if p else None) or parsed.get("phone") or "",
+        "location": (p.location if p else None) or parsed.get("location") or "",
+        "headline": (p.headline if p else None) or parsed.get("headline") or "Software Professional",
+        "skills": (p.skills if p else None) or parsed.get("skills") or []
+    })
 
 
 @dashboard_bp.route("/sync-jobs", methods=["GET", "POST"])

@@ -1,33 +1,34 @@
 // AI Job Agent Companion v2 — DOM Autofill & Smart Screening Questions Engine
+// Security Hardened: Requires active authenticated candidate session; never leaks or fabricates personal data.
 
 const BACKEND_BASE = "http://127.0.0.1:5000";
 
 async function fetchCandidateProfile() {
   try {
-    const res = await fetch(`${BACKEND_BASE}/api/v1/extension/profile`);
+    const res = await fetch(`${BACKEND_BASE}/api/v1/extension/profile`, {
+      credentials: "include"
+    });
+    if (res.status === 401) {
+      console.warn("[AI Job Agent] Authentication required. Please log into AI Job Agent at " + BACKEND_BASE);
+      return null;
+    }
     const data = await res.json();
     if (data.success && data.candidate) {
       return data.candidate;
     }
   } catch (err) {
-    console.warn("[AI Job Agent] Backend profile endpoint unavailable, using cached profile:", err);
+    console.warn("[AI Job Agent] Backend profile endpoint unavailable or network error:", err);
   }
-  return {
-    firstName: "Vishnu Sai",
-    lastName: "Beere",
-    fullName: "Beere Vishnu Sai",
-    email: "beerevishnusai776600@gmail.com",
-    phone: "+91-9876543210",
-    location: "Bengaluru, India",
-    linkedin: "https://www.linkedin.com/in/vishnusai",
-    github: "https://github.com/vishnusai",
-    website: "https://github.com/vishnusai",
-    headline: "Data Science & AI Engineer"
-  };
+  return null;
 }
 
 async function autofillForm() {
   const candidate = await fetchCandidateProfile();
+  if (!candidate) {
+    alert("AI Job Agent: Please log into your account at http://127.0.0.1:5000/login before using 1-Click Auto-Fill.");
+    return 0;
+  }
+
   let filledCount = 0;
 
   const fillInput = (selectorList, value) => {
@@ -105,20 +106,23 @@ async function autofillForm() {
   for (const ta of textareas) {
     if (!ta.value || ta.value.trim() === "") {
       const label = document.querySelector(`label[for='${ta.id}']`) || ta.closest("label") || ta.parentElement;
-      const questionText = (label ? label.textContent : "") || ta.placeholder || ta.name || "Why do you want to join?";
-      if (questionText.length > 5) {
+      const questionText = (label ? label.textContent : "") || ta.placeholder || ta.name || "";
+      if (questionText && questionText.trim().length > 5) {
         try {
           const resp = await fetch(`${BACKEND_BASE}/api/v1/extension/answer-question`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({ question: questionText.trim() })
           });
-          const ansData = await resp.json();
-          if (ansData.success && ansData.answer) {
-            ta.value = ansData.answer;
-            ta.dispatchEvent(new Event("input", { bubbles: true }));
-            ta.dispatchEvent(new Event("change", { bubbles: true }));
-            filledCount++;
+          if (resp.status === 200) {
+            const ansData = await resp.json();
+            if (ansData.success && ansData.answer) {
+              ta.value = ansData.answer;
+              ta.dispatchEvent(new Event("input", { bubbles: true }));
+              ta.dispatchEvent(new Event("change", { bubbles: true }));
+              filledCount++;
+            }
           }
         } catch (e) {
           console.warn("[AI Job Agent] Question auto-answering error:", e);
@@ -166,7 +170,11 @@ function injectFloatingButton() {
     textEl.textContent = "⏳ Filling Form & AI Answers...";
     try {
       const count = await autofillForm();
-      textEl.textContent = `✅ Filled ${count} Fields!`;
+      if (count > 0) {
+        textEl.textContent = `✅ Filled ${count} Fields!`;
+      } else {
+        textEl.textContent = `⚠️ No matching empty fields`;
+      }
       setTimeout(() => { textEl.textContent = orig; }, 3000);
     } catch (e) {
       textEl.textContent = "❌ Autofill Error";
