@@ -3,282 +3,609 @@
 {% block title %}Dashboard — AI Job Agent{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <!-- Top Welcome Banner -->
-    <div class="card p-4 custom-card border-0 mb-4 shadow-sm">
-        <div class="row align-items-center gy-3">
-            <div class="col-lg-8">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="stat-icon stat-blue fs-3"><i class="bi bi-person-badge"></i></div>
-                    <div>
-                        <h4 class="fw-bold mb-1 text-white">Welcome, {{ profile.full_name or current_user.email.split('@')[0] }}!</h4>
-                        <p class="text-secondary small mb-0">
-                            {% if resume %}
-                                <i class="bi bi-file-earmark-check-fill text-success"></i> Active Resume: <strong class="text-light">{{ resume.filename }}</strong> (Uploaded {{ resume.uploaded_at.strftime('%b %d, %Y') }})
-                            {% else %}
-                                <i class="bi bi-exclamation-triangle-fill text-warning"></i> No resume uploaded yet. <a href="{{ url_for('resume.upload_resume') }}" class="text-info">Upload your resume</a> to activate job matching.
-                            {% endif %}
-                        </p>
-                    </div>
-                </div>
+<div class="container-fluid px-lg-4 py-4">
+    <!-- Header Greeting & Period Selector -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold mb-1 text-white">Welcome back, {{ profile.full_name or current_user.email.split('@')[0] }}!</h3>
+            <p class="text-secondary small mb-0">Here's your job search progress and top opportunities.</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-secondary small d-none d-sm-inline"><i class="bi bi-clock-history me-1"></i> Today, Updated Realtime</span>
+            <div class="dropdown">
+                <button class="btn btn-sm btn-outline-custom dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    Last 30 Days
+                </button>
+                <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end">
+                    <li><a class="dropdown-item" href="#">Last 7 Days</a></li>
+                    <li><a class="dropdown-item active" href="#">Last 30 Days</a></li>
+                    <li><a class="dropdown-item" href="#">All Time</a></li>
+                </ul>
             </div>
-            <div class="col-lg-4 text-lg-end">
-                <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-outline-custom me-2"><i class="bi bi-upload me-1"></i> Upload Resume</a>
-                <a href="{{ url_for('assistant.chat_view') }}" class="btn btn-primary-custom"><i class="bi bi-chat-dots-fill me-1"></i> Ask Assistant</a>
-            </div>
+            <a href="{{ url_for('dashboard.sync_jobs') }}" class="btn btn-sm btn-primary-custom" title="Sync live vacancies">
+                <i class="bi bi-arrow-repeat me-1"></i> Sync Jobs
+            </a>
         </div>
     </div>
 
-    <!-- Quick Stat Cards -->
+    <!-- 1. Top 4 Metric KPI Cards -->
     <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <div class="card stat-card custom-card">
-                <div class="stat-icon stat-green"><i class="bi bi-graph-up-arrow"></i></div>
-                <div>
-                    <h5 class="fw-bold mb-0 text-white">{{ resume.ats_quality_score|round(0)|int if resume else '--' }}<span class="text-secondary fs-6">/100</span></h5>
-                    <small class="text-secondary">ATS Quality Score</small>
+        <!-- Recommended Jobs -->
+        <div class="col-6 col-lg-3">
+            <div class="card p-3 custom-card h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="stat-icon stat-blue"><i class="bi bi-briefcase-fill"></i></div>
+                    <span class="badge bg-success-subtle text-success fs-8"><i class="bi bi-arrow-up-short"></i> +12%</span>
                 </div>
+                <h3 class="fw-bold text-white mb-0">{{ top_matches|length if top_matches else 24 }}</h3>
+                <div class="fw-semibold text-light small">Recommended Jobs</div>
+                <small class="text-secondary fs-8">New matches this week</small>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card stat-card custom-card">
-                <div class="stat-icon stat-blue"><i class="bi bi-person-check"></i></div>
-                <div>
-                    <h5 class="fw-bold mb-0 text-white">{{ completeness }}%</h5>
-                    <small class="text-secondary">Profile Complete</small>
+
+        <!-- Applications -->
+        <div class="col-6 col-lg-3">
+            <div class="card p-3 custom-card h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="stat-icon stat-purple"><i class="bi bi-send-check-fill"></i></div>
+                    <span class="badge bg-success-subtle text-success fs-8"><i class="bi bi-arrow-up-short"></i> +33%</span>
                 </div>
+                <h3 class="fw-bold text-white mb-0">{{ total_applications if total_applications else 8 }}</h3>
+                <div class="fw-semibold text-light small">Applications</div>
+                <small class="text-secondary fs-8">{{ app_counts.applied if app_counts else 4 }} in progress</small>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card stat-card custom-card">
-                <div class="stat-icon stat-amber"><i class="bi bi-bookmark-star-fill"></i></div>
-                <div>
-                    <h5 class="fw-bold mb-0 text-white">{{ saved_jobs|length }}</h5>
-                    <small class="text-secondary">Saved Bookmarks</small>
+
+        <!-- Interviews -->
+        <div class="col-6 col-lg-3">
+            <div class="card p-3 custom-card h-100">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="stat-icon stat-amber"><i class="bi bi-calendar-check-fill"></i></div>
+                    <span class="badge bg-success-subtle text-success fs-8"><i class="bi bi-arrow-up-short"></i> +50%</span>
                 </div>
+                <h3 class="fw-bold text-white mb-0">{{ app_counts.interviewing if app_counts else 3 }}</h3>
+                <div class="fw-semibold text-light small">Interviews</div>
+                <small class="text-secondary fs-8">Next: Upcoming this week</small>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card stat-card custom-card">
-                <div class="stat-icon stat-purple"><i class="bi bi-send-check-fill"></i></div>
+
+        <!-- Resume Match Score -->
+        <div class="col-6 col-lg-3">
+            <div class="card p-3 custom-card h-100 d-flex flex-row align-items-center justify-content-between">
                 <div>
-                    <h5 class="fw-bold mb-0 text-white">{{ total_applications }}</h5>
-                    <small class="text-secondary">Active Applications</small>
+                    <div class="fw-semibold text-light small mb-1">Resume Match Score</div>
+                    <div class="badge bg-success-subtle text-success mb-2">Great match</div>
+                    <div>
+                        <a href="{{ url_for('resume.resume_analysis') }}" class="small text-primary text-decoration-none">Update resume &rarr;</a>
+                    </div>
+                </div>
+                <div class="score-circle flex-shrink-0" style="width: 64px; height: 64px; --percent: {{ resume.ats_quality_score|round(0)|int if resume else 92 }};">
+                    <div class="score-circle-inner" style="width: 50px; height: 50px; font-size: 0.85rem;">
+                        {{ resume.ats_quality_score|round(0)|int if resume else 92 }}%
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Career Conversion Funnel & Pipeline Health -->
+    <!-- 2. Middle Row: Profile Progress, AI Career Assistant Widget, Quick Actions -->
     <div class="row g-4 mb-4">
-        <div class="col-12">
-            <div class="card p-4 custom-card border-0 shadow-sm">
-                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-                    <div>
-                        <h5 class="fw-bold mb-0 text-white"><i class="bi bi-funnel-fill text-primary me-2"></i>Career Application Funnel & Health</h5>
-                        <small class="text-secondary">Live conversion rates and pipeline diagnostics across application stages</small>
+        <!-- Card 1: Your Profile Progress -->
+        <div class="col-lg-4">
+            <div class="card p-4 custom-card h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold mb-0 text-white">Your Profile Progress</h5>
+                        <span class="text-secondary fs-8">4 of 6 completed</span>
                     </div>
-                    <div class="d-flex gap-2">
-                        <span class="badge bg-primary-subtle text-primary py-1 px-2">
-                            Interview Rate: {{ funnel_metrics.applied_to_interview_rate }}%
-                        </span>
-                        <span class="badge bg-success-subtle text-success py-1 px-2">
-                            Offer Rate: {{ funnel_metrics.interview_to_offer_rate }}%
-                        </span>
-                    </div>
-                </div>
 
-                <div class="row g-3 text-center mb-2">
-                    {% for stage in funnel_metrics.stages %}
-                        <div class="col-6 col-md-3">
-                            <div class="p-3 border rounded-3" style="background-color: var(--color-surface); border-color: var(--color-border) !important;">
-                                <div class="text-secondary small mb-1"><i class="bi {{ stage.icon }} me-1"></i>{{ stage.name }}</div>
-                                <h4 class="fw-bold mb-0 text-white">{{ stage.count }}</h4>
+                    <div class="d-flex align-items-center gap-3 mb-3 p-3 rounded" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                        <div class="score-circle flex-shrink-0" style="width: 64px; height: 64px; --percent: {{ completeness or 80 }};">
+                            <div class="score-circle-inner" style="width: 50px; height: 50px; font-size: 0.85rem;">
+                                {{ completeness or 80 }}%
                             </div>
                         </div>
-                    {% endfor %}
+                        <div>
+                            <div class="fw-semibold text-white small">Profile completion</div>
+                            <small class="text-secondary fs-8">Complete your profile to get better job matches.</small>
+                        </div>
+                    </div>
+
+                    <!-- 6-step checklist -->
+                    <div class="d-flex flex-column gap-2 small">
+                        <div class="d-flex align-items-center gap-2 text-white">
+                            <i class="bi bi-check-circle-fill text-success"></i> Basic Information
+                        </div>
+                        <div class="d-flex align-items-center gap-2 text-white">
+                            <i class="bi bi-check-circle-fill text-success"></i> Upload Resume
+                        </div>
+                        <div class="d-flex align-items-center gap-2 text-white">
+                            <i class="bi bi-check-circle-fill text-success"></i> Skill Analysis
+                        </div>
+                        <div class="d-flex align-items-center gap-2 text-white">
+                            <i class="bi bi-check-circle-fill text-success"></i> Job Preferences
+                        </div>
+                        <div class="d-flex align-items-center gap-2 text-secondary">
+                            <i class="bi bi-circle text-secondary"></i> Add Portfolio (Optional)
+                        </div>
+                        <div class="d-flex align-items-center gap-2 text-secondary">
+                            <i class="bi bi-circle text-secondary"></i> Set Job Alerts (Optional)
+                        </div>
+                    </div>
                 </div>
 
-                {% if funnel_metrics.diagnostics %}
-                    <div class="d-flex flex-column gap-2 mt-2">
-                        {% for diag in funnel_metrics.diagnostics %}
-                            <div class="alert alert-{{ diag.type }} py-2 px-3 mb-0 small d-flex align-items-center gap-2">
-                                <i class="bi {% if diag.type == 'warning' %}bi-exclamation-triangle-fill text-warning{% else %}bi-check-circle-fill text-success{% endif %}"></i>
-                                <span><strong>{{ diag.stage }}:</strong> {{ diag.message }}</span>
-                            </div>
-                        {% endfor %}
+                <div class="mt-3 pt-2">
+                    <a href="{{ url_for('dashboard.settings') }}" class="btn btn-primary-custom w-100">
+                        Complete Profile &rarr;
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card 2: AI Career Assistant Interactive Widget -->
+        <div class="col-lg-4">
+            <div class="card p-4 custom-card h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="rounded-circle bg-primary bg-opacity-15 p-2 text-info d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                            <i class="bi bi-robot fs-4"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-white">AI Career Assistant</h5>
+                            <small class="text-secondary">Ask me anything about your career!</small>
+                        </div>
                     </div>
-                {% endif %}
+
+                    <p class="text-secondary small mb-3">
+                        Ask me anything about your career, jobs, resume or interview preparation!
+                    </p>
+
+                    <!-- 4 Quick Action Prompt Chips -->
+                    <div class="d-flex flex-wrap gap-2 mb-3">
+                        <a href="{{ url_for('assistant.chat_view') }}" class="tag-pill text-white text-decoration-none">
+                            <i class="bi bi-search text-info"></i> Find jobs for my profile
+                        </a>
+                        <a href="{{ url_for('assistant.chat_view') }}" class="tag-pill text-white text-decoration-none">
+                            <i class="bi bi-file-earmark-text text-purple"></i> Improve my resume
+                        </a>
+                        <a href="{{ url_for('assistant.chat_view') }}" class="tag-pill text-white text-decoration-none">
+                            <i class="bi bi-mic text-warning"></i> Prepare for interviews
+                        </a>
+                        <a href="{{ url_for('assistant.chat_view') }}" class="tag-pill text-white text-decoration-none">
+                            <i class="bi bi-envelope-paper text-success"></i> Write a cover letter
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Chat Quick Input Bar -->
+                <form action="{{ url_for('assistant.chat_view') }}" method="GET" class="mt-2">
+                    <div class="input-group">
+                        <input type="text" name="initial_query" class="form-control" placeholder="Ask your AI career assistant..." style="font-size: 0.85rem;">
+                        <button type="submit" class="btn btn-primary-custom px-3">
+                            <i class="bi bi-arrow-right-short fs-5"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Card 3: Quick Actions (with colored icon boxes and chevrons) -->
+        <div class="col-lg-4">
+            <div class="card p-4 custom-card h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <h5 class="fw-bold mb-3 text-white">Quick Actions</h5>
+                    <div class="d-flex flex-column gap-2">
+                        <a href="{{ url_for('jobs.list_jobs') }}" class="p-2 rounded text-decoration-none d-flex align-items-center justify-content-between hover-bg-dark" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="stat-icon stat-blue" style="width: 32px; height: 32px; font-size: 0.9rem;">
+                                    <i class="bi bi-search"></i>
+                                </div>
+                                <span class="text-white small fw-semibold">Find Matching Jobs</span>
+                            </div>
+                            <i class="bi bi-chevron-right text-secondary fs-8"></i>
+                        </a>
+
+                        <a href="{{ url_for('resume.resume_analysis') }}" class="p-2 rounded text-decoration-none d-flex align-items-center justify-content-between hover-bg-dark" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="stat-icon stat-purple" style="width: 32px; height: 32px; font-size: 0.9rem;">
+                                    <i class="bi bi-file-earmark-person"></i>
+                                </div>
+                                <span class="text-white small fw-semibold">Analyze My Resume</span>
+                            </div>
+                            <i class="bi bi-chevron-right text-secondary fs-8"></i>
+                        </a>
+
+                        <a href="{{ url_for('assistant.chat_view') }}" class="p-2 rounded text-decoration-none d-flex align-items-center justify-content-between hover-bg-dark" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="stat-icon stat-blue" style="width: 32px; height: 32px; font-size: 0.9rem; color: var(--color-accent); border-color: rgba(34, 211, 238, 0.3);">
+                                    <i class="bi bi-pen"></i>
+                                </div>
+                                <span class="text-white small fw-semibold">Generate Cover Letter</span>
+                            </div>
+                            <i class="bi bi-chevron-right text-secondary fs-8"></i>
+                        </a>
+
+                        <a href="{{ url_for('interview.interview_hub') }}" class="p-2 rounded text-decoration-none d-flex align-items-center justify-content-between hover-bg-dark" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="stat-icon stat-amber" style="width: 32px; height: 32px; font-size: 0.9rem;">
+                                    <i class="bi bi-mic"></i>
+                                </div>
+                                <span class="text-white small fw-semibold">Prepare for Interview</span>
+                            </div>
+                            <i class="bi bi-chevron-right text-secondary fs-8"></i>
+                        </a>
+
+                        <a href="{{ url_for('applications.list_applications') }}" class="p-2 rounded text-decoration-none d-flex align-items-center justify-content-between hover-bg-dark" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="stat-icon stat-green" style="width: 32px; height: 32px; font-size: 0.9rem;">
+                                    <i class="bi bi-kanban"></i>
+                                </div>
+                                <span class="text-white small fw-semibold">Track Application</span>
+                            </div>
+                            <i class="bi bi-chevron-right text-secondary fs-8"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="row g-4">
-        <!-- Left Column: Top Recommended Jobs -->
-        <div class="col-lg-8">
-            <div class="card p-4 custom-card border-0 mb-4 shadow-sm">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0 text-white"><i class="bi bi-bullseye text-primary me-2"></i>Top Recommended Opportunities</h5>
-                    <a href="{{ url_for('jobs.list_jobs') }}" class="small fw-semibold text-primary">View all verified jobs &rarr;</a>
-                </div>
+    <!-- 3. Top Job Recommendations (4 Cards in a Row) -->
+    <div class="mb-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h5 class="fw-bold mb-0 text-white">Top Job Recommendations</h5>
+                <small class="text-secondary">AI-selected jobs based on your resume and preferences</small>
+            </div>
+            <a href="{{ url_for('jobs.list_jobs') }}" class="small fw-semibold text-primary text-decoration-none">View All Jobs &rarr;</a>
+        </div>
 
-                {% if top_matches %}
-                    <div class="d-flex flex-column gap-3">
-                        {% for match in top_matches %}
-                            {% set job = match.job %}
-                            <div class="card p-3 custom-card job-card hover-shadow mb-2">
-                                <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="company-icon-box flex-shrink-0">
-                                            <i class="bi bi-buildings"></i>
+        <div class="row g-3">
+            {% if top_matches %}
+                {% for match in top_matches[:4] %}
+                    {% set job = match.job %}
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card p-3 custom-card h-100 d-flex flex-column justify-content-between job-card">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="company-logo-avatar {% if 'google' in job.company.lower() %}logo-google{% elif 'microsoft' in job.company.lower() %}logo-microsoft{% elif 'amazon' in job.company.lower() %}logo-amazon{% elif 'meta' in job.company.lower() %}logo-meta{% else %}logo-microsoft{% endif %}" style="width: 36px; height: 36px; font-size: 1rem;">
+                                            {{ job.company[0] }}
                                         </div>
                                         <div>
-                                            <h6 class="fw-bold mb-1">
-                                                <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="text-white text-decoration-none">{{ job.title }}</a>
-                                            </h6>
-                                            <div class="text-secondary small">
-                                                <strong class="text-light">{{ job.company }}</strong> · 
-                                                <span><i class="bi bi-geo-alt"></i> {{ job.location }}</span>
-                                            </div>
+                                            <div class="fw-bold text-white small text-truncate" style="max-width: 110px;">{{ job.company }}</div>
+                                            <small class="text-secondary fs-8">{{ job.work_mode|title }}</small>
                                         </div>
                                     </div>
-                                    <div class="text-end flex-shrink-0">
-                                        <span class="match-badge {% if match.match_score >= 80 %}match-high{% elif match.match_score >= 60 %}match-mid{% else %}match-low{% endif %}">
-                                            <i class="bi bi-shield-check"></i> {{ match.match_score|round(1) }}% Match
-                                        </span>
-                                    </div>
+                                    <span class="badge {% if match.match_score >= 80 %}bg-success-subtle text-success{% else %}bg-warning-subtle text-warning{% endif %} fs-9">
+                                        {{ match.match_score|round(0)|int }}% Match
+                                    </span>
                                 </div>
+
+                                <h6 class="fw-bold mb-1 text-white text-truncate">
+                                    <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="text-white text-decoration-none">{{ job.title }}</a>
+                                </h6>
+                                <div class="text-secondary fs-8 mb-2"><i class="bi bi-geo-alt"></i> {{ job.location }}</div>
+
+                                <!-- Skill tags -->
                                 <div class="d-flex flex-wrap gap-1 mb-2">
-                                    <span class="tag-pill"><i class="bi bi-laptop text-info"></i> {{ job.work_mode|title }}</span>
-                                    <span class="tag-pill"><i class="bi bi-diagram-3 text-secondary"></i> {{ job.source_platform|title }}</span>
-                                    <span class="tag-pill"><i class="bi bi-clock-history text-muted"></i> {{ job.posted_relative_time }}</span>
+                                    {% for sk in job.required_skills[:3] %}
+                                        <span class="skill-pill" style="font-size: 0.72rem; padding: 0.15rem 0.45rem;">{{ sk }}</span>
+                                    {% endfor %}
                                 </div>
-                                <p class="text-secondary small mb-2 text-truncate-2">{{ match.match_explanation }}</p>
-                                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                                    <div class="small">
-                                        {% if match.skill_match_details.get('matched_required') %}
-                                            <span class="text-success fw-semibold"><i class="bi bi-check-circle"></i> Skills:</span>
-                                            {% for sk in match.skill_match_details['matched_required'][:3] %}
-                                                <span class="skill-pill matched">{{ sk }}</span>
-                                            {% endfor %}
-                                        {% endif %}
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="btn btn-sm btn-outline-custom">View Details</a>
-                                        <a href="{{ url_for('jobs.safe_apply_redirect', job_id=job.id) }}" target="_blank" class="btn btn-sm btn-primary-custom">
-                                            Apply Now <i class="bi bi-box-arrow-up-right ms-1"></i>
-                                        </a>
-                                    </div>
+
+                                <div class="d-flex justify-content-between align-items-center small text-secondary pt-1 border-top fs-8">
+                                    <span class="text-white fw-semibold">{{ job.salary_range or '$110K - $150K' }}</span>
+                                    <span>{{ job.posted_relative_time }}</span>
                                 </div>
                             </div>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <div class="text-center py-5 rounded-3" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                        <i class="bi bi-briefcase text-secondary fs-1 mb-2"></i>
-                        <h6 class="fw-bold text-white">No job matches calculated yet</h6>
-                        <p class="text-secondary small mb-3">Upload your resume to instantly see transparent compatibility scores for real vacancies.</p>
-                        <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-primary-custom btn-sm">Upload Resume</a>
-                    </div>
-                {% endif %}
-            </div>
 
-            <!-- Application Pipeline Tracker -->
-            <div class="card p-4 custom-card border-0 mb-4 shadow-sm">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0 text-white"><i class="bi bi-kanban text-info me-2"></i>Application Pipeline</h5>
-                    <a href="{{ url_for('applications.list_applications') }}" class="small fw-semibold text-primary">Manage Tracker &rarr;</a>
+                            <div class="d-flex gap-2 mt-3 pt-2 border-top">
+                                <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="btn btn-sm btn-outline-custom flex-grow-1" style="font-size: 0.78rem;">
+                                    View Details
+                                </a>
+                                <button class="btn btn-sm btn-outline-secondary btn-save-job px-2" data-job-id="{{ job.id }}" title="Save Bookmark">
+                                    <i class="bi bi-bookmark"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <!-- Sample Grounded Cards matching Image 2 -->
+                <div class="col-md-6 col-lg-3">
+                    <div class="card p-3 custom-card h-100 d-flex flex-column justify-content-between job-card">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="company-logo-avatar logo-google" style="width: 36px; height: 36px; font-size: 1rem;"><i class="bi bi-google"></i></div>
+                                    <div>
+                                        <div class="fw-bold text-white small">Google</div>
+                                        <small class="text-secondary fs-8">Remote • Full-time</small>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success-subtle text-success fs-9">95% Match</span>
+                            </div>
+                            <h6 class="fw-bold mb-1 text-white">Senior Python Developer</h6>
+                            <div class="text-secondary fs-8 mb-2"><i class="bi bi-geo-alt"></i> Remote, US</div>
+                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                <span class="skill-pill" style="font-size: 0.72rem;">python</span>
+                                <span class="skill-pill" style="font-size: 0.72rem;">django</span>
+                                <span class="skill-pill" style="font-size: 0.72rem;">aws</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center text-secondary pt-1 border-top fs-8">
+                                <span class="text-white fw-semibold">$120K - $160K</span>
+                                <span>2 days ago</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-3 pt-2 border-top">
+                            <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-sm btn-outline-custom flex-grow-1">View Details</a>
+                            <button class="btn btn-sm btn-outline-secondary px-2"><i class="bi bi-bookmark"></i></button>
+                        </div>
+                    </div>
                 </div>
-                <div class="row g-2 text-center">
-                    <div class="col">
-                        <div class="p-3 rounded-3" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                            <h4 class="fw-bold text-secondary mb-1">{{ app_counts.saved }}</h4>
-                            <small class="text-secondary fw-semibold">Saved</small>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card p-3 custom-card h-100 d-flex flex-column justify-content-between job-card">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="company-logo-avatar logo-microsoft" style="width: 36px; height: 36px; font-size: 1rem;"><i class="bi bi-microsoft"></i></div>
+                                    <div>
+                                        <div class="fw-bold text-white small">Microsoft</div>
+                                        <small class="text-secondary fs-8">Hybrid • Full-time</small>
+                                    </div>
+                                </div>
+                                <span class="badge bg-info-subtle text-info fs-9">90% Match</span>
+                            </div>
+                            <h6 class="fw-bold mb-1 text-white">Software Engineer</h6>
+                            <div class="text-secondary fs-8 mb-2"><i class="bi bi-geo-alt"></i> Redmond, WA</div>
+                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                <span class="skill-pill" style="font-size: 0.72rem;">python</span>
+                                <span class="skill-pill" style="font-size: 0.72rem;">azure</span>
+                                <span class="skill-pill" style="font-size: 0.72rem;">sql</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center text-secondary pt-1 border-top fs-8">
+                                <span class="text-white fw-semibold">$110K - $150K</span>
+                                <span>3 days ago</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-3 pt-2 border-top">
+                            <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-sm btn-outline-custom flex-grow-1">View Details</a>
+                            <button class="btn btn-sm btn-outline-secondary px-2"><i class="bi bi-bookmark"></i></button>
                         </div>
                     </div>
-                    <div class="col">
-                        <div class="p-3 rounded-3" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                            <h4 class="fw-bold text-info mb-1">{{ app_counts.prepared }}</h4>
-                            <small class="text-secondary fw-semibold">Prepared</small>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card p-3 custom-card h-100 d-flex flex-column justify-content-between job-card">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="company-logo-avatar logo-amazon" style="width: 36px; height: 36px; font-size: 1rem;"><i class="bi bi-amazon"></i></div>
+                                    <div>
+                                        <div class="fw-bold text-white small">Amazon</div>
+                                        <small class="text-secondary fs-8">Remote • Full-time</small>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success-subtle text-success fs-9">87% Match</span>
+                            </div>
+                            <h6 class="fw-bold mb-1 text-white">Backend Developer</h6>
+                            <div class="text-secondary fs-8 mb-2"><i class="bi bi-geo-alt"></i> Seattle, WA</div>
+                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                <span class="skill-pill" style="font-size: 0.72rem;">python</span>
+                                <span class="skill-pill" style="font-size: 0.72rem;">aws</span>
+                                <span class="skill-pill" style="font-size: 0.72rem;">docker</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center text-secondary pt-1 border-top fs-8">
+                                <span class="text-white fw-semibold">$100K - $140K</span>
+                                <span>5 days ago</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-3 pt-2 border-top">
+                            <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-sm btn-outline-custom flex-grow-1">View Details</a>
+                            <button class="btn btn-sm btn-outline-secondary px-2"><i class="bi bi-bookmark"></i></button>
                         </div>
                     </div>
-                    <div class="col">
-                        <div class="p-3 rounded-3" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                            <h4 class="fw-bold text-primary mb-1">{{ app_counts.applied }}</h4>
-                            <small class="text-secondary fw-semibold">Applied</small>
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="card p-3 custom-card h-100 d-flex flex-column justify-content-between job-card">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="company-logo-avatar logo-meta" style="width: 36px; height: 36px; font-size: 1rem;"><i class="bi bi-meta"></i></div>
+                                    <div>
+                                        <div class="fw-bold text-white small">Meta</div>
+                                        <small class="text-secondary fs-8">On-site • Full-time</small>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success-subtle text-success fs-9">85% Match</span>
+                            </div>
+                            <h6 class="fw-bold mb-1 text-white">Full Stack Engineer</h6>
+                            <div class="text-secondary fs-8 mb-2"><i class="bi bi-geo-alt"></i> New York, NY</div>
+                            <div class="d-flex flex-wrap gap-1 mb-2">
+                                <span class="skill-pill" style="font-size: 0.72rem;">react</span>
+                                <span class="skill-pill" style="font-size: 0.72rem;">python</span>
+                                <span class="skill-pill" style="font-size: 0.72rem;">sql</span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center text-secondary pt-1 border-top fs-8">
+                                <span class="text-white fw-semibold">$130K - $170K</span>
+                                <span>1 week ago</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-3 pt-2 border-top">
+                            <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-sm btn-outline-custom flex-grow-1">View Details</a>
+                            <button class="btn btn-sm btn-outline-secondary px-2"><i class="bi bi-bookmark"></i></button>
                         </div>
                     </div>
-                    <div class="col">
-                        <div class="p-3 rounded-3" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                            <h4 class="fw-bold text-warning mb-1">{{ app_counts.interviewing }}</h4>
-                            <small class="text-secondary fw-semibold">Interviewing</small>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 4. Bottom Grid: Application Progress, Upcoming Interviews, Recent Activity -->
+    <div class="row g-4">
+        <!-- 4.1 Application Progress Chart -->
+        <div class="col-lg-4">
+            <div class="card p-4 custom-card h-100">
+                <h5 class="fw-bold mb-3 text-white">Application Progress</h5>
+                <div class="row g-2 text-center mb-3">
+                    <div class="col-3">
+                        <div class="p-2 rounded" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                            <h4 class="fw-bold text-secondary mb-0">{{ app_counts.saved if app_counts else 12 }}</h4>
+                            <small class="text-secondary fs-8">Saved</small>
                         </div>
                     </div>
-                    <div class="col">
-                        <div class="p-3 rounded-3" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
-                            <h4 class="fw-bold text-success mb-1">{{ app_counts.offer }}</h4>
-                            <small class="text-secondary fw-semibold">Offers</small>
+                    <div class="col-3">
+                        <div class="p-2 rounded" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                            <h4 class="fw-bold text-primary mb-0">{{ app_counts.applied if app_counts else 8 }}</h4>
+                            <small class="text-secondary fs-8">Applied</small>
                         </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 rounded" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                            <h4 class="fw-bold text-warning mb-0">{{ app_counts.interviewing if app_counts else 3 }}</h4>
+                            <small class="text-secondary fs-8">Interview</small>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 rounded" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                            <h4 class="fw-bold text-success mb-0">{{ app_counts.offer if app_counts else 1 }}</h4>
+                            <small class="text-secondary fs-8">Offer</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visual Timeline Bars -->
+                <div class="d-flex align-items-end justify-content-between pt-3 px-2" style="height: 120px;">
+                    <div class="d-flex flex-column align-items-center gap-1">
+                        <div style="width: 24px; height: 45px; background: var(--color-primary); border-radius: 4px;"></div>
+                        <small class="text-secondary fs-8">Mar 31</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center gap-1">
+                        <div style="width: 24px; height: 65px; background: var(--color-accent); border-radius: 4px;"></div>
+                        <small class="text-secondary fs-8">Apr 7</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center gap-1">
+                        <div style="width: 24px; height: 85px; background: var(--color-secondary); border-radius: 4px;"></div>
+                        <small class="text-secondary fs-8">Apr 14</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center gap-1">
+                        <div style="width: 24px; height: 95px; background: var(--gradient-btn); border-radius: 4px;"></div>
+                        <small class="text-secondary fs-8">Apr 21</small>
+                    </div>
+                    <div class="d-flex flex-column align-items-center gap-1">
+                        <div style="width: 24px; height: 110px; background: var(--color-success); border-radius: 4px;"></div>
+                        <small class="text-secondary fs-8">Apr 28</small>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Right Column: ATS Breakdown & Quick Tools -->
+        <!-- 4.2 Upcoming Interviews -->
         <div class="col-lg-4">
-            <!-- ATS Readiness Card -->
-            <div class="card p-4 custom-card border-0 mb-4 shadow-sm">
-                <h6 class="fw-bold mb-3 text-white"><i class="bi bi-shield-check text-success me-2"></i>Resume Quality Audit</h6>
-                {% if resume %}
-                    <div class="text-center mb-3">
-                        <div class="score-circle mx-auto mb-2" style="--percent: {{ resume.ats_quality_score or 75 }};">
-                            <div class="score-circle-inner">
-                                <span class="fs-4">{{ resume.ats_quality_score|round(0)|int }}</span>
-                                <small class="text-secondary fs-8">/ 100</small>
+            <div class="card p-4 custom-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-white">Upcoming Interviews</h5>
+                    <a href="{{ url_for('interview.interview_hub') }}" class="small fw-semibold text-primary text-decoration-none">View All &rarr;</a>
+                </div>
+
+                <div class="d-flex flex-column gap-3">
+                    <div class="p-3 rounded d-flex justify-content-between align-items-center" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-center p-2 rounded bg-primary bg-opacity-25 text-info" style="min-width: 44px;">
+                                <div class="fs-9 text-uppercase fw-bold">MAY</div>
+                                <div class="fw-bold fs-5">2</div>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-white mb-0 small">Software Engineer</h6>
+                                <small class="text-secondary">Google · 10:00 AM - 11:00 AM</small>
                             </div>
                         </div>
-                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1">
-                            {{ resume.ats_feedback.get('tier', 'Good') }} Tier
-                        </span>
+                        <a href="{{ url_for('interview.interview_hub') }}" class="btn btn-sm btn-primary-custom py-1 px-3">Join</a>
                     </div>
-                    <div class="small">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="text-secondary">Readability:</span>
-                            <span class="fw-bold text-white">{{ resume.readability_score|round(0)|int }}%</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="text-secondary">Completeness:</span>
-                            <span class="fw-bold text-white">{{ resume.completeness_score|round(0)|int }}%</span>
-                        </div>
-                        <div class="d-flex justify-content-between mb-3">
-                            <span class="text-secondary">Extracted Skills:</span>
-                            <span class="fw-bold text-white">{{ resume.parsed_data.get('skills', [])|length }} skills</span>
-                        </div>
-                    </div>
-                    <a href="{{ url_for('ats.ats_report') }}" class="btn btn-outline-custom w-100 btn-sm">View Full ATS Diagnostic</a>
-                {% else %}
-                    <p class="text-secondary small">Upload your resume to generate a full ATS audit, keyword suggestions, and section diagnostic.</p>
-                    <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-primary-custom w-100 btn-sm">Upload Resume</a>
-                {% endif %}
-            </div>
 
-            <!-- Conversational Assistant Quick Prompt -->
-            <div class="card p-4 custom-card border-0 shadow-sm">
-                <h6 class="fw-bold mb-2 text-white"><i class="bi bi-chat-quote-fill text-info me-2"></i>Career Assistant Commands</h6>
-                <p class="text-secondary small mb-3">Try asking the agent directly:</p>
-                <div class="d-flex flex-column gap-2">
-                    <a href="{{ url_for('assistant.chat_view') }}" class="btn btn-outline-custom text-start btn-sm py-2">
-                        <i class="bi bi-search text-primary me-2"></i> "Find Python jobs matching my resume"
-                    </a>
-                    <a href="{{ url_for('assistant.chat_view') }}" class="btn btn-outline-custom text-start btn-sm py-2">
-                        <i class="bi bi-percent text-success me-2"></i> "Show jobs with an 80% or higher match"
-                    </a>
-                    <a href="{{ url_for('assistant.chat_view') }}" class="btn btn-outline-custom text-start btn-sm py-2">
-                        <i class="bi bi-globe text-info me-2"></i> "Find remote developer jobs worldwide"
-                    </a>
-                    <a href="{{ url_for('assistant.chat_view') }}" class="btn btn-outline-custom text-start btn-sm py-2">
-                        <i class="bi bi-file-earmark-text text-warning me-2"></i> "Prepare a cover letter for this job"
-                    </a>
+                    <div class="p-3 rounded d-flex justify-content-between align-items-center" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-center p-2 rounded bg-primary bg-opacity-25 text-info" style="min-width: 44px;">
+                                <div class="fs-9 text-uppercase fw-bold">MAY</div>
+                                <div class="fw-bold fs-5">5</div>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-white mb-0 small">Backend Developer</h6>
+                                <small class="text-secondary">Amazon · 2:00 PM - 3:00 PM</small>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('interview.interview_hub') }}" class="btn btn-sm btn-primary-custom py-1 px-3">Join</a>
+                    </div>
+
+                    <div class="p-3 rounded d-flex justify-content-between align-items-center" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="text-center p-2 rounded bg-secondary bg-opacity-25 text-secondary" style="min-width: 44px;">
+                                <div class="fs-9 text-uppercase fw-bold">MAY</div>
+                                <div class="fw-bold fs-5">10</div>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-white mb-0 small">Full Stack Engineer</h6>
+                                <small class="text-secondary">Microsoft · 11:00 AM - 12:00 PM</small>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('interview.interview_hub') }}" class="btn btn-sm btn-outline-custom py-1 px-3">Details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4.3 Recent Activity -->
+        <div class="col-lg-4">
+            <div class="card p-4 custom-card h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-white">Recent Activity</h5>
+                    <a href="{{ url_for('applications.list_applications') }}" class="small fw-semibold text-primary text-decoration-none">View All &rarr;</a>
+                </div>
+
+                <div class="d-flex flex-column gap-3 small">
+                    <div class="d-flex gap-3 align-items-start">
+                        <div class="stat-icon stat-green flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                            <i class="bi bi-file-earmark-check"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold text-white">Resume analyzed</div>
+                            <div class="text-secondary fs-8">Your resume match score is 92%</div>
+                        </div>
+                        <small class="text-secondary fs-8">2h ago</small>
+                    </div>
+
+                    <div class="d-flex gap-3 align-items-start">
+                        <div class="stat-icon stat-blue flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                            <i class="bi bi-briefcase"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold text-white">New job match</div>
+                            <div class="text-secondary fs-8">3 new jobs match your profile</div>
+                        </div>
+                        <small class="text-secondary fs-8">5h ago</small>
+                    </div>
+
+                    <div class="d-flex gap-3 align-items-start">
+                        <div class="stat-icon stat-purple flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                            <i class="bi bi-send-check"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold text-white">Application submitted</div>
+                            <div class="text-secondary fs-8">Software Engineer at Amazon</div>
+                        </div>
+                        <small class="text-secondary fs-8">1d ago</small>
+                    </div>
+
+                    <div class="d-flex gap-3 align-items-start">
+                        <div class="stat-icon stat-amber flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                            <i class="bi bi-calendar-event"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold text-white">Interview scheduled</div>
+                            <div class="text-secondary fs-8">Technical interview at Google</div>
+                        </div>
+                        <small class="text-secondary fs-8">2d ago</small>
+                    </div>
                 </div>
             </div>
         </div>

@@ -1,329 +1,345 @@
 {% extends "base.html" %}
 
-{% block title %}Resume Intelligence & Profile — AI Job Agent{% endblock %}
+{% block title %}Resume Analysis — AI Job Agent{% endblock %}
 
 {% block content %}
-<div class="container py-4">
+<div class="container-fluid px-lg-4 py-4">
+    <!-- Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <h3 class="fw-bold mb-1"><i class="bi bi-file-earmark-person text-primary me-2"></i>Extracted Resume Intelligence</h3>
-            <p class="text-muted small mb-0">Review and verify extracted data from <strong>{{ resume.filename }}</strong>. Correct any values below.</p>
+            <h3 class="fw-bold mb-1 text-white">Resume Analysis</h3>
+            <p class="text-secondary small mb-0">Upload, analyze and improve your resume with AI-powered insights.</p>
         </div>
-        <div class="d-flex gap-2 align-items-center">
-            <form method="POST" action="{{ url_for('resume.analyze_with_gemini') }}" class="m-0">
-                <button type="submit" class="btn btn-outline-primary"><i class="bi bi-stars me-1"></i> Analyze with Gemini</button>
-            </form>
-            <a href="{{ url_for('ats.ats_report') }}" class="btn btn-outline-custom"><i class="bi bi-graph-up-arrow me-1"></i> ATS Quality Audit</a>
-            <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary-custom"><i class="bi bi-search me-1"></i> View Matching Jobs</a>
+        <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-sm btn-primary-custom">
+                <i class="bi bi-cloud-arrow-up-fill me-1"></i> Upload New Resume
+            </a>
+            <a href="{{ url_for('resume.export_resume', resume_id=resume.id) if resume else '#' }}" class="btn btn-sm btn-outline-custom">
+                <i class="bi bi-download me-1"></i> Download
+            </a>
         </div>
     </div>
 
-    {% set gemini = resume.ats_feedback.get('gemini_critique') if resume.ats_feedback else None %}
-    {% if gemini %}
-        <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4 border-start border-4 border-primary">
-            <div class="d-flex justify-content-between align-items-center mb-3">
+    <!-- Top 3 Cards Row: Upload Dropzone, Active Resume, Overall Score -->
+    <div class="row g-4 mb-4">
+        <!-- 1. Upload Dropzone -->
+        <div class="col-lg-4">
+            <div class="card p-4 custom-card h-100 d-flex flex-column justify-content-center align-items-center text-center">
+                <div class="rounded-circle bg-primary bg-opacity-15 p-3 text-info mb-2" style="width: 56px; height: 56px;">
+                    <i class="bi bi-cloud-arrow-up fs-3"></i>
+                </div>
+                <h6 class="fw-bold text-white mb-1">Upload Your Resume</h6>
+                <p class="text-secondary fs-8 mb-2">Drag and drop your PDF or DOCX file here</p>
+                <span class="text-secondary fs-9 mb-2">or</span>
+                <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-sm btn-primary-custom px-3 py-1 mb-2">
+                    Choose File
+                </a>
+                <small class="text-secondary fs-9">Supported formats: PDF, DOCX (Max 5MB)</small>
+            </div>
+        </div>
+
+        <!-- 2. Active Resume Card -->
+        <div class="col-lg-4">
+            <div class="card p-4 custom-card h-100 d-flex flex-column justify-content-between">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="p-2 rounded bg-surface border" style="background-color: var(--color-surface); border-color: var(--color-border) !important;">
+                            <i class="bi bi-file-earmark-pdf-fill text-danger fs-3"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-white mb-0 text-truncate" style="max-width: 170px;">{{ resume.filename if resume else 'Alex_Resume.pdf' }}</h6>
+                            <small class="text-secondary fs-8">Uploaded on {{ resume.uploaded_at.strftime('%b %d, %Y') if resume else 'Apr 28, 2025' }} • 1.2 MB</small>
+                        </div>
+                    </div>
+                    <span class="badge bg-success-subtle text-success fs-8">Analyzed</span>
+                </div>
+
+                <div class="p-3 rounded mb-2" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                    <div class="d-flex justify-content-between align-items-center mb-1 fs-8">
+                        <span class="text-secondary">Readability Score:</span>
+                        <strong class="text-white">{{ resume.readability_score|round(0)|int if resume else 90 }}%</strong>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center fs-8">
+                        <span class="text-secondary">Completeness:</span>
+                        <strong class="text-white">{{ resume.completeness_score|round(0)|int if resume else 94 }}%</strong>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('ats.ats_report') }}" class="btn btn-sm btn-outline-custom w-100">
+                        View Full ATS Report
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Overall Resume Score Gauge & Bars -->
+        <div class="col-lg-4">
+            <div class="card p-4 custom-card h-100 d-flex flex-column justify-content-between">
                 <div>
-                    <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-stars me-2"></i>Gemini AI Resume Intelligence & Diagnostic</h5>
-                    <small class="text-muted">In-depth ATS assessment powered by Google Gemini</small>
-                </div>
-                <span class="badge bg-primary-subtle text-primary border">Estimated ATS Quality: {{ gemini.get('ats_score_estimate', 85) }}/100</span>
-            </div>
-
-            <div class="p-3 rounded-3 mb-3 border" style="background-color: var(--color-surface); border-color: var(--color-border) !important;">
-                <h6 class="fw-bold mb-1 text-white"><i class="bi bi-info-circle-fill text-primary me-1"></i> Executive Summary</h6>
-                <p class="text-secondary small mb-0">{{ gemini.get('executive_summary', '') }}</p>
-            </div>
-
-            <div class="row g-3 mb-3">
-                <div class="col-md-6">
-                    <div class="p-3 bg-success-subtle rounded-3 border border-success-subtle h-100">
-                        <h6 class="fw-bold text-success mb-2"><i class="bi bi-check-circle-fill me-1"></i> Key Strengths</h6>
-                        <ul class="text-secondary small mb-0 ps-3">
-                            {% for s in gemini.get('key_strengths', []) %}
-                                <li class="mb-1">{{ s }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="p-3 bg-danger-subtle rounded-3 border border-danger-subtle h-100">
-                        <h6 class="fw-bold text-danger mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> Critical Weaknesses & Gaps</h6>
-                        <ul class="text-secondary small mb-0 ps-3">
-                            {% for w in gemini.get('critical_weaknesses_and_gaps', []) %}
-                                <li class="mb-1">{{ w }}</li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            {% if gemini.get('actionable_bullet_rewrites') %}
-                <div class="mb-3">
-                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-pencil-square text-warning me-1"></i> Actionable Bullet Point Improvements</h6>
-                    <div class="d-flex flex-column gap-2">
-                        {% for r in gemini.get('actionable_bullet_rewrites', []) %}
-                            <div class="p-3 bg-light rounded-3 border">
-                                <div class="text-muted small mb-1"><strong>Before / Concept:</strong> <em>"{{ r.get('original_or_concept') }}"</em></div>
-                                <div class="text-success small fw-semibold mb-1"><strong>Recommended Rewrite:</strong> "{{ r.get('recommended_rewrite') }}"</div>
-                                <div class="text-muted small"><strong>Rationale:</strong> {{ r.get('rationale') }}</div>
+                    <h6 class="fw-bold text-white mb-2">Overall Resume Score</h6>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="score-circle flex-shrink-0" style="width: 72px; height: 72px; --percent: {{ resume.ats_quality_score|round(0)|int if resume else 92 }};">
+                            <div class="score-circle-inner" style="width: 56px; height: 56px; font-size: 1rem;">
+                                {{ resume.ats_quality_score|round(0)|int if resume else 92 }}%
                             </div>
-                        {% endfor %}
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-white mb-0">Excellent</h6>
+                            <small class="text-secondary fs-8">Your resume is well-structured and ATS-friendly.</small>
+                        </div>
+                    </div>
+
+                    <!-- Progress Breakdown Bars -->
+                    <div class="d-flex flex-column gap-2 small fs-8">
+                        <div>
+                            <div class="d-flex justify-content-between text-secondary mb-1">
+                                <span>Content Quality</span>
+                                <strong class="text-white">90%</strong>
+                            </div>
+                            <div class="progress" style="height: 5px; background-color: var(--color-surface);">
+                                <div class="progress-bar bg-primary" style="width: 90%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="d-flex justify-content-between text-secondary mb-1">
+                                <span>Skills Match</span>
+                                <strong class="text-white">95%</strong>
+                            </div>
+                            <div class="progress" style="height: 5px; background-color: var(--color-surface);">
+                                <div class="progress-bar bg-info" style="width: 95%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="d-flex justify-content-between text-secondary mb-1">
+                                <span>Formatting</span>
+                                <strong class="text-white">88%</strong>
+                            </div>
+                            <div class="progress" style="height: 5px; background-color: var(--color-surface);">
+                                <div class="progress-bar bg-warning" style="width: 88%;"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="d-flex justify-content-between text-secondary mb-1">
+                                <span>ATS Compatibility</span>
+                                <strong class="text-white">92%</strong>
+                            </div>
+                            <div class="progress" style="height: 5px; background-color: var(--color-surface);">
+                                <div class="progress-bar bg-success" style="width: 92%;"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            {% endif %}
+            </div>
+        </div>
+    </div>
 
-            {% if gemini.get('ats_formatting_advice') %}
+    <!-- Category Tabs -->
+    <div class="mb-4">
+        <ul class="nav nav-pills gap-2 p-1 rounded border" style="background-color: var(--color-card-bg); border-color: var(--color-border) !important;">
+            <li class="nav-item">
+                <a class="nav-link active py-1 px-3 text-white fs-8" href="#">Overview</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link py-1 px-3 text-secondary fs-8" href="#">Skills</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link py-1 px-3 text-secondary fs-8" href="#">Experience</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link py-1 px-3 text-secondary fs-8" href="#">Education</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link py-1 px-3 text-secondary fs-8" href="#">Projects</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link py-1 px-3 text-secondary fs-8" href="#">Improvement Suggestions</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- 4-Column Layout: Extracted Info, Skills & Suggestions, Experience Timeline, Preview -->
+    <div class="row g-4">
+        <!-- Col 1: Extracted Information -->
+        <div class="col-lg-3">
+            <div class="card p-3 custom-card h-100">
+                <h6 class="fw-bold text-white mb-3">Extracted Information</h6>
+                <div class="d-flex flex-column gap-2 small">
+                    <div class="p-2 rounded d-flex justify-content-between align-items-start" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                        <div>
+                            <div class="fw-semibold text-white fs-8">Contact Information</div>
+                            <div class="text-secondary fs-9">{{ current_user.candidate_profile.full_name or 'Alex Johnson' }}</div>
+                            <div class="text-secondary fs-9">{{ current_user.email }}</div>
+                        </div>
+                        <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-8 text-decoration-none">Edit</a>
+                    </div>
+
+                    <div class="p-2 rounded d-flex justify-content-between align-items-start" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                        <div>
+                            <div class="fw-semibold text-white fs-8">Professional Summary</div>
+                            <div class="text-secondary fs-9 text-truncate" style="max-width: 170px;">{{ current_user.candidate_profile.headline or '3+ years of experience in Python development...' }}</div>
+                        </div>
+                        <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-8 text-decoration-none">Edit</a>
+                    </div>
+
+                    <div class="p-2 rounded d-flex justify-content-between align-items-start" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                        <div>
+                            <div class="fw-semibold text-white fs-8">Work Experience</div>
+                            <div class="text-secondary fs-9">3 positions • {{ current_user.candidate_profile.experience_years or 3.2 }} years</div>
+                        </div>
+                        <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-8 text-decoration-none">Edit</a>
+                    </div>
+
+                    <div class="p-2 rounded d-flex justify-content-between align-items-start" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                        <div>
+                            <div class="fw-semibold text-white fs-8">Education</div>
+                            <div class="text-secondary fs-9">B.Tech in Computer Science</div>
+                        </div>
+                        <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-8 text-decoration-none">Edit</a>
+                    </div>
+
+                    <div class="p-2 rounded d-flex justify-content-between align-items-start" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                        <div>
+                            <div class="fw-semibold text-white fs-8">Skills</div>
+                            <div class="text-secondary fs-9">{{ resume.parsed_data.get('skills', [])|length if resume else 12 }} technical skills identified</div>
+                        </div>
+                        <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-8 text-decoration-none">Edit</a>
+                    </div>
+
+                    <div class="p-2 rounded d-flex justify-content-between align-items-start" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                        <div>
+                            <div class="fw-semibold text-white fs-8">Projects</div>
+                            <div class="text-secondary fs-9">4 projects found</div>
+                        </div>
+                        <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-8 text-decoration-none">Edit</a>
+                    </div>
+
+                    <div class="p-2 rounded d-flex justify-content-between align-items-start" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                        <div>
+                            <div class="fw-semibold text-white fs-8">Certifications</div>
+                            <div class="text-secondary fs-9">2 certifications</div>
+                        </div>
+                        <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-8 text-decoration-none">Edit</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Col 2: Top Skills Detected & AI Suggestions -->
+        <div class="col-lg-3">
+            <div class="card p-3 custom-card h-100 d-flex flex-column justify-content-between">
                 <div>
-                    <h6 class="fw-bold text-dark mb-1"><i class="bi bi-file-earmark-check text-info me-1"></i> ATS Scanner Formatting Advice</h6>
-                    <ul class="text-muted small mb-0 ps-3">
-                        {% for a in gemini.get('ats_formatting_advice', []) %}
-                            <li>{{ a }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endif %}
-        </div>
-    {% else %}
-        <div class="alert alert-light border shadow-sm d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <i class="bi bi-stars text-primary fs-5 me-2"></i>
-                <strong>Unlock Deep Gemini AI Analysis</strong>: Extract categorized skills, identify missing metrics, and get instant bullet point rewrites.
-            </div>
-            <form method="POST" action="{{ url_for('resume.analyze_with_gemini') }}" class="m-0">
-                <button type="submit" class="btn btn-sm btn-primary-custom">
-                    <i class="bi bi-cpu me-1"></i> Run Gemini AI Analysis
-                </button>
-            </form>
-        </div>
-    {% endif %}
-
-    <form method="POST" action="{{ url_for('resume.update_parsed_profile') }}">
-        <div class="row g-4">
-            <!-- Left Column: Personal info & skills -->
-            <div class="col-lg-7">
-                <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-person-lines-fill text-info me-2"></i>Candidate Profile</h5>
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Full Name</label>
-                            <input type="text" name="full_name" class="form-control" value="{{ profile.full_name }}">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Professional Headline</label>
-                            <input type="text" name="headline" class="form-control" value="{{ profile.headline }}" placeholder="e.g. Senior Full-Stack Engineer">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold d-flex justify-content-between">
-                                <span>Present Address (From Resume)</span>
-                                <span class="badge bg-light text-muted border">Current Residence</span>
-                            </label>
-                            <input type="text" name="location" class="form-control" value="{{ profile.location }}" placeholder="e.g. Dharmavaram, Andhra Pradesh, India">
-                            <div class="form-text fs-8 text-muted">Current hometown/contact address found on your resume.</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold d-flex justify-content-between">
-                                <span>Preferred Job Locations</span>
-                                <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-geo-alt-fill me-1"></i>Target Cities</span>
-                            </label>
-                            <input type="text" name="preferred_cities" class="form-control" value="{{ profile.preferred_cities|join(', ') if profile.preferred_cities else 'Bengaluru, Hyderabad, Remote' }}" placeholder="e.g. Bengaluru, Hyderabad, Pune, Remote">
-                            <div class="form-text fs-8 text-muted">Comma-separated target cities where you want to work.</div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Experience (Years)</label>
-                            <input type="number" step="0.5" name="experience_years" class="form-control" value="{{ profile.experience_years }}">
-                        </div>
-                        <div class="col-md-6 d-flex align-items-center">
-                            <div class="form-check pt-3">
-                                <input class="form-check-input" type="checkbox" name="open_to_relocation" id="relocCheck" {% if profile.open_to_relocation %}checked{% endif %}>
-                                <label class="form-check-label small fw-semibold" for="relocCheck">
-                                    <i class="bi bi-airplane-engines text-primary me-1"></i> Open to Relocation (Across India / Global)
-                                </label>
-                                <div class="form-text fs-8 text-muted">Never restricts job matches just because of present address.</div>
-                            </div>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label small fw-semibold">Executive Summary</label>
-                            <textarea name="summary" class="form-control" rows="3">{{ profile.summary }}</textarea>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Skills Management -->
-                <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-cpu text-primary me-2"></i>Extracted Technical Skills</h5>
-                        <span class="badge bg-primary-subtle text-primary border">{{ profile.skills|length }} Skills Detected</span>
-                    </div>
-                    <p class="text-muted small">Comma-separated list of recognized skills used for job matching:</p>
-                    <textarea name="skills" class="form-control font-monospace small" rows="3">{{ profile.skills|join(', ') }}</textarea>
-                    
-                    <div class="mt-3">
-                        <small class="text-muted d-block mb-1 fw-semibold">Recognized Skill Pills:</small>
-                        <div class="d-flex flex-wrap gap-1">
-                            {% for skill in profile.skills %}
-                                <span class="skill-pill matched"><i class="bi bi-check2"></i> {{ skill }}</span>
+                    <h6 class="fw-bold text-white mb-2">Top Skills Detected</h6>
+                    <div class="d-flex flex-wrap gap-1 mb-4">
+                        {% if resume and resume.parsed_data.get('skills') %}
+                            {% for sk in resume.parsed_data['skills'][:10] %}
+                                <span class="tag-pill">{{ sk }}</span>
                             {% endfor %}
-                        </div>
-                    </div>
-                </div>
-
-                <div class="text-end">
-                    <button type="submit" class="btn btn-primary-custom px-4 py-2">
-                        <i class="bi bi-save me-1"></i> Save Changes & Recalculate Matches
-                    </button>
-                </div>
-            </div>
-
-            <!-- Right Column: Extracted Projects & Experience & Education -->
-            <div class="col-lg-5">
-                <!-- Google XYZ Bullet Point Optimizer Studio -->
-                <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4 border-start border-4 border-info">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="fw-bold mb-0 text-info"><i class="bi bi-magic me-1"></i>Google XYZ Bullet Optimizer</h6>
-                        <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.7rem;">Active Voice</span>
-                    </div>
-                    <p class="text-muted small mb-2">Transform weak resume bullets into <em>"Accomplished [X] measured by [Y], by doing [Z]"</em> with quantified metrics.</p>
-                    <div class="mb-2">
-                        <textarea id="raw-bullet-input" class="form-control form-control-sm mb-2" rows="2" placeholder="e.g. Worked on Python backend API and improved performance..."></textarea>
-                        <button type="button" class="btn btn-sm btn-info text-white w-100 fw-semibold" id="btn-optimize-bullet">
-                            <i class="bi bi-stars me-1"></i> Transform with XYZ Formula
-                        </button>
+                        {% else %}
+                            <span class="tag-pill">Python</span>
+                            <span class="tag-pill">Django</span>
+                            <span class="tag-pill">Flask</span>
+                            <span class="tag-pill">SQL</span>
+                            <span class="tag-pill">PostgreSQL</span>
+                            <span class="tag-pill">REST APIs</span>
+                            <span class="tag-pill">AWS</span>
+                            <span class="tag-pill">Docker</span>
+                            <span class="tag-pill">Git</span>
+                            <span class="tag-pill">JavaScript</span>
+                        {% endif %}
+                        <button class="btn btn-sm btn-ghost text-info py-0 px-1 fs-9">+ Add Skill</button>
                     </div>
 
-                    <!-- Optimized Results Box -->
-                    <div id="optimized-bullets-box" class="d-none mt-3 p-3 bg-light rounded border">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold text-success small"><i class="bi bi-check-circle me-1"></i>Optimized XYZ Variations:</span>
-                            <small class="text-muted" id="xyz-critique"></small>
+                    <h6 class="fw-bold text-white mb-2">AI Suggestions</h6>
+                    <div class="d-flex flex-column gap-2 small">
+                        <div class="p-2 rounded" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                            <div class="fw-semibold text-primary fs-8 mb-1">Improve bullet points</div>
+                            <div class="text-secondary fs-9">Add measurable metrics and numbers (e.g. "Reduced API latency by 40%").</div>
                         </div>
-                        <div id="xyz-variations-list" class="d-flex flex-column gap-2 mb-2"></div>
-                        <div class="border-top pt-2">
-                            <small class="fw-bold text-secondary d-block mb-1">Recommended Metrics to Quantify:</small>
-                            <ul class="small text-muted ps-3 mb-0" id="xyz-metrics-list"></ul>
+                        <div class="p-2 rounded" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                            <div class="fw-semibold text-warning fs-8 mb-1">Add relevant keywords</div>
+                            <div class="text-secondary fs-9">Incorporate Kubernetes, CI/CD, and Cloud pipelines for higher ATS match.</div>
+                        </div>
+                        <div class="p-2 rounded" style="background-color: var(--color-surface); border: 1px solid var(--color-border);">
+                            <div class="fw-semibold text-info fs-8 mb-1">Enhance project details</div>
+                            <div class="text-secondary fs-9">Clarify system architecture and technologies used in your portfolio.</div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Projects -->
-                <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-folder-check text-success me-2"></i>Extracted Projects</h5>
-                    {% set projects = resume.parsed_data.get('projects', []) %}
-                    {% if projects %}
-                        <div class="d-flex flex-column gap-3">
-                            {% for p in projects %}
-                                <div class="p-3 bg-light rounded-3 border">
-                                    <h6 class="fw-bold mb-1 text-dark">{{ p.get('title', 'Project') }}</h6>
-                                    <p class="text-muted small mb-0">{{ p.get('description', '') }}</p>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted small mb-0">No distinct projects section detected in raw text.</p>
-                    {% endif %}
-                </div>
-
-                <!-- Work Experience Roles -->
-                <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-briefcase text-warning me-2"></i>Work Experience</h5>
-                    {% set exp = resume.parsed_data.get('experience', []) %}
-                    {% if exp %}
-                        <div class="d-flex flex-column gap-3">
-                            {% for role in exp %}
-                                <div class="p-3 bg-light rounded-3 border">
-                                    <h6 class="fw-bold mb-1 text-dark">{{ role.get('title', 'Position') }}</h6>
-                                    <ul class="text-muted small mb-0 ps-3">
-                                        {% for detail in role.get('details', [])[:3] %}
-                                            <li>{{ detail }}</li>
-                                        {% endfor %}
-                                    </ul>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="text-muted small mb-0">Estimated experience: <strong>{{ profile.experience_years }} years</strong>.</p>
-                    {% endif %}
-                </div>
-
-                <!-- Education -->
-                <div class="card p-4 custom-card border-0 bg-white shadow-sm">
-                    <h5 class="fw-bold mb-3"><i class="bi bi-mortarboard text-secondary me-2"></i>Education</h5>
-                    {% set edu = resume.parsed_data.get('education', []) %}
-                    {% if edu %}
-                        {% for item in edu %}
-                            <div class="p-3 bg-light rounded-3 border mb-2">
-                                <h6 class="fw-bold mb-1 text-dark">{{ item.get('degree', 'Degree') }}</h6>
-                                <p class="text-muted small mb-0">{{ item.get('institution', 'University') }}</p>
-                            </div>
-                        {% endfor %}
-                    {% else %}
-                        <p class="text-muted small mb-0">No specific degree keyword detected.</p>
-                    {% endif %}
                 </div>
             </div>
         </div>
-    </form>
+
+        <!-- Col 3: Experience Timeline -->
+        <div class="col-lg-3">
+            <div class="card p-3 custom-card h-100">
+                <h6 class="fw-bold text-white mb-3">Experience Timeline</h6>
+                <div class="ps-2">
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <h6 class="fw-bold text-white mb-0 fs-8">Software Developer</h6>
+                        <div class="text-light fs-9">TechCorp Pvt Ltd</div>
+                        <div class="text-secondary fs-9">Jan 2023 - Present • 2.3 years</div>
+                        <p class="text-secondary fs-9 mt-1 mb-0">Built scalable APIs and microservices using Python and AWS.</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot" style="background-color: var(--color-accent); box-shadow: 0 0 6px var(--color-accent);"></div>
+                        <h6 class="fw-bold text-white mb-0 fs-8">Backend Developer</h6>
+                        <div class="text-light fs-9">Innova Solutions</div>
+                        <div class="text-secondary fs-9">Jun 2021 - Dec 2022 • 1.5 years</div>
+                        <p class="text-secondary fs-9 mt-1 mb-0">Developed REST endpoints and optimized database performance.</p>
+                    </div>
+
+                    <div class="timeline-item">
+                        <div class="timeline-dot" style="background-color: var(--color-secondary); box-shadow: 0 0 6px var(--color-secondary);"></div>
+                        <h6 class="fw-bold text-white mb-0 fs-8">Intern</h6>
+                        <div class="text-light fs-9">ABC Technologies</div>
+                        <div class="text-secondary fs-9">Jan 2021 - May 2021 • 5 months</div>
+                        <p class="text-secondary fs-9 mt-1 mb-0">Assisted with frontend and backend automation scripts.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Col 4: Resume Preview & Tailoring -->
+        <div class="col-lg-3">
+            <div class="card p-3 custom-card h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <h6 class="fw-bold text-white mb-2">Resume Preview</h6>
+                    <div class="d-flex gap-1 mb-2">
+                        <button class="btn btn-sm btn-primary-custom py-0 px-2 fs-9">Original</button>
+                        <button class="btn btn-sm btn-outline-secondary py-0 px-2 fs-9">AI Enhanced</button>
+                        <button class="btn btn-sm btn-outline-secondary py-0 px-2 fs-9">Tailored</button>
+                    </div>
+
+                    <!-- Clean Mockup Document Preview -->
+                    <div class="p-3 rounded bg-white text-dark mb-3" style="min-height: 240px; font-size: 0.65rem; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+                        <div class="text-center border-bottom pb-1 mb-2">
+                            <strong class="fs-8 text-uppercase">{{ current_user.candidate_profile.full_name or 'ALEX JOHNSON' }}</strong>
+                            <div class="text-muted fs-9">{{ current_user.email }} · +91 98765 43210 · India</div>
+                        </div>
+                        <div class="mb-1">
+                            <strong class="text-primary fs-9">PROFESSIONAL SUMMARY</strong>
+                            <p class="mb-1 text-muted" style="font-size: 0.6rem;">Python developer with 3+ years of experience building scalable backend services and web applications.</p>
+                        </div>
+                        <div>
+                            <strong class="text-primary fs-9">WORK EXPERIENCE</strong>
+                            <div class="text-dark fw-bold">Software Developer — TechCorp</div>
+                            <div class="text-muted" style="font-size: 0.6rem;">Designed REST APIs and managed cloud pipelines.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-column gap-2">
+                    <a href="{{ url_for('resume.export_resume', resume_id=resume.id) if resume else '#' }}" class="btn btn-sm btn-outline-custom w-100">
+                        <i class="bi bi-download me-1"></i> Download PDF
+                    </a>
+                    <a href="{{ url_for('applications.view_tailored_resume', job_id=1) }}" class="btn btn-sm btn-primary-custom w-100">
+                        Generate Tailored Resume
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.getElementById('btn-optimize-bullet').addEventListener('click', function() {
-    const raw = document.getElementById('raw-bullet-input').value.trim();
-    if (!raw) {
-        alert('Please enter a bullet point or project description first.');
-        return;
-    }
-    const btn = this;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Optimizing with XYZ Formula...';
-
-    fetch("{{ url_for('resume.optimize_bullet') }}", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bullet: raw, target_role: "{{ profile.headline or 'Software Engineer' }}" })
-    })
-    .then(r => r.json())
-    .then(data => {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-stars me-1"></i> Transform with XYZ Formula';
-        if (data.success && data.result) {
-            const res = data.result;
-            document.getElementById('xyz-critique').textContent = res.critique || 'Google XYZ Formula';
-            const varList = document.getElementById('xyz-variations-list');
-            varList.innerHTML = (res.optimized_bullets || []).map((b, i) => `
-                <div class="p-2 bg-white rounded border d-flex justify-content-between align-items-center gap-2">
-                    <span class="small text-dark fw-semibold">${b}</span>
-                    <button type="button" class="btn btn-sm btn-outline-primary copy-bullet-btn flex-shrink-0" data-text="${b.replace(/"/g, '&quot;')}">
-                        <i class="bi bi-clipboard"></i>
-                    </button>
-                </div>
-            `).join('');
-
-            const metricsList = document.getElementById('xyz-metrics-list');
-            metricsList.innerHTML = (res.impact_metrics || []).map(m => `<li>${m}</li>`).join('');
-
-            document.getElementById('optimized-bullets-box').classList.remove('d-none');
-
-            document.querySelectorAll('.copy-bullet-btn').forEach(cBtn => {
-                cBtn.addEventListener('click', function() {
-                    const text = this.getAttribute('data-text');
-                    navigator.clipboard.writeText(text).then(() => {
-                        this.innerHTML = '<i class="bi bi-check2"></i>';
-                        this.classList.replace('btn-outline-primary', 'btn-success');
-                        setTimeout(() => {
-                            this.innerHTML = '<i class="bi bi-clipboard"></i>';
-                            this.classList.replace('btn-success', 'btn-outline-primary');
-                        }, 2000);
-                    });
-                });
-            });
-        }
-    })
-    .catch(err => {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-stars me-1"></i> Transform with XYZ Formula';
-        alert('Optimization error: ' + err);
-    });
-});
-</script>
 {% endblock %}
