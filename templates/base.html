@@ -67,91 +67,65 @@
                     </div>
                 </div>
 
-                <!-- Navigation Section 1: Discovery -->
+                <!-- Navigation: Main Suite (Matching v1.0 Overview Blueprint) -->
                 <div class="nav-section-title text-uppercase text-secondary fw-bold px-2 mb-1" style="font-size: 0.68rem; letter-spacing: 0.05rem;">
-                    Job Discovery
+                    Platform Menu
                 </div>
                 <ul class="nav flex-column mb-3">
                     <li class="nav-item">
-                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2 rounded hover-bg-dark" href="{{ url_for('jobs.list_jobs') }}">
-                            <span><i class="bi bi-briefcase-fill text-info me-2"></i> Discover Jobs</span>
-                            <span class="badge bg-success text-white" style="font-size: 0.65rem;">Freshest</span>
+                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2.5 rounded {% if request.endpoint in ['dashboard.dashboard', 'dashboard.index'] %}bg-primary text-white fw-semibold shadow-xs{% else %}hover-bg-dark{% endif %}" href="{{ url_for('dashboard.dashboard') }}">
+                            <span><i class="bi bi-speedometer2 me-2 {% if request.endpoint in ['dashboard.dashboard', 'dashboard.index'] %}text-white{% else %}text-primary{% endif %}"></i> Dashboard</span>
+                            <span class="badge bg-white text-dark small" style="font-size: 0.65rem;">v1.0</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2 rounded hover-bg-dark" href="{{ url_for('jobs.saved_jobs') }}">
-                            <span><i class="bi bi-bookmark-fill text-warning me-2"></i> Saved Jobs</span>
+                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2.5 rounded {% if request.endpoint == 'jobs.list_jobs' %}bg-primary text-white fw-semibold shadow-xs{% else %}hover-bg-dark{% endif %}" href="{{ url_for('jobs.list_jobs') }}">
+                            <span><i class="bi bi-search me-2 {% if request.endpoint == 'jobs.list_jobs' %}text-white{% else %}text-info{% endif %}"></i> Find Jobs</span>
+                            <span class="badge bg-success text-white" style="font-size: 0.65rem;">Verified</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2 rounded hover-bg-dark" href="{{ url_for('alerts.alerts_home') }}">
-                            <span><i class="bi bi-bell-fill text-warning me-2"></i> Smart Job Alerts</span>
+                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2.5 rounded {% if request.endpoint in ['resume.resume_analysis', 'resume.upload_resume'] %}bg-primary text-white fw-semibold shadow-xs{% else %}hover-bg-dark{% endif %}" href="{{ url_for('resume.resume_analysis') }}">
+                            <span><i class="bi bi-file-earmark-person-fill me-2 {% if request.endpoint in ['resume.resume_analysis', 'resume.upload_resume'] %}text-white{% else %}text-primary{% endif %}"></i> Resume</span>
+                            <span class="badge bg-purple-subtle text-purple border" style="font-size: 0.65rem; background: rgba(139, 92, 246, 0.15); color: #C084FC;">AI Intel</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2 rounded hover-bg-dark" href="{{ url_for('watchlist.view_watchlist') }}">
-                            <span><i class="bi bi-star-fill text-warning me-2"></i> Dream Companies</span>
-                            <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">Watchlist</span>
-                        </a>
-                    </li>
-                </ul>
-
-                <!-- Navigation Section 2: Applications & AI Tools -->
-                <div class="nav-section-title text-uppercase text-secondary fw-bold px-2 mb-1" style="font-size: 0.68rem; letter-spacing: 0.05rem;">
-                    Applications & AI Suite
-                </div>
-                <ul class="nav flex-column mb-3">
-                    <li class="nav-item">
-                        <a class="nav-link text-light py-2 px-2 rounded hover-bg-dark" href="{{ url_for('applications.list_applications') }}">
-                            <i class="bi bi-kanban-fill text-primary me-2"></i> Applications Kanban
+                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2.5 rounded {% if request.endpoint == 'applications.list_applications' %}bg-primary text-white fw-semibold shadow-xs{% else %}hover-bg-dark{% endif %}" href="{{ url_for('applications.list_applications') }}">
+                            <span><i class="bi bi-kanban-fill me-2 {% if request.endpoint == 'applications.list_applications' %}text-white{% else %}text-warning{% endif %}"></i> Applications</span>
+                            <span class="badge bg-info-subtle text-info" style="font-size: 0.65rem;">Pipeline</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-light py-2 px-2 rounded hover-bg-dark" href="{{ url_for('interview.interview_hub') }}">
-                            <i class="bi bi-mic-fill text-danger me-2"></i> AI Mock Interview (STAR)
+                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2.5 rounded {% if request.endpoint == 'assistant.chat_view' %}bg-primary text-white fw-semibold shadow-xs{% else %}hover-bg-dark{% endif %}" href="{{ url_for('assistant.chat_view') }}">
+                            <span><i class="bi bi-chat-dots-fill me-2 {% if request.endpoint == 'assistant.chat_view' %}text-white{% else %}text-info{% endif %}"></i> AI Assistant</span>
+                            <span class="badge bg-danger-subtle text-danger" style="font-size: 0.65rem;">24/7</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-light py-2 px-2 rounded hover-bg-dark" href="{{ url_for('salary.salary_home') }}">
-                            <i class="bi bi-cash-stack text-success me-2"></i> Salary Intelligence & Counter
-                        </a>
-                    </li>
-                </ul>
-
-                <!-- Navigation Section 3: Resume & Analytics -->
-                <div class="nav-section-title text-uppercase text-secondary fw-bold px-2 mb-1" style="font-size: 0.68rem; letter-spacing: 0.05rem;">
-                    Resume & Analytics
-                </div>
-                <ul class="nav flex-column mb-3">
-                    <li class="nav-item">
-                        <a class="nav-link text-light py-2 px-2 rounded hover-bg-dark" href="{{ url_for('resume.resume_analysis') }}">
-                            <i class="bi bi-file-earmark-person-fill text-info me-2"></i> Resume Skills & Profile
+                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2.5 rounded {% if request.endpoint in ['interview.interview_hub', 'interview.start_interview', 'interview.coding_challenge'] %}bg-primary text-white fw-semibold shadow-xs{% else %}hover-bg-dark{% endif %}" href="{{ url_for('interview.interview_hub') }}">
+                            <span><i class="bi bi-mic-fill me-2 {% if request.endpoint in ['interview.interview_hub', 'interview.start_interview'] %}text-white{% else %}text-danger{% endif %}"></i> Interview Prep</span>
+                            <span class="badge bg-success text-white" style="font-size: 0.65rem;">STAR AI</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-light py-2 px-2 rounded hover-bg-dark" href="{{ url_for('ats.ats_report') }}">
-                            <i class="bi bi-graph-up-arrow text-warning me-2"></i> ATS Match Breakdown
+                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2.5 rounded {% if request.endpoint == 'salary.salary_home' %}bg-primary text-white fw-semibold shadow-xs{% else %}hover-bg-dark{% endif %}" href="{{ url_for('salary.salary_home') }}">
+                            <span><i class="bi bi-graph-up-arrow me-2 {% if request.endpoint == 'salary.salary_home' %}text-white{% else %}text-success{% endif %}"></i> Career Insights</span>
+                            <span class="badge bg-success-subtle text-success" style="font-size: 0.65rem;">Skills & Pay</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-light py-2 px-2 rounded hover-bg-dark" href="{{ url_for('assistant.chat_view') }}">
-                            <i class="bi bi-chat-dots-fill text-info me-2"></i> 24/7 AI Career Coach
-                        </a>
-                    </li>
-                </ul>
-
-                <!-- Navigation Section 4: System -->
-                <div class="nav-section-title text-uppercase text-secondary fw-bold px-2 mb-1" style="font-size: 0.68rem; letter-spacing: 0.05rem;">
-                    Settings & System
-                </div>
-                <ul class="nav flex-column mb-auto">
-                    <li class="nav-item">
-                        <a class="nav-link text-light py-2 px-2 rounded hover-bg-dark" href="{{ url_for('dashboard.settings') }}">
-                            <i class="bi bi-sliders me-2 text-secondary"></i> Candidate Preferences
+                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2.5 rounded {% if request.endpoint == 'alerts.alerts_home' %}bg-primary text-white fw-semibold shadow-xs{% else %}hover-bg-dark{% endif %}" href="{{ url_for('alerts.alerts_home') }}">
+                            <span><i class="bi bi-calendar-event me-2 {% if request.endpoint == 'alerts.alerts_home' %}text-white{% else %}text-secondary{% endif %}"></i> Calendar & Alerts</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-danger py-2 px-2 rounded hover-bg-dark" href="{{ url_for('auth.logout') }}">
+                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2.5 rounded {% if request.endpoint == 'dashboard.settings' %}bg-primary text-white fw-semibold shadow-xs{% else %}hover-bg-dark{% endif %}" href="{{ url_for('dashboard.settings') }}">
+                            <span><i class="bi bi-gear-fill me-2 {% if request.endpoint == 'dashboard.settings' %}text-white{% else %}text-secondary{% endif %}"></i> Settings</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mt-2">
+                        <a class="nav-link text-danger py-2 px-2.5 rounded hover-bg-dark" href="{{ url_for('auth.logout') }}">
                             <i class="bi bi-box-arrow-right me-2"></i> Sign Out
                         </a>
                     </li>
