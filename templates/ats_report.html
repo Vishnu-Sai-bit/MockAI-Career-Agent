@@ -24,73 +24,105 @@
             <!-- Overall Compatibility Score -->
             <div class="col-lg-4">
                 <div class="card p-4 custom-card border-0 bg-white shadow-sm text-center h-100">
-                    <h6 class="fw-bold text-muted mb-3">Job Compatibility Score</h6>
+                    <h6 class="fw-bold text-muted mb-3">Job Compatibility Score (M)</h6>
                     <div class="score-circle mx-auto mb-3" style="--percent: {{ match.match_score|round(0)|int }};">
                         <div class="score-circle-inner">
                             <span class="display-6 fw-bold">{{ match.match_score|round(0)|int }}</span>
                             <small class="text-muted">/ 100</small>
                         </div>
                     </div>
-                    <span class="badge {% if match.match_score >= 80 %}bg-success{% elif match.match_score >= 60 %}bg-warning text-dark{% else %}bg-secondary{% endif %} px-3 py-2 mb-3">
-                        {% if match.match_score >= 80 %}Strong Match{% elif match.match_score >= 60 %}Moderate Match{% else %}Growth Match{% endif %}
+                    <span class="badge {% if match.match_score >= 80 %}bg-success{% elif match.match_score >= 65 %}bg-primary{% else %}bg-warning-subtle text-warning-emphasis border border-warning-subtle{% endif %} px-3 py-2 mb-3">
+                        {% if match.match_score >= 80 %}
+                            Strong Match (80% – 98%)
+                        {% elif match.match_score >= 65 %}
+                            Moderate Match (65% – 79%)
+                        {% else %}
+                            Potential Fit (Below 65%)
+                        {% endif %}
                     </span>
                     <p class="text-muted small mb-0">{{ match.match_explanation }}</p>
                 </div>
             </div>
 
-            <!-- Formula Breakdown Components -->
+            <!-- Formula Breakdown Components (6 Components) -->
             <div class="col-lg-8">
                 <div class="card p-4 custom-card border-0 bg-white shadow-sm h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold mb-0"><i class="bi bi-calculator text-primary me-2"></i>Formula Breakdown</h5>
-                        <code class="small text-muted">M = 0.40S + 0.25E + 0.15K + 0.10P + 0.10Q</code>
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                        <h5 class="fw-bold mb-0"><i class="bi bi-calculator text-primary me-2"></i>Explainable Formula Breakdown</h5>
+                        <code class="small text-primary bg-primary-subtle px-2 py-1 rounded">M = 0.35S + 0.20E + 0.15K + 0.10P + 0.10L + 0.10Q</code>
                     </div>
                     {% set b = match.score_breakdown %}
                     <div class="d-flex flex-column gap-3">
+                        <!-- S - Skills Overlap (35%) -->
                         <div>
                             <div class="d-flex justify-content-between small fw-semibold mb-1">
-                                <span><i class="bi bi-cpu text-info me-1"></i> Skills Alignment (S - 40% weight)</span>
+                                <span><i class="bi bi-cpu text-info me-1"></i> Skills Overlap (S — 35% weight)</span>
                                 <span>{{ b.skills }} / 100</span>
                             </div>
                             <div class="progress" style="height: 8px;">
                                 <div class="progress-bar bg-info" style="width: {{ b.skills }}%"></div>
                             </div>
+                            <small class="text-muted" style="font-size: 0.72rem;">(Matched Skills from Resume / Total Required Skills) × 100</small>
                         </div>
+
+                        <!-- E - Experience Alignment (20%) -->
                         <div>
                             <div class="d-flex justify-content-between small fw-semibold mb-1">
-                                <span><i class="bi bi-clock-history text-primary me-1"></i> Experience Alignment (E - 25% weight)</span>
+                                <span><i class="bi bi-clock-history text-primary me-1"></i> Experience Alignment (E — 20% weight)</span>
                                 <span>{{ b.experience }} / 100</span>
                             </div>
                             <div class="progress" style="height: 8px;">
                                 <div class="progress-bar bg-primary" style="width: {{ b.experience }}%"></div>
                             </div>
+                            <small class="text-muted" style="font-size: 0.72rem;">100% if experience fits vacancy range; 90% if overqualified; scaled if under</small>
                         </div>
+
+                        <!-- K - Keyword Coverage (15%) -->
                         <div>
                             <div class="d-flex justify-content-between small fw-semibold mb-1">
-                                <span><i class="bi bi-key text-warning me-1"></i> Keyword Coverage (K - 15% weight)</span>
+                                <span><i class="bi bi-key text-warning me-1"></i> Keyword Coverage (K — 15% weight)</span>
                                 <span>{{ b.keyword_coverage }} / 100</span>
                             </div>
                             <div class="progress" style="height: 8px;">
                                 <div class="progress-bar bg-warning" style="width: {{ b.keyword_coverage }}%"></div>
                             </div>
+                            <small class="text-muted" style="font-size: 0.72rem;">Presence of key domain terms, technical concepts, and industry terminology</small>
                         </div>
+
+                        <!-- P - Project Evidence (10%) -->
                         <div>
                             <div class="d-flex justify-content-between small fw-semibold mb-1">
-                                <span><i class="bi bi-folder-check text-success me-1"></i> Project Evidence (P - 10% weight)</span>
+                                <span><i class="bi bi-folder-check text-success me-1"></i> Project & Practical Evidence (P — 10% weight)</span>
                                 <span>{{ b.projects }} / 100</span>
                             </div>
                             <div class="progress" style="height: 8px;">
                                 <div class="progress-bar bg-success" style="width: {{ b.projects }}%"></div>
                             </div>
+                            <small class="text-muted" style="font-size: 0.72rem;">Evidence of applying tools in real-world projects (≥3 projects = 95%)</small>
                         </div>
+
+                        <!-- L - Location & Work-Mode Fit (10%) -->
                         <div>
                             <div class="d-flex justify-content-between small fw-semibold mb-1">
-                                <span><i class="bi bi-mortarboard text-secondary me-1"></i> Qualification Alignment (Q - 10% weight)</span>
+                                <span><i class="bi bi-geo-alt-fill text-danger me-1"></i> Location & Work-Mode Fit (L — 10% weight)</span>
+                                <span>{{ b.location or 85 }} / 100</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-danger" style="width: {{ b.location or 85 }}%"></div>
+                            </div>
+                            <small class="text-muted" style="font-size: 0.72rem;">100% for Remote/Worldwide or matching city; 85% for major metro tech hubs</small>
+                        </div>
+
+                        <!-- Q - Qualification Alignment (10%) -->
+                        <div>
+                            <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                <span><i class="bi bi-mortarboard text-secondary me-1"></i> Qualifications (Q — 10% weight)</span>
                                 <span>{{ b.qualifications }} / 100</span>
                             </div>
                             <div class="progress" style="height: 8px;">
                                 <div class="progress-bar bg-secondary" style="width: {{ b.qualifications }}%"></div>
                             </div>
+                            <small class="text-muted" style="font-size: 0.72rem;">Relevant academic degree, engineering background, or equivalent professional standing</small>
                         </div>
                     </div>
                 </div>
@@ -98,7 +130,7 @@
         </div>
 
         <!-- Skill Gap Analysis -->
-        <div class="row g-4">
+        <div class="row g-4 mb-4">
             <div class="col-md-6">
                 <div class="card p-4 custom-card border-0 bg-white shadow-sm h-100">
                     <h5 class="fw-bold mb-3 text-success"><i class="bi bi-check-circle-fill me-2"></i>Verified Skills Present</h5>
@@ -131,12 +163,37 @@
             </div>
         </div>
 
+        <!-- How to Boost Your ATS Score to 90%+ -->
+        <div class="card p-4 custom-card border-0 bg-white shadow-sm">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-rocket-takeoff-fill text-primary me-2"></i>How to Boost Your ATS Score to 90%+</h5>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="p-3 border rounded-3 bg-light h-100">
+                        <h6 class="fw-bold text-primary small mb-2"><i class="bi bi-1-circle-fill me-1"></i>Quantifiable Metrics</h6>
+                        <p class="small text-muted mb-0">Add numbers to bullet points (e.g., <em>"Optimized SQL query response time by 35%"</em>, <em>"Processed 5M+ daily records using PySpark"</em>).</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 border rounded-3 bg-light h-100">
+                        <h6 class="fw-bold text-success small mb-2"><i class="bi bi-2-circle-fill me-1"></i>Standard Headers</h6>
+                        <p class="small text-muted mb-0">Use clear headings (<strong>Experience, Skills, Education, Projects</strong>) so parsers extract sections without ambiguity.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 border rounded-3 bg-light h-100">
+                        <h6 class="fw-bold text-warning-emphasis small mb-2"><i class="bi bi-3-circle-fill me-1"></i>Keyword Alignment</h6>
+                        <p class="small text-muted mb-0">Include both acronyms and full names (e.g., <strong>Natural Language Processing (NLP)</strong>, <strong>Extract, Transform, Load (ETL)</strong>).</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     {% else %}
-        <!-- General Resume ATS Diagnostic -->
+        <!-- General Resume ATS Diagnostic (Intrinsic ATS Score: 0-100%) -->
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
             <div>
-                <h3 class="fw-bold mb-1"><i class="bi bi-graph-up-arrow text-primary me-2"></i>ATS Resume Quality Audit</h3>
-                <p class="text-muted small mb-0">Structural evaluation and readability metrics for <strong>{{ resume.filename }}</strong></p>
+                <h3 class="fw-bold mb-1"><i class="bi bi-graph-up-arrow text-primary me-2"></i>Resume Quality Score (Intrinsic ATS Score)</h3>
+                <p class="text-muted small mb-0">Evaluates how complete, structured, and machine-readable <strong>{{ resume.filename }}</strong> is on its own (0–100%).</p>
             </div>
             <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary-custom">Discover Compatible Jobs &rarr;</a>
         </div>
@@ -144,60 +201,101 @@
         <div class="row g-4 mb-4">
             <div class="col-lg-4">
                 <div class="card p-4 custom-card border-0 bg-white shadow-sm text-center h-100">
-                    <h6 class="fw-bold text-muted mb-3">Overall Resume Quality Score</h6>
+                    <h6 class="fw-bold text-muted mb-3">Intrinsic ATS Quality Score</h6>
                     <div class="score-circle mx-auto mb-3" style="--percent: {{ resume.ats_quality_score or 75 }};">
                         <div class="score-circle-inner">
                             <span class="display-6 fw-bold">{{ resume.ats_quality_score|round(0)|int }}</span>
                             <small class="text-muted">/ 100</small>
                         </div>
                     </div>
-                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 mb-3">
-                        {{ feedback.get('tier', 'Good') }} Tier
+                    <span class="badge {% if resume.ats_quality_score >= 80 %}bg-success{% elif resume.ats_quality_score >= 65 %}bg-primary{% else %}bg-warning-subtle text-warning-emphasis border border-warning-subtle{% endif %} px-3 py-2 mb-3">
+                        {% if resume.ats_quality_score >= 80 %}
+                            Strong Quality (80% – 98%)
+                        {% elif resume.ats_quality_score >= 65 %}
+                            Moderate Quality (65% – 79%)
+                        {% else %}
+                            Potential Fit (Below 65%)
+                        {% endif %}
                     </span>
-                    <p class="text-muted small mb-0">{{ feedback.get('summary', '') }}</p>
+                    <p class="text-muted small mb-0">{{ feedback.get('summary', 'Your resume has been structurally evaluated across all 6 core machine-readable ATS sections.') }}</p>
                 </div>
             </div>
 
             <div class="col-lg-8">
                 <div class="card p-4 custom-card border-0 bg-white shadow-sm h-100">
-                    <h5 class="fw-bold mb-4"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Four Core Quality Pillars</h5>
+                    <h5 class="fw-bold mb-3"><i class="bi bi-bar-chart-fill text-primary me-2"></i>Six Core Intrinsic ATS Sections</h5>
                     {% set bk = feedback.get('breakdown', {}) %}
                     <div class="d-flex flex-column gap-3">
+                        <!-- 1. Contact Information (10%) -->
                         <div>
                             <div class="d-flex justify-content-between small fw-semibold mb-1">
-                                <span><i class="bi bi-book me-1"></i> Readability & Conciseness</span>
-                                <span>{{ bk.get('readability', resume.readability_score)|round(0)|int }}%</span>
+                                <span><i class="bi bi-person-lines-fill text-info me-1"></i> Contact Information (10% weight)</span>
+                                <span>{{ bk.get('contact_info', 8)|round(1) }} / 10 pts</span>
                             </div>
-                            <div class="progress" style="height: 10px;">
-                                <div class="progress-bar bg-info" style="width: {{ bk.get('readability', resume.readability_score) }}%"></div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-info" style="width: {{ (bk.get('contact_info', 8) / 10 * 100)|round(0) }}%"></div>
                             </div>
+                            <small class="text-muted" style="font-size: 0.72rem;">Name (2%), Professional Email (3%), Phone (3%), LinkedIn (1%), GitHub/Portfolio (1%)</small>
                         </div>
+
+                        <!-- 2. Skills Section (30%) -->
                         <div>
                             <div class="d-flex justify-content-between small fw-semibold mb-1">
-                                <span><i class="bi bi-card-checklist me-1"></i> Section Completeness</span>
-                                <span>{{ bk.get('completeness', resume.completeness_score)|round(0)|int }}%</span>
+                                <span><i class="bi bi-cpu text-primary me-1"></i> Skills Section (30% weight)</span>
+                                <span>{{ bk.get('skills', 25)|round(1) }} / 30 pts</span>
                             </div>
-                            <div class="progress" style="height: 10px;">
-                                <div class="progress-bar bg-success" style="width: {{ bk.get('completeness', resume.completeness_score) }}%"></div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-primary" style="width: {{ (bk.get('skills', 25) / 30 * 100)|round(0) }}%"></div>
                             </div>
+                            <small class="text-muted" style="font-size: 0.72rem;">Total normalized skills (≥10 skills = 20 pts) + high-value domain technical skills bonus (up to 10 pts)</small>
                         </div>
+
+                        <!-- 3. Work Experience (20%) -->
                         <div>
                             <div class="d-flex justify-content-between small fw-semibold mb-1">
-                                <span><i class="bi bi-lightning-charge me-1"></i> Impact & Measurable Metrics</span>
-                                <span>{{ bk.get('impact_and_metrics', 70)|round(0)|int }}%</span>
+                                <span><i class="bi bi-briefcase text-success me-1"></i> Work Experience (20% weight)</span>
+                                <span>{{ bk.get('experience', 18)|round(1) }} / 20 pts</span>
                             </div>
-                            <div class="progress" style="height: 10px;">
-                                <div class="progress-bar bg-warning" style="width: {{ bk.get('impact_and_metrics', 70) }}%"></div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-success" style="width: {{ (bk.get('experience', 18) / 20 * 100)|round(0) }}%"></div>
                             </div>
+                            <small class="text-muted" style="font-size: 0.72rem;">Documented experience tenure, role progression, and measurable responsibilities</small>
                         </div>
+
+                        <!-- 4. Education (15%) -->
                         <div>
                             <div class="d-flex justify-content-between small fw-semibold mb-1">
-                                <span><i class="bi bi-layout-text-sidebar-reverse me-1"></i> Structure & Formatting Clarity</span>
-                                <span>{{ bk.get('structure_and_format', 85)|round(0)|int }}%</span>
+                                <span><i class="bi bi-mortarboard text-secondary me-1"></i> Education (15% weight)</span>
+                                <span>{{ bk.get('education', 14)|round(1) }} / 15 pts</span>
                             </div>
-                            <div class="progress" style="height: 10px;">
-                                <div class="progress-bar bg-primary" style="width: {{ bk.get('structure_and_format', 85) }}%"></div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-secondary" style="width: {{ (bk.get('education', 14) / 15 * 100)|round(0) }}%"></div>
                             </div>
+                            <small class="text-muted" style="font-size: 0.72rem;">Accredited degree, major, university, and graduation year</small>
+                        </div>
+
+                        <!-- 5. Projects (15%) -->
+                        <div>
+                            <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                <span><i class="bi bi-folder-check text-warning me-1"></i> Projects (15% weight)</span>
+                                <span>{{ bk.get('projects', 12)|round(1) }} / 15 pts</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-warning" style="width: {{ (bk.get('projects', 12) / 15 * 100)|round(0) }}%"></div>
+                            </div>
+                            <small class="text-muted" style="font-size: 0.72rem;">Demonstrated technical projects with tools, GitHub links, and quantifiable outcomes (≥3 projects = 15 pts)</small>
+                        </div>
+
+                        <!-- 6. Certifications (10%) -->
+                        <div>
+                            <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                <span><i class="bi bi-patch-check text-info me-1"></i> Certifications (10% weight)</span>
+                                <span>{{ bk.get('certifications', 6)|round(1) }} / 10 pts</span>
+                            </div>
+                            <div class="progress" style="height: 8px;">
+                                <div class="progress-bar bg-info" style="width: {{ (bk.get('certifications', 6) / 10 * 100)|round(0) }}%"></div>
+                            </div>
+                            <small class="text-muted" style="font-size: 0.72rem;">Cloud or professional certifications (AWS, Azure, GCP, etc.)</small>
                         </div>
                     </div>
                 </div>
@@ -205,7 +303,7 @@
         </div>
 
         <!-- Actionable Recommendations -->
-        <div class="card p-4 custom-card border-0 bg-white shadow-sm">
+        <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
             <h5 class="fw-bold mb-3"><i class="bi bi-lightbulb-fill text-warning me-2"></i>Actionable Improvement Checklist</h5>
             {% set tips = feedback.get('actionable_feedback', []) %}
             {% if tips %}
@@ -222,6 +320,31 @@
             {% else %}
                 <p class="text-muted small mb-0">Your resume satisfies primary ATS guidelines. Ensure you maintain quantifiable metrics for past projects.</p>
             {% endif %}
+        </div>
+
+        <!-- How to Boost Your ATS Score to 90%+ -->
+        <div class="card p-4 custom-card border-0 bg-white shadow-sm">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-rocket-takeoff-fill text-primary me-2"></i>How to Boost Your ATS Score to 90%+</h5>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="p-3 border rounded-3 bg-light h-100">
+                        <h6 class="fw-bold text-primary small mb-2"><i class="bi bi-1-circle-fill me-1"></i>Quantifiable Metrics</h6>
+                        <p class="small text-muted mb-0">Add numbers to bullet points (e.g., <em>"Optimized SQL query response time by 35%"</em>, <em>"Processed 5M+ daily records using PySpark"</em>).</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 border rounded-3 bg-light h-100">
+                        <h6 class="fw-bold text-success small mb-2"><i class="bi bi-2-circle-fill me-1"></i>Standard Headers</h6>
+                        <p class="small text-muted mb-0">Use clear headings (<strong>Experience, Skills, Education, Projects</strong>) so parsers extract sections without ambiguity.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="p-3 border rounded-3 bg-light h-100">
+                        <h6 class="fw-bold text-warning-emphasis small mb-2"><i class="bi bi-3-circle-fill me-1"></i>Keyword Alignment</h6>
+                        <p class="small text-muted mb-0">Include both acronyms and full names (e.g., <strong>Natural Language Processing (NLP)</strong>, <strong>Extract, Transform, Load (ETL)</strong>).</p>
+                    </div>
+                </div>
+            </div>
         </div>
     {% endif %}
 </div>

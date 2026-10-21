@@ -16,26 +16,32 @@ class ATSScorer:
         if overall >= 85:
             tier = "Excellent"
             summary = "Your resume is well-structured, keyword-rich, and clearly details your technical impact."
-        elif overall >= 70:
+        elif overall >= 75:
             tier = "Strong"
             summary = "Your resume meets standard ATS criteria with good clarity, but could benefit from more quantifiable achievements."
-        elif overall >= 55:
+        elif overall >= 65:
             tier = "Moderate"
-            summary = "Your resume conveys key skills, but lacks detail in key sections or formatting readability."
+            summary = "Your resume conveys key skills, but lacks detail in key sections or certifications."
         else:
             tier = "Needs Improvement"
-            summary = "Key resume sections are missing or brief. Expanding on technical skills and work experience is recommended."
+            summary = "Key resume sections are missing or brief. Expanding on technical skills, projects, and certifications is recommended."
 
         return {
             "overall_score": overall,
             "tier": tier,
             "summary": summary,
-            "breakdown": {
-                "readability": analysis["readability_score"],
-                "completeness": analysis["completeness_score"],
-                "impact_and_metrics": analysis["impact_score"],
-                "structure_and_format": analysis["formatting_score"]
-            },
+            "breakdown": analysis.get("breakdown", {
+                "contact_info": 8.0,
+                "skills": 25.0,
+                "experience": 18.0,
+                "education": 14.0,
+                "projects": 12.0,
+                "certifications": 6.0,
+                "readability": analysis.get("readability_score", 85.0),
+                "completeness": analysis.get("completeness_score", 85.0),
+                "impact_and_metrics": analysis.get("impact_score", 75.0),
+                "structure_and_format": analysis.get("formatting_score", 85.0)
+            }),
             "actionable_feedback": analysis["actionable_feedback"],
             "missing_sections": analysis["missing_sections"]
         }

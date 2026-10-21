@@ -166,8 +166,8 @@
                             <small class="text-muted fs-8">/ 100</small>
                         </div>
                     </div>
-                    <span class="badge {% if match.match_score >= 80 %}bg-success{% elif match.match_score >= 60 %}bg-warning text-dark{% else %}bg-secondary{% endif %}">
-                        {{ match.match_score|round(1) }}% Match
+                    <span class="badge {% if match.match_score >= 80 %}bg-success text-white{% elif match.match_score >= 65 %}bg-primary text-white{% else %}bg-warning-subtle text-warning-emphasis border border-warning-subtle{% endif %}">
+                        {% if match.match_score >= 80 %}Strong Match{% elif match.match_score >= 65 %}Moderate Match{% else %}Potential Fit{% endif %} ({{ match.match_score|round(1) }}%)
                     </span>
                 </div>
                 <div class="col-md-9">
@@ -186,7 +186,7 @@
                         {% endif %}
                     </div>
                     <a href="{{ url_for('ats.job_ats_report', job_id=job.id) }}" class="small fw-semibold text-primary">
-                        View full 5-component ATS report &rarr;
+                        View full 6-component ATS report &rarr;
                     </a>
                 </div>
             </div>

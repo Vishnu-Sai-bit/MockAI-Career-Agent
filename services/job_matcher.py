@@ -7,12 +7,13 @@ from models.resume import Resume
 from models.user import CandidateProfile
 
 class JobMatcher:
-    # Component weights without Location:
-    # M = 0.40S + 0.25E + 0.15K + 0.10P + 0.10Q
-    W_SKILLS = 0.40
-    W_EXPERIENCE = 0.25
+    # Component weights:
+    # M = 0.35S + 0.20E + 0.15K + 0.10P + 0.10L + 0.10Q
+    W_SKILLS = 0.35
+    W_EXPERIENCE = 0.20
     W_KEYWORDS = 0.15
     W_PROJECTS = 0.10
+    W_LOCATION = 0.10
     W_QUALIFICATIONS = 0.10
 
     def compute_match(
@@ -22,34 +23,33 @@ class JobMatcher:
         job: Job
     ) -> Dict[str, Any]:
         """
-        Calculates explainable ATS Job Compatibility Score and breakdown.
-        Formula: M = 0.40S + 0.25E + 0.15K + 0.10P + 0.10Q
-        (Location & Work Mode fit is treated as an informative eligibility flag, not scored in ATS qualification).
+        Calculates explainable ATS Job Compatibility Score (M) and breakdown.
+        Formula: M = 0.35S + 0.20E + 0.15K + 0.10P + 0.10L + 0.10Q
         """
         resume_data = resume.parsed_data or {}
-        candidate_skills = [s.lower() for s in (resume_data.get("skills") or profile.skills or [])]
-        candidate_years = float(resume_data.get("experience_years") or profile.experience_years or 0.0)
-        candidate_projects = resume_data.get("projects") or profile.projects or []
-        candidate_education = resume_data.get("education") or profile.education or []
+        candidate_skills = [s.lower() for s in (resume_data.get("skills") or (profile.skills if profile else []) or [])]
+        candidate_years = float(resume_data.get("experience_years") or (profile.experience_years if profile else 0.0) or 0.0)
+        candidate_projects = resume_data.get("projects") or (profile.projects if profile else []) or []
+        candidate_education = resume_data.get("education") or (profile.education if profile else []) or []
         resume_raw_text = resume.raw_text or ""
 
-        # 1. Skills Alignment (S - 40%)
+        # 1. Skills Alignment (S - 35%)
         s_score, skill_details = self._score_skills(candidate_skills, job)
 
-        # 2. Experience Alignment (E - 25%)
+        # 2. Experience Alignment (E - 20%)
         e_score, exp_details = self._score_experience(candidate_years, job)
 
         # 3. Keyword Coverage (K - 15%)
         k_score = self._score_keyword_coverage(resume_raw_text, job.description)
 
-        # 4. Project Alignment (P - 10%)
+        # 4. Project & Practical Evidence (P - 10%)
         p_score, proj_details = self._score_projects(candidate_projects, job)
 
-        # 5. Qualification Alignment (Q - 10%)
-        q_score, qual_details = self._score_qualifications(candidate_education, job)
+        # 5. Location & Work-Mode Fit (L - 10%)
+        l_score, loc_flags = self._score_location_and_work_mode(profile, job)
 
-        # Advisory Location & Work Mode flags (informational advisory, 0% ATS weight)
-        _, loc_flags = self._score_location_and_work_mode(profile, job)
+        # 6. Qualification Alignment (Q - 10%)
+        q_score, qual_details = self._score_qualifications(candidate_education, job)
 
         # Weighted ATS compatibility calculation
         total_score = round(
@@ -57,6 +57,7 @@ class JobMatcher:
             self.W_EXPERIENCE * e_score +
             self.W_KEYWORDS * k_score +
             self.W_PROJECTS * p_score +
+            self.W_LOCATION * l_score +
             self.W_QUALIFICATIONS * q_score,
             2
         )
@@ -78,6 +79,7 @@ class JobMatcher:
                 "experience": round(e_score, 1),
                 "keyword_coverage": round(k_score, 1),
                 "projects": round(p_score, 1),
+                "location": round(l_score, 1),
                 "qualifications": round(q_score, 1)
             },
             "skill_match_details": skill_details,
@@ -107,11 +109,15 @@ class JobMatcher:
                 "missing_preferred": []
             }
 
-        # Weight required skills at 80% of skills score, preferred at 20%
-        req_ratio = len(matched_req) / max(len(req_skills), 1)
-        pref_ratio = len(matched_pref) / max(len(pref_skills), 1) if pref_skills else 1.0
+        # (Matched Skills from Resume / Total Required Skills in Job Posting) * 100
+        req_overlap = (len(matched_req) / len(req_skills)) * 100.0
+        # Preferred skills bonus (up to 10%)
+        if pref_skills and matched_pref:
+            bonus = min(10.0, (len(matched_pref) / len(pref_skills)) * 10.0)
+            score = min(100.0, req_overlap + bonus)
+        else:
+            score = req_overlap
 
-        score = (req_ratio * 80.0) + (pref_ratio * 20.0)
         return min(100.0, max(0.0, score)), {
             "matched_required": matched_req,
             "missing_required": missing_req,
@@ -137,13 +143,19 @@ class JobMatcher:
             else:
                 target_years = 3
 
+        # Experience Alignment:
+        # Full marks (100%) if fits range; 90% if overqualified; scaled if under
         if cand_years >= target_years:
-            score = 100.0
-            detail = f"Meets or exceeds target experience ({cand_years:.1f} yrs vs {target_years} yrs required)."
+            if cand_years > target_years + 4:
+                score = 90.0
+                detail = f"Extensive experience ({cand_years:.1f} yrs vs {target_years} yrs targeted - 90% alignment, overqualified)."
+            else:
+                score = 100.0
+                detail = f"Fits target experience range ({cand_years:.1f} yrs vs {target_years} yrs targeted - 100% alignment)."
         else:
             ratio = cand_years / max(target_years, 1)
-            score = max(40.0, ratio * 90.0)
-            detail = f"Has {cand_years:.1f} years experience; position targets around {target_years} years."
+            score = max(35.0, round(ratio * 100.0, 1))
+            detail = f"Has {cand_years:.1f} years experience; position targets around {target_years} years ({score:.0f}% alignment)."
 
         return score, detail
 
@@ -161,63 +173,57 @@ class JobMatcher:
             return 60.0
 
     def _score_projects(self, projects: List[Any], job: Job) -> Tuple[float, str]:
+        # Project & Practical Evidence: whether resume shows applying tools in projects (>= 3 projects = 95%)
         if not projects:
             return 50.0, "No projects detailed on resume."
-        
-        job_terms = set(job.title.lower().split() + [s.lower() for s in (job.required_skills or [])])
-        match_count = 0
-        for p in projects:
-            desc = (p.get("description", "") + " " + p.get("title", "")).lower() if isinstance(p, dict) else str(p).lower()
-            if any(term in desc for term in job_terms if len(term) > 2):
-                match_count += 1
-
-        score = min(100.0, 60.0 + (match_count * 15.0))
-        return score, f"{match_count} projects show relevant domain or technical overlap."
+        count = len(projects)
+        if count >= 3:
+            return 95.0, f"{count} projects demonstrated with practical tool application (95% evidence)."
+        elif count == 2:
+            return 80.0, "2 projects detailed on resume (80% evidence)."
+        elif count == 1:
+            return 65.0, "1 project detailed on resume (65% evidence)."
+        return 50.0, "No projects detailed on resume."
 
     def _score_location_and_work_mode(self, profile: CandidateProfile, job: Job) -> Tuple[float, List[str]]:
+        # Location & Work-Mode Fit:
+        # 100% for Remote/Worldwide or matching city; 85% for major metro tech hubs (Bangalore, Hyderabad, etc.)
         flags = []
-        user_modes = [m.lower() for m in (profile.work_modes or ["remote", "hybrid", "on-site"])]
+        user_modes = [m.lower() for m in (profile.work_modes if profile and profile.work_modes else ["remote", "hybrid", "on-site"])]
         job_mode = (job.work_mode or "on-site").lower()
-
-        if job_mode == "remote":
-            if "remote" in user_modes:
-                return 100.0, flags
-            return 80.0, flags
-
-        # Job is on-site or hybrid
-        cand_loc = (profile.location or "").lower()
-        pref_countries = [c.lower() for c in (profile.preferred_countries or [])]
-        pref_cities = [c.lower() for c in (profile.preferred_cities or [])]
         job_loc = (job.location or "").lower()
-        open_to_reloc = getattr(profile, "open_to_relocation", True)
 
-        # 1. Direct match with candidate's preferred work cities
-        if pref_cities and any(c in job_loc for c in pref_cities if c):
-            flags.append(f"🎯 Matches preferred work city: {job.location or 'office'}.")
+        # 100% for Remote or Worldwide
+        if job_mode == "remote" or any(w in job_loc for w in ["remote", "worldwide", "anywhere"]):
+            flags.append("🌐 Remote / Worldwide eligible (100% location fit).")
             return 100.0, flags
 
-        # 2. Direct match with candidate's present address
+        cand_loc = (profile.location or "").lower() if profile else ""
+        pref_cities = [c.lower() for c in (profile.preferred_cities or [])] if profile else []
+
+        # 100% for matching city
         if cand_loc and (cand_loc in job_loc or job_loc in cand_loc):
-            flags.append(f"📍 Matches present residential location: {job.location or 'office'}.")
+            flags.append(f"📍 Matches present city: {job.location or 'Local Office'} (100% location fit).")
             return 100.0, flags
 
-        # 3. Same country or Open to Relocation (e.g. Candidate present address is hometown, open to major tech hubs)
-        country_match = any(c in job_loc for c in pref_countries if c) or (
-            "india" in cand_loc and ("india" in job_loc or not job.country or job.country.lower() == "india")
-        ) or (
-            "united states" in cand_loc and ("united states" in job_loc or "usa" in job_loc or "us" in job_loc)
-        )
+        if pref_cities and any(c in job_loc for c in pref_cities if c):
+            flags.append(f"🎯 Matches preferred work city: {job.location} (100% location fit).")
+            return 100.0, flags
 
-        if country_match or open_to_reloc or not pref_cities:
-            if job.location:
-                flags.append(f"💼 {job_mode.title()} in {job.location} (Open to relocation from present address).")
-            return 95.0, flags
+        # 85% for major metro tech hubs (Bangalore, Hyderabad, Pune, Mumbai, Delhi, Gurgaon, San Francisco, Seattle, etc.)
+        METRO_HUBS = [
+            "bangalore", "bengaluru", "hyderabad", "pune", "mumbai", "delhi", "noida",
+            "gurgaon", "gurugram", "chennai", "san francisco", "seattle", "austin", "new york"
+        ]
+        if any(hub in job_loc for hub in METRO_HUBS):
+            flags.append(f"🏢 Located in major tech hub: {job.location or 'Metro Hub'} (85% location fit).")
+            return 85.0, flags
 
-        # 4. Strictly restricted to other locations without relocation
-        flags.append(f"Requires {job_mode} presence in {job.location or 'employer office'}.")
-        return 50.0, flags
+        flags.append(f"Requires {job_mode} presence in {job.location or 'office'}.")
+        return 70.0, flags
 
     def _score_qualifications(self, education: List[Any], job: Job) -> Tuple[float, str]:
+        # Qualifications: Relevant academic degree, engineering background, or equivalent standing
         if not education:
             return 75.0, "Degree not explicitly stated."
         return 90.0, "Educational background aligns with standard qualifications."
@@ -232,10 +238,19 @@ class JobMatcher:
     ) -> Tuple[str, List[str]]:
         matched = skill_details.get("matched_required", [])
         missing = skill_details.get("missing_required", [])
-        
-        tier = "Strong match" if total_score >= 80 else ("Moderate match" if total_score >= 60 else "Potential growth match")
-        
-        parts = [f"{tier} ({total_score:.1f}% compatibility)."]
+
+        # Match Categorization:
+        # 80% – 98%: Strong Match (High probability of passing ATS recruiter screening)
+        # 65% – 79%: Moderate Match (Core qualifications met; may need minor keyword tailoring)
+        # Below 65%: Potential Fit (Noticeable skill or experience gaps)
+        if total_score >= 80:
+            tier = "Strong Match (High probability of passing ATS recruiter screening)"
+        elif total_score >= 65:
+            tier = "Moderate Match (Core qualifications met; may need minor keyword tailoring)"
+        else:
+            tier = "Potential Fit (Noticeable skill or experience gaps)"
+
+        parts = [f"{tier} — {total_score:.1f}% compatibility."]
         if matched:
             parts.append(f"Skills matched: {', '.join(matched[:5])}.")
         if missing:
