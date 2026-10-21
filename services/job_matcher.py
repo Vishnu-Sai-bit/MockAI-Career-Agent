@@ -41,6 +41,20 @@ class JobMatcher:
 
         # 3. Title / Role & Keyword Coverage (K - 15%)
         candidate_headline = (resume_data.get("headline") or (profile.headline if profile else "") or "")
+        if any(w in candidate_headline.lower() for w in ["linkedin", "github", "portfolio", "|", "http"]):
+            candidate_headline = (profile.headline if profile and profile.headline else "") or getattr(resume, "target_role", "") or ""
+        if not candidate_headline:
+            role_m = re.search(
+                r"\b(data analyst|business analyst|bi developer|data scientist|data engineer|"
+                r"analytics engineer|software engineer|python developer|frontend developer|"
+                r"full stack developer|backend developer|ml engineer|machine learning engineer|"
+                r"cloud engineer|devops engineer|product manager|qa engineer)\b",
+                resume_raw_text[:1500],
+                re.IGNORECASE
+            )
+            if role_m:
+                candidate_headline = role_m.group(1).title()
+
         k_score = self._score_keyword_coverage(resume_raw_text, job.description, candidate_headline, job.title)
 
         # 4. Project & Practical Evidence (P - 10%)
@@ -216,26 +230,41 @@ class JobMatcher:
         if not resume_text and not candidate_headline:
             return 50.0
         try:
-            # Token cosine similarity between candidate headline and job title
             title_sim = 0.0
             if candidate_headline and job_title:
-                try:
-                    t_vec = TfidfVectorizer(stop_words="english")
-                    t_mat = t_vec.fit_transform([candidate_headline, job_title])
-                    title_sim = float(cosine_similarity(t_mat[0:1], t_mat[1:2])[0][0])
-                except Exception:
-                    pass
+                h_low = candidate_headline.lower().strip()
+                t_low = job_title.lower().strip()
+
+                # Direct title overlap check
+                h_words = [w for w in h_low.split() if len(w) > 2]
+                matched_words = [w for w in h_words if w in t_low]
+                if matched_words and len(matched_words) == len(h_words):
+                    title_sim = 1.0
+                elif matched_words:
+                    title_sim = 0.75
+                else:
+                    try:
+                        t_vec = TfidfVectorizer(stop_words="english")
+                        t_mat = t_vec.fit_transform([candidate_headline, job_title])
+                        title_sim = float(cosine_similarity(t_mat[0:1], t_mat[1:2])[0][0])
+                    except Exception:
+                        title_sim = 0.0
 
             # Body keyword similarity
             vectorizer = TfidfVectorizer(stop_words="english", max_features=100)
             tfidf_matrix = vectorizer.fit_transform([resume_text or candidate_headline, job_desc or job_title])
             desc_sim = float(cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0])
 
-            combined_sim = max(title_sim, desc_sim) if title_sim > 0 else desc_sim
-            score = min(100.0, max(30.0, combined_sim * 150.0))
-            return score
+            if title_sim >= 0.75:
+                combined_score = 0.70 * (title_sim * 100.0) + 0.30 * min(100.0, desc_sim * 150.0)
+            elif title_sim > 0.0:
+                combined_score = 0.50 * (title_sim * 100.0) + 0.50 * min(100.0, desc_sim * 150.0)
+            else:
+                combined_score = min(65.0, max(25.0, desc_sim * 120.0))
+
+            return round(min(100.0, max(25.0, combined_score)), 1)
         except Exception:
-            return 60.0
+            return 50.0
 
     def _score_projects(self, projects: List[Any], job: Job) -> Tuple[float, str]:
         # Project & Practical Evidence: whether resume shows applying tools in projects (>= 3 projects = 95%)

@@ -93,15 +93,32 @@ class ResumeParser:
         # Name heuristic: First non-empty 2-to-4 word line that doesn't contain email/phone/url
         name = ""
         headline = ""
-        for line in lines[:5]:
-            if "@" in line or "http" in line or any(c.isdigit() for c in line if line.count(c) > 3):
+        for line in lines[:8]:
+            line_str = line.strip()
+            if not line_str or "@" in line_str or "http" in line_str or any(c.isdigit() for c in line_str if line_str.count(c) > 3):
                 continue
-            words = line.split()
-            if len(words) in [2, 3, 4] and not name and not any(w.lower() in ("resume", "curriculum", "vitae", "profile") for w in words):
-                name = line.title()
-            elif name and not headline and len(line) < 60:
-                headline = line
-                break
+            if any(w in line_str.lower() for w in ["linkedin", "github", "portfolio", "leetcode", "gitlab"]):
+                continue
+            words = line_str.split()
+            if len(words) in [2, 3, 4] and not name and not any(w.lower() in ("resume", "curriculum", "vitae", "profile", "summary") for w in words):
+                name = line_str.title()
+            elif name and not headline and len(line_str) < 60 and not any(w in line_str.lower() for w in ["summary", "profile", "experience", "education", "skills"]):
+                headline = line_str
+
+        # If headline wasn't found or contains link characters, scan for candidate's target role in header/summary
+        if not headline or any(w in headline.lower() for w in ["linkedin", "github", "portfolio", "|", "/"]):
+            role_match = re.search(
+                r"\b(data analyst|business analyst|bi developer|data scientist|data engineer|"
+                r"analytics engineer|software engineer|python developer|frontend developer|"
+                r"full stack developer|backend developer|ml engineer|machine learning engineer|"
+                r"cloud engineer|devops engineer|product manager|qa engineer)\b",
+                text[:1500],
+                re.IGNORECASE
+            )
+            if role_match:
+                headline = role_match.group(1).title()
+            elif headline and ("|" in headline or "/" in headline):
+                headline = ""
 
         # Location / Address heuristic: explicitly distinguish present/current residential address from preferred locations
         location = ""

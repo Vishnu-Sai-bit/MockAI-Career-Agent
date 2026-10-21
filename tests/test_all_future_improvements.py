@@ -533,4 +533,77 @@ def test_job_deduplicator_cross_platform_and_profile_skills():
     assert match3 is None
 
 
+def test_job_search_experience_and_domain_priority(app_with_db, test_setup):
+    user = test_setup["user"]
+    source = test_setup["source"]
+
+    # Candidate has Data Analyst resume with 0.5 years experience (Fresher)
+    resume = Resume(
+        user_id=user.id,
+        filename="da_fresher.pdf",
+        file_path="uploads/da_fresher.pdf",
+        file_type="pdf",
+        target_role="Data Analyst",
+        parsed_data={"experience_years": 0.5, "skills": ["Python", "SQL", "Tableau", "Power BI"], "headline": "Aspiring Data Analyst"},
+        is_active=True
+    )
+    db.session.add(resume)
+
+    # 1. Junior Data Analyst (Entry level) -> Must rank FIRST
+    j1 = Job(
+        source_id=source.id, source_platform="greenhouse", source_company_key="stripe",
+        source_job_id="t-da-entry", title="Junior Data Analyst", company="Acme Data",
+        location="Bengaluru", experience_level="entry", original_url="https://example.com/1",
+        apply_url="https://example.com/1", status="active"
+    )
+    # 2. Senior Data Analyst (Senior level) -> Domain fit 3, exp fit 0
+    j2 = Job(
+        source_id=source.id, source_platform="greenhouse", source_company_key="stripe",
+        source_job_id="t-da-sr", title="Senior Data Analyst", company="Acme Data",
+        location="Bengaluru", experience_level="senior", original_url="https://example.com/2",
+        apply_url="https://example.com/2", status="active"
+    )
+    # 3. Junior Frontend Developer (Entry level) -> Domain fit 0, exp fit 1
+    j3 = Job(
+        source_id=source.id, source_platform="greenhouse", source_company_key="stripe",
+        source_job_id="t-fe-entry", title="Junior Frontend Engineer", company="Acme Web",
+        location="Bengaluru", experience_level="entry", original_url="https://example.com/3",
+        apply_url="https://example.com/3", status="active"
+    )
+    # 4. Lead Java Architect (Lead level) -> Domain fit 0, exp fit 0
+    j4 = Job(
+        source_id=source.id, source_platform="greenhouse", source_company_key="stripe",
+        source_job_id="t-java-lead", title="Lead Java Architect", company="Acme Enterprise",
+        location="Bengaluru", experience_level="lead", original_url="https://example.com/4",
+        apply_url="https://example.com/4", status="active"
+    )
+    db.session.add_all([j1, j2, j3, j4])
+    db.session.commit()
+
+    from services.job_search_service import JobSearchService
+    svc = JobSearchService()
+    res = svc.search_jobs(
+        user=user,
+        sort_by="match"
+    )
+
+    titles = [r["job"].title for r in res["items"]]
+    # "Junior Data Analyst" must be #1 because it has both domain_fit and entry-level exp_fit
+    assert titles[0] == "Junior Data Analyst"
+    # Junior frontend or senior data analyst are next, and lead java architect is at the bottom
+    assert titles[-1] == "Lead Java Architect" or "Lead" in titles[-1]
+
+    # Test only_relevant filter
+    rel_res = svc.search_jobs(
+        user=user,
+        only_relevant=True
+    )
+    rel_titles = [r["job"].title for r in rel_res["items"]]
+    assert "Junior Data Analyst" in rel_titles
+    assert "Senior Data Analyst" in rel_titles
+    # Non-data developer roles without match score are filtered out
+    assert "Lead Java Architect" not in rel_titles
+
+
+
 

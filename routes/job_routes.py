@@ -23,6 +23,7 @@ def list_jobs():
     date_posted = request.args.get("date_posted", "all")
     sort_by = request.args.get("sort_by", "fresh")
     min_score = request.args.get("min_match")
+    only_relevant = request.args.get("only_relevant", "false").lower() in ("true", "1", "yes")
     page = request.args.get("page", 1, type=int)
 
     # Ensure matches are computed if user has an active resume but no matches yet
@@ -49,7 +50,8 @@ def list_jobs():
         sort_by=sort_by,
         min_match_score=float(min_score) if min_score else None,
         page=page,
-        per_page=12
+        per_page=12,
+        only_relevant=only_relevant
     )
 
     available_platforms = [s.platform for s in JobSource.query.filter_by(is_active=True).all()]
@@ -66,6 +68,7 @@ def list_jobs():
         date_posted=date_posted,
         sort_by=sort_by,
         min_score=min_score,
+        only_relevant=only_relevant,
         available_platforms=available_platforms
     )
 

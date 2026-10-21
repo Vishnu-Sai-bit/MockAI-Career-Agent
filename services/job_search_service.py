@@ -19,7 +19,8 @@ class JobSearchService:
         status: str = "active",
         page: int = 1,
         per_page: int = 12,
-        sort_by: str = "fresh"
+        sort_by: str = "fresh",
+        only_relevant: bool = False
     ) -> Dict[str, Any]:
         """
         Queries and filters jobs with match scores for the given candidate.
@@ -107,6 +108,55 @@ class JobSearchService:
                 or 0.0
             )
 
+            # Target Domain / Role Affinity:
+            # Check if candidate has a Data Analyst / Analytics / BI / Data Science focus
+            candidate_target = (
+                getattr(active_resume, "target_role", "")
+                or (active_resume.parsed_data or {}).get("headline")
+                or (user.candidate_profile.headline if user and user.candidate_profile else "")
+                or ""
+            ).lower().strip()
+
+            candidate_skills_lower = [s.lower() for s in (active_resume.parsed_data or {}).get("skills", [])]
+            is_data_domain = (
+                any(w in candidate_target for w in ["data", "analyst", "analytics", "bi", "sql", "insights"]) or
+                any(w in candidate_skills_lower for w in ["power bi", "tableau", "data analysis", "data engineering", "pandas", "numpy", "matplotlib", "seaborn"])
+            )
+
+            if is_data_domain:
+                domain_fit = case(
+                    (Job.title.ilike("%data analyst%"), 3),
+                    (or_(
+                        Job.title.ilike("%analyst%"),
+                        Job.title.ilike("%analytics%"),
+                        Job.title.ilike("%business intelligence%"),
+                        Job.title.ilike("%bi developer%"),
+                        Job.title.ilike("%bi analyst%")
+                    ), 2),
+                    (or_(
+                        Job.title.ilike("%data%"),
+                        Job.title.ilike("%machine learning%"),
+                        Job.title.ilike("%sql%"),
+                        Job.title.ilike("%reporting%")
+                    ), 1),
+                    else_=0
+                )
+            elif candidate_target and len(candidate_target) >= 3:
+                domain_fit = case(
+                    (Job.title.ilike(f"%{candidate_target}%"), 2),
+                    else_=0
+                )
+            else:
+                domain_fit = None
+
+            # Strict "Only Relevant Roles" toggle:
+            # When active, filters out all remaining/non-matching jobs
+            if only_relevant:
+                if domain_fit is not None:
+                    query = query.filter(or_(domain_fit > 0, JobMatch.match_score >= 60.0))
+                elif min_match_score is None:
+                    query = query.filter(JobMatch.match_score >= 60.0)
+
             # Experience-tier priority:
             # - Fresher (0 to 1.5 yrs): Fresher / Entry-Level (0-2 Yrs) jobs appear FIRST!
             # - 2 Years Experience (1.5 to 5.0 yrs): 2-5 Yrs (Mid-Level) jobs appear FIRST!
@@ -162,8 +212,11 @@ class JobSearchService:
                 else_=0
             )
 
+            order_prefix = [desc(domain_fit)] if domain_fit is not None else []
+
             if sort_by == "match":
                 query = query.order_by(
+                    *order_prefix,
                     desc(exp_fit),
                     desc(is_matched),
                     desc(JobMatch.match_score),
@@ -172,6 +225,7 @@ class JobSearchService:
                 )
             elif sort_by == "salary":
                 query = query.order_by(
+                    *order_prefix,
                     desc(exp_fit),
                     desc(is_matched),
                     desc(Job.salary_max),
@@ -181,9 +235,10 @@ class JobSearchService:
             elif sort_by == "all_fresh":
                 query = query.order_by(desc(Job.published_at), desc(Job.id))
             else:
-                # Default: Candidate's experience-matching jobs first (fresher for fresher, 2+ yrs for 2 yrs),
+                # Default: Data Analyst & related domain jobs matching candidate experience tier FIRST,
                 # ordered by highest relevance and freshness, followed by remaining jobs next
                 query = query.order_by(
+                    *order_prefix,
                     desc(exp_fit),
                     desc(is_matched),
                     desc(JobMatch.match_score),

@@ -103,7 +103,13 @@
                     {% if sort_by and sort_by != 'fresh' %}
                         <span class="badge bg-light text-dark border">
                             Sort: {{ sort_by|title }}
-                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, only_relevant='true' if only_relevant else 'false') }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    {% endif %}
+                    {% if only_relevant %}
+                        <span class="badge bg-primary text-white border">
+                            <i class="bi bi-funnel-fill me-1"></i>Only Relevant Roles
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, only_relevant='false') }}" class="text-white ms-1 text-decoration-none">&times;</a>
                         </span>
                     {% endif %}
                     <a href="{{ url_for('jobs.list_jobs') }}" class="small text-danger ms-2 text-decoration-none">Clear all</a>
@@ -217,11 +223,24 @@
                 {% endif %}
             {% endif %}
         </div>
-        {% if current_user.is_authenticated and not current_user.get_active_resume() %}
-            <span class="badge bg-warning-subtle text-warning-emphasis">
-                <a href="{{ url_for('resume.upload_resume') }}" class="text-decoration-none">Upload resume to calculate match scores</a>
-            </span>
-        {% endif %}
+        <div class="d-flex align-items-center gap-2">
+            {% if current_user.is_authenticated and current_user.get_active_resume() %}
+                {% if only_relevant %}
+                    <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, min_match=min_score, only_relevant='false') }}" class="btn btn-sm btn-primary-custom" title="Currently showing only matching positions. Click to show all.">
+                        <i class="bi bi-funnel-fill me-1"></i> Showing Only Relevant Roles <i class="bi bi-x-circle ms-1"></i>
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, min_match=min_score, only_relevant='true') }}" class="btn btn-sm btn-outline-primary" title="Filter to show ONLY roles matching your resume domain & skills">
+                        <i class="bi bi-bullseye me-1"></i> Show Only Relevant Roles
+                    </a>
+                {% endif %}
+            {% endif %}
+            {% if current_user.is_authenticated and not current_user.get_active_resume() %}
+                <span class="badge bg-warning-subtle text-warning-emphasis">
+                    <a href="{{ url_for('resume.upload_resume') }}" class="text-decoration-none">Upload resume to calculate match scores</a>
+                </span>
+            {% endif %}
+        </div>
     </div>
 
     <!-- Job Cards Grid -->
