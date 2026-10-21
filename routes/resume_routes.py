@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import uuid
 from pathlib import Path
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify, send_file, Response
@@ -86,6 +87,15 @@ def upload_resume():
         ats_report = scorer.score_resume(raw_text, parsed_data)
         if gemini_result and gemini_result.get("ai_critique"):
             ats_report["gemini_critique"] = gemini_result["ai_critique"]
+
+        # Cache profile state to data/default_parsed_resume.json
+        try:
+            data_folder = Path("data")
+            data_folder.mkdir(parents=True, exist_ok=True)
+            with open(data_folder / "default_parsed_resume.json", "w", encoding="utf-8") as f:
+                json.dump(parsed_data, f, indent=2, default=str)
+        except Exception as e:
+            logger.error(f"Error caching default_parsed_resume.json: {e}")
 
         # Deactivate old resumes
         Resume.query.filter_by(user_id=current_user.id, is_active=True).update({"is_active": False})

@@ -73,10 +73,16 @@ def test_file_validation_rejections():
     from werkzeug.datastructures import FileStorage
 
     # 1. Invalid extension
-    fs_txt = FileStorage(stream=io.BytesIO(b"Hello world"), filename="test.txt")
-    valid, err, _ = validate_uploaded_file(fs_txt)
+    fs_invalid = FileStorage(stream=io.BytesIO(b"binary payload"), filename="test.exe")
+    valid, err, _ = validate_uploaded_file(fs_invalid)
     assert not valid
     assert "Unsupported file type" in err
+
+    # Valid text extension
+    fs_txt = FileStorage(stream=io.BytesIO(b"Valid resume text"), filename="test.txt")
+    valid_txt, err_txt, ext_txt = validate_uploaded_file(fs_txt)
+    assert valid_txt
+    assert ext_txt == "txt"
 
     # 2. Fake PDF (wrong magic bytes)
     fs_fake_pdf = FileStorage(stream=io.BytesIO(b"not a real pdf"), filename="test.pdf")

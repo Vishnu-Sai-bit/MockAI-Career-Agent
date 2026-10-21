@@ -39,8 +39,9 @@ class JobMatcher:
         # 2. Experience Alignment (E - 20%)
         e_score, exp_details = self._score_experience(candidate_years, job)
 
-        # 3. Keyword Coverage (K - 15%)
-        k_score = self._score_keyword_coverage(resume_raw_text, job.description)
+        # 3. Title / Role & Keyword Coverage (K - 15%)
+        candidate_headline = (resume_data.get("headline") or (profile.headline if profile else "") or "")
+        k_score = self._score_keyword_coverage(resume_raw_text, job.description, candidate_headline, job.title)
 
         # 4. Project & Practical Evidence (P - 10%)
         p_score, proj_details = self._score_projects(candidate_projects, job)
@@ -175,15 +176,27 @@ class JobMatcher:
 
         return score, detail
 
-    def _score_keyword_coverage(self, resume_text: str, job_desc: str) -> float:
-        if not resume_text or not job_desc:
+    def _score_keyword_coverage(self, resume_text: str, job_desc: str, candidate_headline: str = "", job_title: str = "") -> float:
+        if not resume_text and not candidate_headline:
             return 50.0
         try:
+            # Token cosine similarity between candidate headline and job title
+            title_sim = 0.0
+            if candidate_headline and job_title:
+                try:
+                    t_vec = TfidfVectorizer(stop_words="english")
+                    t_mat = t_vec.fit_transform([candidate_headline, job_title])
+                    title_sim = float(cosine_similarity(t_mat[0:1], t_mat[1:2])[0][0])
+                except Exception:
+                    pass
+
+            # Body keyword similarity
             vectorizer = TfidfVectorizer(stop_words="english", max_features=100)
-            tfidf_matrix = vectorizer.fit_transform([resume_text, job_desc])
-            sim = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
-            # Rescale cosine similarity typically ranging 0.1 to 0.7 into 0 to 100
-            score = min(100.0, max(30.0, sim * 150.0))
+            tfidf_matrix = vectorizer.fit_transform([resume_text or candidate_headline, job_desc or job_title])
+            desc_sim = float(cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0])
+
+            combined_sim = max(title_sim, desc_sim) if title_sim > 0 else desc_sim
+            score = min(100.0, max(30.0, combined_sim * 150.0))
             return score
         except Exception:
             return 60.0

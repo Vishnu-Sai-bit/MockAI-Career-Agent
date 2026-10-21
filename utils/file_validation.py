@@ -2,12 +2,13 @@ import os
 import zipfile
 from typing import Tuple, Optional
 
-ALLOWED_EXTENSIONS = {"pdf", "docx"}
+ALLOWED_EXTENSIONS = {"pdf", "docx", "doc", "txt", "rtf", "odt"}
 MAX_FILE_SIZE = 16 * 1024 * 1024  # 16 MB
 
 def validate_uploaded_file(file_storage, max_size: int = MAX_FILE_SIZE) -> Tuple[bool, Optional[str], Optional[str]]:
     """
     Validates uploaded file filename, extension, file size, and magic bytes.
+    Accepts: .pdf, .docx, .doc, .txt, .rtf, .odt.
     Returns (is_valid, error_message, file_type).
     """
     if not file_storage or not file_storage.filename:
@@ -19,7 +20,7 @@ def validate_uploaded_file(file_storage, max_size: int = MAX_FILE_SIZE) -> Tuple
 
     ext = filename.rsplit(".", 1)[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
-        return False, f"Unsupported file type '.{ext}'. Allowed types are PDF and DOCX.", None
+        return False, f"Unsupported file type '.{ext}'. Allowed types are PDF, DOCX, DOC, TXT, RTF, and ODT.", None
 
     # Check file size by seeking
     file_storage.seek(0, os.SEEK_END)

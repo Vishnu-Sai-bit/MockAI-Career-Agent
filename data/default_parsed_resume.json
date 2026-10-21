@@ -1,0 +1,21 @@
+{
+  "name": "Candidate",
+  "email": "dev.candidate@example.com",
+  "phone": "(555) 000-1111",
+  "location": "",
+  "linkedin": "",
+  "github": "",
+  "portfolio": "",
+  "present_address": "",
+  "preferred_locations": [],
+  "open_to_relocation": true,
+  "headline": "",
+  "summary": "",
+  "skills": [],
+  "skills_by_category": {},
+  "experience_years": 0.0,
+  "experience": [],
+  "education": [],
+  "projects": [],
+  "certifications": []
+}

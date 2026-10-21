@@ -101,15 +101,38 @@ def job_details(job_id):
     )
 
 
+@jobs_bp.route("/cover-letter/<int:job_id>")
+@jobs_bp.route("/jobs/cover-letter/<int:job_id>")
+@login_required
+def generate_job_cover_letter(job_id):
+    """
+    AI Cover Letter Generator: Dynamically merges candidate skills and experience
+    with role requirements and company details to generate tailored application materials.
+    """
+    job = Job.query.get_or_404(job_id)
+    resume = current_user.get_active_resume()
+    if not resume:
+        flash("Please upload a resume first to generate a tailored cover letter.", "info")
+        return redirect(url_for("resume.upload_resume"))
+
+    from services.tailored_document_generator import TailoredDocumentGenerator
+    doc_gen = TailoredDocumentGenerator()
+    cover_data = doc_gen.generate_tailored_cover_letter(resume, current_user.candidate_profile, job)
+    return render_template("tailored_cover_letter.html", job=job, doc=cover_data)
+
+
 @jobs_bp.route("/apply/<int:job_id>")
+@jobs_bp.route("/jobs/apply/<int:job_id>")
+@jobs_bp.route("/jobs/<int:job_id>/apply")
+@jobs_bp.route("/<int:job_id>/apply")
 def safe_apply_redirect(job_id):
     """
     Core Grounded Apply Now Route.
     1. Loads the stored job record from database.
-    2. Validates stored apply_url / original_url for HTTPS, safe host, and permitted domain.
-    3. Re-verifies live availability if status is unknown or verification is aged.
-    4. Safely redirects to official destination.
-    Note: Never constructs destinations from user query parameters, preventing open redirects.
+    2. Resolves and unwraps verified destination ATS application URL.
+    3. Automatically records application into user's CRM with status 'applied'.
+    4. Re-verifies live availability.
+    5. Returns 302 redirect to employer's official ATS vacancy portal.
     """
     job = Job.query.get_or_404(job_id)
 
@@ -118,20 +141,30 @@ def safe_apply_redirect(job_id):
         flash("This job posting is no longer active or accepting applications.", "warning")
         return redirect(url_for("jobs.job_details", job_id=job.id))
 
-    destination_url = job.apply_url or job.original_url
-    if not destination_url:
-        flash("No valid application URL stored for this job.", "danger")
-        return redirect(url_for("jobs.job_details", job_id=job.id))
-
-    # Validate destination security: scheme, SSRF checks, platform host
-    is_valid, err_msg, clean_url = validate_external_job_url(
-        destination_url,
-        expected_platform=job.source_platform
-    )
+    from services.job_links.normalizer import resolve_verified_apply_link
+    is_valid, clean_url, err_msg = resolve_verified_apply_link(job)
     if not is_valid:
-        logger.error(f"Security blocked application redirect for job {job.id}: {err_msg}")
-        flash(f"Application link verification failed: {err_msg}", "danger")
-        return redirect(url_for("jobs.job_details", job_id=job.id))
+        # Fallback to direct validation of raw stored URLs
+        destination_url = job.apply_url or job.original_url
+        if not destination_url:
+            flash("No valid application URL stored for this job.", "danger")
+            return redirect(url_for("jobs.job_details", job_id=job.id))
+        is_val_fallback, err_fallback, clean_url = validate_external_job_url(
+            destination_url,
+            expected_platform=job.source_platform
+        )
+        if not is_val_fallback:
+            logger.error(f"Security blocked application redirect for job {job.id}: {err_msg or err_fallback}")
+            flash(f"Application link verification failed: {err_msg or err_fallback}", "danger")
+            return redirect(url_for("jobs.job_details", job_id=job.id))
+
+    # Automatic Application CRM Tracking
+    if current_user.is_authenticated:
+        try:
+            from services.crm.application_crm import application_crm
+            application_crm.record_application(current_user.id, job, status="applied")
+        except Exception as e:
+            logger.error(f"Error recording CRM application for user {current_user.id}, job {job.id}: {e}")
 
     # Live re-verification (skipped in test mode)
     if not current_app.config.get("TESTING"):

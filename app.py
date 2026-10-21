@@ -72,6 +72,8 @@ def create_app(config_name=None):
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(resume_bp)
+    from routes.resumes import resumes_bp
+    app.register_blueprint(resumes_bp)
     app.register_blueprint(ats_bp)
     app.register_blueprint(jobs_bp)
     app.register_blueprint(applications_bp)
