@@ -25,6 +25,18 @@ def list_jobs():
     min_score = request.args.get("min_match")
     page = request.args.get("page", 1, type=int)
 
+    # Ensure matches are computed if user has an active resume but no matches yet
+    if current_user.is_authenticated:
+        active_resume = current_user.get_active_resume()
+        if active_resume:
+            match_count = JobMatch.query.filter_by(
+                user_id=current_user.id,
+                resume_id=active_resume.id
+            ).count()
+            if match_count == 0:
+                from tasks.recompute_matches import recompute_user_matches
+                recompute_user_matches(current_user, active_resume)
+
     search_service = JobSearchService()
     search_data = search_service.search_jobs(
         user=current_user if current_user.is_authenticated else None,
@@ -222,6 +234,10 @@ def saved_jobs():
 def refresh_jobs():
     try:
         stats = run_job_refresh(limit_per_source=20)
+        active_resume = current_user.get_active_resume()
+        if active_resume:
+            from tasks.recompute_matches import recompute_user_matches
+            recompute_user_matches(current_user, active_resume)
         flash(
             f"Job collection refreshed: {stats['total_added']} new jobs added, "
             f"{stats['total_duplicates']} duplicates skipped from {stats['sources_checked']} sources.",

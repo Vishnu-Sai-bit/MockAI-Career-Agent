@@ -235,7 +235,7 @@
                                 <div class="text-end">
                                     {% if item.is_matched and match and match.match_score > 0 %}
                                         <span class="match-badge {% if match.match_score >= 80 %}match-high{% elif match.match_score >= 60 %}match-mid{% else %}match-low{% endif %}">
-                                            <i class="bi bi-shield-check"></i> {{ match.match_score|round(0)|int }}% Match
+                                            <i class="bi bi-shield-check"></i> {{ match.match_score|round(0)|int }}% Relevant
                                         </span>
                                     {% else %}
                                         <span class="badge bg-light text-secondary border">Remaining Role</span>

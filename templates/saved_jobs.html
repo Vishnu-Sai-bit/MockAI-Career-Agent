@@ -33,7 +33,7 @@
                                 <div class="text-end">
                                     {% if match %}
                                         <span class="match-badge {% if match.match_score >= 80 %}match-high{% elif match.match_score >= 60 %}match-mid{% else %}match-low{% endif %}">
-                                            {{ match.match_score|round(0)|int }}% Match
+                                            {{ match.match_score|round(0)|int }}% Relevant
                                         </span>
                                     {% endif %}
                                 </div>
