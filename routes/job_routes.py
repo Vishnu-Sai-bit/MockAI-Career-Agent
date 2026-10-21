@@ -238,11 +238,14 @@ def refresh_jobs():
         if active_resume:
             from tasks.recompute_matches import recompute_user_matches
             recompute_user_matches(current_user, active_resume)
-        flash(
-            f"Job collection refreshed: {stats['total_added']} new jobs added, "
-            f"{stats['total_duplicates']} duplicates skipped from {stats['sources_checked']} sources.",
-            "success"
-        )
+        if stats.get("status") == "already_running":
+            flash("Job synchronization is already running in the background.", "info")
+        else:
+            flash(
+                f"Job collection refreshed: {stats['total_added']} new jobs added, "
+                f"{stats['total_duplicates']} duplicates skipped from {stats['sources_checked']} sources.",
+                "success"
+            )
     except Exception as e:
         flash(f"Error during job refresh: {str(e)}", "danger")
     

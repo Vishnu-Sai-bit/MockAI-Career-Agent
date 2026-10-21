@@ -102,9 +102,9 @@ class JobSearchService:
 
             from sqlalchemy import case
 
-            # Prioritize jobs matching the candidate's resume first, followed by remaining jobs
+            # Prioritize jobs matching candidate resume requirements (>= 60%) first, followed by remaining jobs next
             is_matched = case(
-                (and_(JobMatch.match_score.isnot(None), JobMatch.match_score > 0), 1),
+                (and_(JobMatch.match_score.isnot(None), JobMatch.match_score >= 60.0), 1),
                 else_=0
             )
 
@@ -157,7 +157,7 @@ class JobSearchService:
                     job_id=job.id
                 ).first()
 
-            is_job_matched = bool(match_obj and match_obj.match_score and match_obj.match_score > 0)
+            is_job_matched = bool(match_obj and match_obj.match_score and match_obj.match_score >= 60.0)
             is_dream = bool(job.company and job.company.lower().strip() in user_dream_companies)
             results.append({
                 "job": job,

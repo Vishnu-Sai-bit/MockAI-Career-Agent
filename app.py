@@ -37,6 +37,24 @@ def create_app(config_name=None):
     migrate.init_app(app, db)
     login_manager.init_app(app)
 
+    # Configure SQLite PRAGMAs for thread-safe concurrency without database locks
+    from sqlalchemy import event
+    from sqlalchemy.engine import Engine
+
+    @event.listens_for(Engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        import sqlite3
+        if isinstance(dbapi_connection, sqlite3.Connection):
+            cursor = dbapi_connection.cursor()
+            try:
+                cursor.execute("PRAGMA journal_mode=WAL")
+                cursor.execute("PRAGMA synchronous=NORMAL")
+                cursor.execute("PRAGMA busy_timeout=30000")
+            except Exception:
+                pass
+            finally:
+                cursor.close()
+
     # Register Jinja Template Filters
     @app.template_filter("time_ago")
     @app.template_filter("relative_time")

@@ -15,8 +15,8 @@ def _background_job_worker(app, interval_seconds: int):
     """
     from tasks.refresh_jobs import run_job_refresh
 
-    # Initial delay to let application start up cleanly
-    time.sleep(15)
+    # Initial delay to let application start up cleanly without lock contention
+    time.sleep(45)
 
     while True:
         try:
