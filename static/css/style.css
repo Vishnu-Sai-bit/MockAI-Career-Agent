@@ -28,7 +28,150 @@ body {
     flex-direction: column;
 }
 
-/* Navbar */
+/* App Body & Sidebar Layout */
+.app-body {
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+#appSidebar {
+    background-color: #0b1120 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #e2e8f0;
+    transition: transform 0.25s ease-in-out;
+}
+
+[data-bs-theme="dark"] #appSidebar {
+    background-color: #080d19 !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Sidebar Brand */
+.sidebar-header {
+    background-color: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.sidebar-brand .brand-icon-box {
+    width: 36px;
+    height: 36px;
+    background: rgba(6, 182, 212, 0.15);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+}
+
+.sidebar-heading {
+    font-size: 0.67rem;
+    letter-spacing: 0.06rem;
+    color: #94a3b8 !important;
+    margin-top: 0.85rem;
+}
+
+/* Sidebar Navigation Items */
+.sidebar-nav {
+    gap: 3px;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 0.52rem 0.75rem;
+    border-radius: 0.5rem;
+    color: #cbd5e1;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.18s ease-in-out;
+    border-left: 3px solid transparent;
+}
+
+.sidebar-link:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.07);
+}
+
+.sidebar-link.active {
+    color: #38bdf8 !important;
+    background-color: rgba(56, 189, 248, 0.12);
+    border-left-color: #38bdf8;
+    font-weight: 600;
+}
+
+.candidate-mini-card {
+    background-color: #131b2e;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+.candidate-mini-card .avatar-circle {
+    width: 34px;
+    height: 34px;
+    font-size: 0.82rem;
+}
+
+.sidebar-footer {
+    background-color: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Desktop layout: Persistent Fixed Sidebar */
+@media (min-width: 992px) {
+    #appSidebar {
+        position: fixed !important;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        width: 270px !important;
+        z-index: 1040;
+        transform: none !important;
+        visibility: visible !important;
+    }
+
+    .app-main-wrapper {
+        margin-left: 270px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        transition: margin-left 0.25s ease;
+    }
+
+    body.sidebar-collapsed #appSidebar {
+        transform: translateX(-100%) !important;
+    }
+
+    body.sidebar-collapsed .app-main-wrapper {
+        margin-left: 0 !important;
+    }
+}
+
+/* Mobile layout: Offcanvas Slide-over */
+@media (max-width: 991.98px) {
+    #appSidebar {
+        width: 285px !important;
+    }
+
+    .app-main-wrapper {
+        margin-left: 0 !important;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+/* App Topbar (Header without duplicate menu items) */
+.app-topbar {
+    background-color: var(--card-bg);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    backdrop-filter: blur(8px);
+}
+
+[data-bs-theme="dark"] .app-topbar {
+    background-color: #0f172a;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Navbar compatibility */
 .navbar-custom {
     background-color: var(--primary-navy);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
