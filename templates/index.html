@@ -5,7 +5,7 @@
 {% block content %}
 <!-- 1. Landing Top Navigation Bar -->
 <nav class="navbar navbar-expand-lg landing-navbar sticky-top py-3">
-    <div class="container">
+    <div class="container-xl">
         <!-- Brand -->
         <a class="navbar-brand d-flex align-items-center gap-2 text-decoration-none" href="{{ url_for('dashboard.index') }}">
             <div class="brand-icon-box-landing">
@@ -36,9 +36,6 @@
                     <a class="nav-link nav-link-landing" href="{{ url_for('jobs.list_jobs') }}">Jobs</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link nav-link-landing" href="#pricing">Pricing</a>
-                </li>
-                <li class="nav-item">
                     <a class="nav-link nav-link-landing" href="#about">About</a>
                 </li>
             </ul>
@@ -56,8 +53,8 @@
 </nav>
 
 <!-- 2. Hero Section (Matching Reference Design) -->
-<section id="hero" class="landing-hero py-5 py-lg-6">
-    <div class="container py-lg-4">
+<section id="hero" class="landing-hero py-4 py-lg-5">
+    <div class="container-xl py-lg-3">
         <div class="row align-items-center gy-5">
             <!-- Left Hero Content -->
             <div class="col-lg-6 pe-lg-4">
@@ -278,7 +275,7 @@
 
 <!-- 3. Trusted By / Logos Section (Matching Reference Design) -->
 <section class="trusted-logos-section">
-    <div class="container text-center">
+    <div class="container-xl text-center">
         <p class="text-muted small fw-semibold text-uppercase tracking-wider mb-4">
             Trusted by job seekers worldwide
         </p>
@@ -336,7 +333,7 @@
 
 <!-- 4. Powerful Features for Your Career Growth (Matching Reference Design) -->
 <section id="features" class="features-section">
-    <div class="container py-lg-4">
+    <div class="container-xl py-lg-4">
         <div class="text-center max-w-xl mx-auto mb-5">
             <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-semibold mb-3">
                 Everything You Need
@@ -447,7 +444,7 @@
 
 <!-- 5. How It Works Section -->
 <section id="how-it-works" class="py-5 bg-light border-top border-bottom">
-    <div class="container py-lg-4">
+    <div class="container-xl py-lg-4">
         <div class="text-center max-w-xl mx-auto mb-5">
             <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-semibold mb-3">
                 Simple & Transparent
@@ -487,74 +484,9 @@
     </div>
 </section>
 
-<!-- 6. Pricing Section -->
-<section id="pricing" class="py-5">
-    <div class="container py-lg-4">
-        <div class="text-center max-w-xl mx-auto mb-5">
-            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-semibold mb-3">
-                Transparent Plans
-            </span>
-            <h2 class="display-6 fw-bold text-dark mb-3">Simple Pricing for Every Candidate</h2>
-            <p class="text-muted fs-5">Everything you need to accelerate your career search.</p>
-        </div>
-        <div class="row g-4 justify-content-center">
-            <!-- Free Plan -->
-            <div class="col-md-6 col-lg-5">
-                <div class="p-4 p-lg-5 bg-white rounded-4 border shadow-sm h-100 d-flex flex-column justify-content-between">
-                    <div>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h4 class="fw-bold text-dark mb-0">Job Seeker Free</h4>
-                            <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1">Active</span>
-                        </div>
-                        <div class="display-5 fw-extrabold text-dark mb-3">₹0 <span class="fs-6 text-muted fw-normal">/ forever</span></div>
-                        <p class="text-muted small mb-4">Complete access to real verified jobs and transparent ATS scoring.</p>
-                        <ul class="list-unstyled d-flex flex-column gap-2 small text-secondary mb-4">
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i> Browse 1,900+ real verified employer jobs</li>
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i> Full 6-section ATS Resume Quality Audit</li>
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i> Drag-and-drop Application Tracker</li>
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i> AI Career Assistant chat support</li>
-                            <li><i class="bi bi-check-circle-fill text-success me-2"></i> Direct official employer apply redirects</li>
-                        </ul>
-                    </div>
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary rounded-pill w-100 py-2 fw-semibold">
-                        Get Started Free
-                    </a>
-                </div>
-            </div>
-
-            <!-- Pro Plan -->
-            <div class="col-md-6 col-lg-5">
-                <div class="p-4 p-lg-5 bg-white rounded-4 border border-primary shadow-lg h-100 d-flex flex-column justify-content-between position-relative">
-                    <span class="position-absolute top-0 end-0 translate-middle-y me-4 badge bg-primary text-white rounded-pill px-3 py-2 fw-semibold shadow-sm">
-                        Recommended
-                    </span>
-                    <div>
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h4 class="fw-bold text-dark mb-0">Career Pro</h4>
-                            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1">Fast Track</span>
-                        </div>
-                        <div class="display-5 fw-extrabold text-dark mb-3">₹499 <span class="fs-6 text-muted fw-normal">/ month</span></div>
-                        <p class="text-muted small mb-4">Advanced mock interview simulation, instant WhatsApp alerts, and priority AI tailoring.</p>
-                        <ul class="list-unstyled d-flex flex-column gap-2 small text-secondary mb-4">
-                            <li><i class="bi bi-check-circle-fill text-primary me-2"></i> Everything in Job Seeker Free</li>
-                            <li><i class="bi bi-check-circle-fill text-primary me-2"></i> Unlimited AI Mock Interviews (STAR + Sandbox)</li>
-                            <li><i class="bi bi-check-circle-fill text-primary me-2"></i> Instant WhatsApp & Email Job Match Alerts</li>
-                            <li><i class="bi bi-check-circle-fill text-primary me-2"></i> Tailored ATS Cover Letters in 1-Click</li>
-                            <li><i class="bi bi-check-circle-fill text-primary me-2"></i> Dream Company automatic openings monitor</li>
-                        </ul>
-                    </div>
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-hero-primary rounded-pill w-100 py-2 fw-semibold">
-                        Start 7-Day Free Trial
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- 7. About Section -->
-<section id="about" class="py-5 bg-light border-top">
-    <div class="container py-lg-4 text-center">
+<!-- 6. About Section -->
+<section id="about" class="py-5">
+    <div class="container-xl py-lg-4 text-center">
         <div class="max-w-xl mx-auto">
             <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-semibold mb-3">
                 Our Mission
@@ -572,9 +504,9 @@
     </div>
 </section>
 
-<!-- 8. Modern SaaS Landing Footer -->
+<!-- 7. Modern SaaS Landing Footer -->
 <footer class="py-5 bg-white border-top">
-    <div class="container">
+    <div class="container-xl">
         <div class="row g-4 mb-5">
             <div class="col-lg-4">
                 <a class="navbar-brand d-flex align-items-center gap-2 text-decoration-none mb-3" href="{{ url_for('dashboard.index') }}">
