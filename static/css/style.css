@@ -119,14 +119,14 @@ body {
         top: 0;
         bottom: 0;
         left: 0;
-        width: 270px !important;
+        width: 260px !important;
         z-index: 1040;
         transform: none !important;
         visibility: visible !important;
     }
 
     .app-main-wrapper {
-        margin-left: 270px;
+        margin-left: 260px;
         min-height: 100vh;
         display: flex;
         flex-direction: column;
@@ -145,7 +145,7 @@ body {
 /* Mobile layout: Offcanvas Slide-over */
 @media (max-width: 991.98px) {
     #appSidebar {
-        width: 285px !important;
+        width: 280px !important;
     }
 
     .app-main-wrapper {
@@ -169,6 +169,41 @@ body {
 [data-bs-theme="dark"] .app-topbar {
     background-color: #0f172a;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Notification Dropdown Styling in Topbar */
+.notif-dropdown-menu {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    animation: fadeInDropdown 0.15s ease-out;
+}
+
+@keyframes fadeInDropdown {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.notif-items-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.notif-items-list::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+}
+
+[data-bs-theme="dark"] .notif-items-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Custom Scrollbar for Sidebar */
+#appSidebar .sidebar-body::-webkit-scrollbar {
+    width: 4px;
+}
+
+#appSidebar .sidebar-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
 }
 
 /* Navbar compatibility */

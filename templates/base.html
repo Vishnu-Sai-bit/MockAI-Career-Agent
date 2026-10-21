@@ -95,6 +95,13 @@
                             <span>Applications Kanban</span>
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="sidebar-link {% if 'watchlist' in request.endpoint %}active{% endif %}" href="{{ url_for('watchlist.view_watchlist') }}">
+                            <i class="bi bi-star-fill me-2 text-warning"></i>
+                            <span class="flex-grow-1">Dream Companies</span>
+                            <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">Watch</span>
+                        </a>
+                    </li>
                 </ul>
 
                 <!-- Section 2: AI Career Suite -->
@@ -129,40 +136,20 @@
                     </li>
                 </ul>
 
-                <!-- Section 3: Profile & Strategy -->
+                <!-- Section 3: Account & Profile (Preferences & Career Profile unified) -->
                 <div class="sidebar-heading text-uppercase text-secondary fw-bold px-2 mb-1">
-                    Career Profile
-                </div>
-                <ul class="nav flex-column mb-3 sidebar-nav">
-                    <li class="nav-item">
-                        <a class="sidebar-link {% if 'resume' in request.endpoint %}active{% endif %}" href="{{ url_for('resume.resume_analysis') }}">
-                            <i class="bi bi-file-earmark-person-fill me-2 text-primary"></i>
-                            <span>Resume & Skills</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="sidebar-link {% if 'watchlist' in request.endpoint %}active{% endif %}" href="{{ url_for('watchlist.view_watchlist') }}">
-                            <i class="bi bi-star-fill me-2 text-warning"></i>
-                            <span class="flex-grow-1">Dream Companies</span>
-                            <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">Watch</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="sidebar-link {% if 'alert' in request.endpoint %}active{% endif %}" href="{{ url_for('alerts.alerts_home') }}">
-                            <i class="bi bi-bell-fill me-2 text-warning"></i>
-                            <span>Smart Job Alerts</span>
-                        </a>
-                    </li>
-                </ul>
-
-                <!-- Section 4: Account & Settings -->
-                <div class="sidebar-heading text-uppercase text-secondary fw-bold px-2 mb-1">
-                    Account
+                    Account & Profile
                 </div>
                 <ul class="nav flex-column mb-auto sidebar-nav">
                     <li class="nav-item">
+                        <a class="sidebar-link {% if 'resume' in request.endpoint %}active{% endif %}" href="{{ url_for('resume.resume_analysis') }}">
+                            <i class="bi bi-file-earmark-person-fill me-2 text-primary"></i>
+                            <span>Career Profile & Resume</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="sidebar-link {% if request.endpoint == 'dashboard.settings' %}active{% endif %}" href="{{ url_for('dashboard.settings') }}">
-                            <i class="bi bi-sliders me-2 text-secondary"></i>
+                            <i class="bi bi-sliders me-2 text-info"></i>
                             <span>Candidate Preferences</span>
                         </a>
                     </li>
@@ -200,7 +187,7 @@
     <!-- 2. Main Wrapper (Header Topbar, Content, Footer) -->
     <div class="app-main-wrapper flex-grow-1 d-flex flex-column">
 
-        <!-- Top App Bar (Header with page context & utilities, NO duplicate links) -->
+        <!-- Top App Bar (Header with context & utilities including Notifications, NO duplicate links) -->
         <header class="app-topbar d-flex align-items-center justify-content-between px-3 px-lg-4 py-2 shadow-sm">
             <div class="d-flex align-items-center gap-2">
                 <!-- Hamburger Button (Toggles sidebar offcanvas on mobile or collapses on desktop) -->
@@ -217,10 +204,10 @@
                         {% elif 'assistant' in request.endpoint %}AI Career Assistant
                         {% elif 'interview' in request.endpoint %}Mock Interview Simulator
                         {% elif 'salary' in request.endpoint %}Salary Intelligence
-                        {% elif 'resume' in request.endpoint %}Resume Intelligence
+                        {% elif 'resume' in request.endpoint %}Career Profile & Resume
                         {% elif 'watchlist' in request.endpoint %}Dream Companies
-                        {% elif 'alert' in request.endpoint %}Job Alerts
-                        {% elif 'settings' in request.endpoint %}Candidate Settings
+                        {% elif 'alert' in request.endpoint %}Job Alerts & Notifications
+                        {% elif 'settings' in request.endpoint %}Candidate Preferences
                         {% else %}AI Job Agent
                         {% endif %}
                     </span>
@@ -231,13 +218,65 @@
                 </div>
             </div>
 
-            <!-- Topbar Right Utilities: Sync, Theme Toggle, User Profile Avatar -->
+            <!-- Topbar Right Utilities: Sync, Notifications, Theme Toggle, User Profile Avatar -->
             <div class="d-flex align-items-center gap-2">
                 {% if current_user.is_authenticated %}
+                    <!-- Quick Sync Jobs Button -->
                     <a href="{{ url_for('dashboard.sync_jobs') }}" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1" title="Synchronize fresh jobs from official ATS boards">
                         <i class="bi bi-arrow-repeat"></i>
                         <span class="d-none d-md-inline small">Sync Jobs</span>
                     </a>
+
+                    <!-- Notifications Dropdown in Navbar -->
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-outline-secondary border-secondary position-relative d-flex align-items-center px-2 py-1" type="button" id="notifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Job Alerts & Notifications">
+                            <i class="bi bi-bell{% if navbar_notification_count > 0 %}-fill text-warning{% endif %}"></i>
+                            {% if navbar_notification_count > 0 %}
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.62rem;">
+                                    {{ navbar_notification_count }}
+                                </span>
+                            {% endif %}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border p-0 notif-dropdown-menu" aria-labelledby="notifDropdownBtn" style="width: 320px; max-width: 90vw;">
+                            <li class="p-3 border-bottom d-flex align-items-center justify-content-between bg-body-tertiary rounded-top">
+                                <span class="fw-bold small text-body">
+                                    <i class="bi bi-bell-fill text-warning me-1"></i> Notifications
+                                </span>
+                                <a href="{{ url_for('alerts.alerts_home') }}" class="text-decoration-none small text-primary" style="font-size: 0.75rem;">
+                                    View Alerts
+                                </a>
+                            </li>
+                            <div class="notif-items-list overflow-y-auto" style="max-height: 280px;">
+                                {% if navbar_notifications %}
+                                    {% for notif in navbar_notifications %}
+                                        <li class="border-bottom">
+                                            <a href="{{ url_for('alerts.alerts_home') }}" class="dropdown-item py-2 px-3 text-wrap d-flex align-items-start gap-2">
+                                                <i class="bi bi-info-circle-fill text-info mt-1 fs-6 flex-shrink-0"></i>
+                                                <div class="overflow-hidden">
+                                                    <div class="fw-semibold small lh-sm text-body text-truncate">{{ notif.subject or 'Job Notification' }}</div>
+                                                    <div class="text-secondary small text-truncate" style="font-size: 0.75rem; max-width: 250px;">
+                                                        {{ notif.message or 'New verified positions matching your skills are open.' }}
+                                                    </div>
+                                                    <small class="text-muted" style="font-size: 0.68rem;">{{ notif.created_at|time_ago }}</small>
+                                                </div>
+                                            </a>
+                                        </li>
+                                    {% endfor %}
+                                {% else %}
+                                    <li class="p-4 text-center text-muted">
+                                        <i class="bi bi-bell-slash fs-4 d-block mb-2 text-secondary opacity-50"></i>
+                                        <span class="small d-block fw-semibold text-body">No unread alerts</span>
+                                        <span class="small text-secondary" style="font-size: 0.75rem;">You will receive alerts when new live positions match your profile.</span>
+                                    </li>
+                                {% endif %}
+                            </div>
+                            <li class="p-2 border-top text-center bg-body-tertiary rounded-bottom">
+                                <a href="{{ url_for('alerts.alerts_home') }}" class="btn btn-sm btn-link text-decoration-none small py-0" style="font-size: 0.78rem;">
+                                    Manage Smart Job Alerts <i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 {% endif %}
 
                 <!-- Dark / Light Theme Toggle -->
@@ -257,7 +296,8 @@
                         <ul class="dropdown-menu dropdown-menu-end shadow border" aria-labelledby="userMenuButton">
                             <li class="dropdown-header small text-muted">Signed in as<br><strong class="text-body text-truncate d-block">{{ current_user.email }}</strong></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item small" href="{{ url_for('dashboard.settings') }}"><i class="bi bi-gear me-2"></i> Candidate Preferences</a></li>
+                            <li><a class="dropdown-item small" href="{{ url_for('dashboard.settings') }}"><i class="bi bi-sliders me-2"></i> Candidate Preferences</a></li>
+                            <li><a class="dropdown-item small" href="{{ url_for('resume.resume_analysis') }}"><i class="bi bi-file-earmark-person me-2"></i> Career Profile & Resume</a></li>
                             <li><a class="dropdown-item small" href="{{ url_for('resume.upload_resume') }}"><i class="bi bi-upload me-2"></i> Upload New Resume</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item small text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i> Sign Out</a></li>

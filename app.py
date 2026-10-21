@@ -42,6 +42,21 @@ def create_app(config_name=None):
     def jinja_relative_time(dt):
         return format_relative_time(dt)
 
+    # Context Processor for Topbar Notifications
+    @app.context_processor
+    def inject_navbar_data():
+        from flask_login import current_user
+        if current_user and current_user.is_authenticated:
+            try:
+                recent_notifs = current_user.notifications.order_by(db.desc("created_at")).limit(5).all()
+                return {
+                    "navbar_notifications": recent_notifs,
+                    "navbar_notification_count": len(recent_notifs)
+                }
+            except Exception:
+                return {"navbar_notifications": [], "navbar_notification_count": 0}
+        return {"navbar_notifications": [], "navbar_notification_count": 0}
+
     # Register Route Blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
