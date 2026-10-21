@@ -125,26 +125,26 @@
                         <label class="form-label small fw-semibold text-secondary">Experience Level</label>
                         <select name="experience_level" class="form-select form-select-sm">
                             <option value="all" {% if experience_level == 'all' or not experience_level %}selected{% endif %}>All Experience Levels</option>
-                            <option value="entry" {% if experience_level == 'entry' %}selected{% endif %}>💼 Entry Level (0–2 Yrs)</option>
-                            <option value="mid" {% if experience_level == 'mid' %}selected{% endif %}>💼 Mid Level (2–5 Yrs)</option>
-                            <option value="senior" {% if experience_level == 'senior' %}selected{% endif %}>💼 Senior Level (5–8 Yrs)</option>
-                            <option value="lead" {% if experience_level == 'lead' %}selected{% endif %}>💼 Lead / Staff (8+ Yrs)</option>
+                            <option value="entry" {% if experience_level == 'entry' %}selected{% endif %}>Entry Level (0–2 Yrs)</option>
+                            <option value="mid" {% if experience_level == 'mid' %}selected{% endif %}>Mid Level (2–5 Yrs)</option>
+                            <option value="senior" {% if experience_level == 'senior' %}selected{% endif %}>Senior Level (5–8 Yrs)</option>
+                            <option value="lead" {% if experience_level == 'lead' %}selected{% endif %}>Lead / Staff (8+ Yrs)</option>
                         </select>
                     </div>
                     <div class="col-lg-3 col-md-6">
                         <label class="form-label small fw-semibold text-secondary">Work Mode</label>
                         <select name="work_mode" class="form-select form-select-sm">
                             <option value="all" {% if work_mode == 'all' or not work_mode %}selected{% endif %}>All Work Modes</option>
-                            <option value="remote" {% if work_mode == 'remote' %}selected{% endif %}>🌐 Remote</option>
-                            <option value="hybrid" {% if work_mode == 'hybrid' %}selected{% endif %}>🏢 Hybrid</option>
-                            <option value="on-site" {% if work_mode == 'on-site' %}selected{% endif %}>📍 On-site</option>
+                            <option value="remote" {% if work_mode == 'remote' %}selected{% endif %}>Remote</option>
+                            <option value="hybrid" {% if work_mode == 'hybrid' %}selected{% endif %}>Hybrid</option>
+                            <option value="on-site" {% if work_mode == 'on-site' %}selected{% endif %}>On-site</option>
                         </select>
                     </div>
                     <div class="col-lg-2 col-md-4">
                         <label class="form-label small fw-semibold text-secondary">Date Posted</label>
                         <select name="date_posted" class="form-select form-select-sm">
                             <option value="all" {% if date_posted == 'all' or not date_posted %}selected{% endif %}>Any Time</option>
-                            <option value="24h" {% if date_posted == '24h' or date_posted == '1d' %}selected{% endif %}>⚡ Past 24 Hours (1 Day)</option>
+                            <option value="24h" {% if date_posted == '24h' or date_posted == '1d' %}selected{% endif %}>Past 24 Hours (1 Day)</option>
                             <option value="3d" {% if date_posted == '3d' %}selected{% endif %}>Past 3 Days</option>
                             <option value="7d" {% if date_posted == '7d' or date_posted == '1w' %}selected{% endif %}>Past Week (7 Days)</option>
                             <option value="14d" {% if date_posted == '14d' or date_posted == '2w' %}selected{% endif %}>Past 2 Weeks</option>
@@ -163,10 +163,10 @@
                     <div class="col-lg-2 col-md-4">
                         <label class="form-label small fw-semibold text-secondary">Sort By</label>
                         <select name="sort_by" class="form-select form-select-sm">
-                            <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>🎯 Relevant First & Fresh</option>
-                            <option value="match" {% if sort_by == 'match' %}selected{% endif %}>🔥 Highest Relevance Score</option>
-                            <option value="salary" {% if sort_by == 'salary' %}selected{% endif %}>💰 Highest Salary</option>
-                            <option value="all_fresh" {% if sort_by == 'all_fresh' %}selected{% endif %}>🕒 All Freshest First</option>
+                            <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>Relevant First & Fresh</option>
+                            <option value="match" {% if sort_by == 'match' %}selected{% endif %}>Highest Relevance Score</option>
+                            <option value="salary" {% if sort_by == 'salary' %}selected{% endif %}>Highest Salary</option>
+                            <option value="all_fresh" {% if sort_by == 'all_fresh' %}selected{% endif %}>All Freshest First</option>
                         </select>
                     </div>
                 </div>

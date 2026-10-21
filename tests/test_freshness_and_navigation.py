@@ -73,7 +73,7 @@ def test_sidebar_and_navigation_rendered(app_with_db):
     assert 'id="appSidebar"' in html
     assert 'data-bs-target="#appSidebar"' in html
     assert 'Relevant First' in html
-    assert '⚡ Past 24 Hours (1 Day)' in html
+    assert 'Past 24 Hours (1 Day)' in html
 
 def test_matched_jobs_prioritized_first(app_with_db, test_user, test_source):
     from models.job_match import JobMatch
