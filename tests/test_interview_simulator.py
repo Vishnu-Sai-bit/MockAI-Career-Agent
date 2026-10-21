@@ -99,3 +99,38 @@ def test_sidebar_career_coach_order(app_instance, client):
     # Ensure Salary Intelligence is not present in the sidebar nav
     sidebar_part = html[html.find('id="appSidebar"'):html.find('</nav>')]
     assert "Salary Intelligence" not in sidebar_part
+
+def test_interview_hub_page(app_instance, client):
+    with app_instance.app_context():
+        u = User.query.first()
+        user_id = str(u.id) if u else "1"
+
+    with client.session_transaction() as sess:
+        sess["_user_id"] = user_id
+        sess["_fresh"] = True
+
+    resp = client.get("/interview/hub")
+    assert resp.status_code == 200
+    html = resp.data.decode("utf-8")
+    assert "AI Mock Interview Prep Center" in html
+    assert "STAR Method Blueprint" in html
+    assert "Behavioral & STAR Simulator" in html
+
+def test_interview_simulator_page_details(app_instance, client):
+    with app_instance.app_context():
+        u = User.query.first()
+        user_id = str(u.id) if u else "1"
+        job = Job.query.first()
+
+    with client.session_transaction() as sess:
+        sess["_user_id"] = user_id
+        sess["_fresh"] = True
+
+    resp = client.get(f"/interview/{job.id}")
+    assert resp.status_code == 200
+    html = resp.data.decode("utf-8")
+    assert "Interview Progress:" in html
+    assert "STAR Blueprint for This Question" in html
+    assert "stopwatch-display" in html
+    assert "switchJobModal" in html
+    assert "Verified Live" in html

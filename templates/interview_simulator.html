@@ -3,35 +3,123 @@
 {% block title %}AI Mock Interview for {{ job.title }} at {{ job.company }}{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <!-- Header -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-        <div>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb small mb-1">
-                    <li class="breadcrumb-item"><a href="{{ url_for('jobs.job_details', job_id=job.id) }}">{{ job.title }}</a></li>
-                    <li class="breadcrumb-item active">AI Mock Interview</li>
-                </ol>
-            </nav>
-            <h3 class="fw-bold mb-0">🎙️ AI Mock Interview Simulator</h3>
-            <p class="text-muted small mb-0">Role-specific behavioral & technical questions tailored to <strong>{{ job.title }}</strong> at <strong>{{ job.company }}</strong>.</p>
+<div class="container-fluid px-lg-4 py-4">
+    <!-- Top Command & Breadcrumb Navigation -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb small mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('interview.interview_hub') }}">AI Mock Interview Prep</a></li>
+                <li class="breadcrumb-item active text-truncate" style="max-width: 250px;">{{ job.title }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-sm btn-outline-custom d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#switchJobModal">
+                <i class="bi bi-arrow-repeat"></i> <span>Switch Target Role</span>
+            </button>
+            <a href="{{ url_for('interview.coding_challenge', job_id=job.id) }}" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1">
+                <i class="bi bi-code-slash"></i> <span>Coding Sandbox</span>
+            </a>
+            <a href="{{ url_for('applications.view_tailored_cover_letter', job_id=job.id) }}" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
+                <i class="bi bi-file-earmark-text"></i> <span>Cover Letter</span>
+            </a>
+            <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="btn btn-sm btn-outline-secondary">
+                Back to Job
+            </a>
         </div>
-        <div>
-            <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="btn btn-outline-custom">Back to Job</a>
+    </div>
+
+    <!-- Target Role Specification Banner -->
+    <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div class="d-flex align-items-start gap-3">
+                <div class="rounded-3 bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-4 flex-shrink-0" style="width: 52px; height: 52px;">
+                    {{ job.company[0].upper() }}
+                </div>
+                <div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                        <h4 class="fw-bold text-body mb-0">{{ job.title }}</h4>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle small">
+                            <i class="bi bi-shield-check me-1"></i>Verified Live
+                        </span>
+                        {% if match_score %}
+                            <span class="badge {% if match_score >= 80 %}bg-success text-white{% elif match_score >= 60 %}bg-warning-subtle text-warning-emphasis{% else %}bg-secondary-subtle text-secondary{% endif %}">
+                                <i class="bi bi-bullseye me-1"></i>{{ match_score }}% ATS Fit
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 text-secondary small mb-2">
+                        <span class="fw-semibold text-body"><i class="bi bi-building me-1"></i>{{ job.company }}</span>
+                        <span class="text-muted">•</span>
+                        <span><i class="bi bi-geo-alt me-1"></i>{{ job.location or 'Global / Remote' }}</span>
+                        <span class="text-muted">•</span>
+                        <span class="badge bg-light text-secondary border">{{ job.work_mode|title }}</span>
+                        <span class="badge bg-light text-secondary border">{{ job.experience_level|title }}</span>
+                        <span class="text-muted">•</span>
+                        <span class="text-success fw-bold"><i class="bi bi-cash-stack me-1"></i>{{ job|format_job_salary }}</span>
+                        <span class="text-muted">•</span>
+                        <span><i class="bi bi-clock-history me-1"></i>{{ job.posted_relative_time }}</span>
+                    </div>
+
+                    <!-- Skills targeted by this role -->
+                    {% if job.required_skills %}
+                        <div class="d-flex flex-wrap align-items-center gap-1 mt-2">
+                            <span class="small text-muted me-1 fw-semibold">Targeted Skills:</span>
+                            {% for sk in job.required_skills[:8] %}
+                                {% set is_matched = candidate_skills and sk|lower in candidate_skills|map('lower')|list %}
+                                <span class="badge {% if is_matched %}bg-success-subtle text-success border border-success-subtle{% else %}bg-light text-secondary border{% endif %} small">
+                                    {% if is_matched %}<i class="bi bi-check-circle-fill me-1"></i>{% endif %}{{ sk }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Direct Link -->
+            <div class="flex-shrink-0">
+                <a href="{{ job.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-outline-custom btn-sm d-flex align-items-center gap-1">
+                    <i class="bi bi-box-arrow-up-right"></i> Official Job Link
+                </a>
+            </div>
+        </div>
+
+        <!-- Session Progress Bar -->
+        <hr class="my-3 opacity-25">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+            <div class="d-flex align-items-center gap-2 small">
+                <span class="text-muted fw-semibold">Interview Progress:</span>
+                <span id="session-progress-text" class="fw-bold text-body">0 of {{ questions|length }} Evaluated (0%)</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 small">
+                <span id="session-avg-badge" class="badge bg-light text-secondary border">Session Avg: --</span>
+            </div>
+        </div>
+        <div class="progress mt-2" style="height: 6px;">
+            <div id="session-progress-bar" class="progress-bar bg-primary" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
         </div>
     </div>
 
     <div class="row g-4">
-        <!-- Left: Question Carousel / Selector -->
+        <!-- Left: Question Selector & Dynamic STAR Blueprint Hints -->
         <div class="col-lg-5">
+            <!-- Question List Card -->
             <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-3">
-                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-list-check text-primary me-2"></i>Interview Questions ({{ questions|length }})</h6>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-body mb-0">
+                        <i class="bi bi-list-check text-primary me-2"></i>Interview Questions ({{ questions|length }})
+                    </h6>
+                    <span class="badge bg-primary-subtle text-primary small">High-Yield Set</span>
+                </div>
                 <div class="list-group list-group-flush" id="question-list">
                     {% for q in questions %}
                         <button type="button" class="list-group-item list-group-item-action p-3 rounded-3 mb-2 question-btn {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="badge bg-secondary-subtle text-secondary small">{{ q.type }}</span>
-                                <small class="fw-bold">Q{{ loop.index }}</small>
+                                <div class="d-flex align-items-center gap-1">
+                                    <span class="badge bg-light text-muted border small q-score-badge" id="q-status-{{ loop.index0 }}">Pending</span>
+                                    <small class="fw-bold">Q{{ loop.index }}</small>
+                                </div>
                             </div>
                             <div class="fw-semibold small text-truncate-2">{{ q.question }}</div>
                         </button>
@@ -39,67 +127,136 @@
                 </div>
             </div>
 
-            <!-- STAR Guide Card -->
+            <!-- Dynamic Question-Specific STAR Guide Card -->
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="fw-bold text-success mb-0">
+                        <i class="bi bi-lightbulb-fill text-warning me-2"></i>STAR Blueprint for This Question
+                    </h6>
+                    <span class="badge bg-success-subtle text-success small">Bar-Raiser Hints</span>
+                </div>
+                <p class="text-secondary small mb-3">Structure your response according to this question's tailored rubric:</p>
+
+                <div class="d-flex flex-column gap-2 small">
+                    <div class="p-2 border rounded bg-body-tertiary">
+                        <strong class="text-info d-block mb-1"><i class="bi bi-geo-alt-fill me-1"></i>Situation (Context):</strong>
+                        <span id="star-hint-situation" class="text-secondary">
+                            {{ questions[0].star_guide.situation if questions[0].star_guide and questions[0].star_guide.situation else "Establish the business problem, team stakes, and technical constraints." }}
+                        </span>
+                    </div>
+                    <div class="p-2 border rounded bg-body-tertiary">
+                        <strong class="text-primary d-block mb-1"><i class="bi bi-check2-square me-1"></i>Task (Objective):</strong>
+                        <span id="star-hint-task" class="text-secondary">
+                            {{ questions[0].star_guide.task if questions[0].star_guide and questions[0].star_guide.task else "Identify the specific challenge you were directly responsible for resolving." }}
+                        </span>
+                    </div>
+                    <div class="p-2 border rounded bg-body-tertiary">
+                        <strong class="text-success d-block mb-1"><i class="bi bi-cpu-fill me-1"></i>Action (Technical Execution):</strong>
+                        <span id="star-hint-action" class="text-secondary">
+                            {{ questions[0].star_guide.action if questions[0].star_guide and questions[0].star_guide.action else "Detail your architectural choices, personal implementation, and trade-offs." }}
+                        </span>
+                    </div>
+                    <div class="p-2 border rounded bg-body-tertiary">
+                        <strong class="text-warning-emphasis d-block mb-1"><i class="bi bi-graph-up me-1"></i>Result (Quantified Outcome):</strong>
+                        <span id="star-hint-result" class="text-secondary">
+                            {{ questions[0].star_guide.result if questions[0].star_guide and questions[0].star_guide.result else "Conclude with measurable numbers: latency reduction %, uptime, or shipped milestones." }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Essential Interview Strategy Tips -->
             <div class="card p-3 custom-card border-0 bg-white shadow-sm">
-                <h6 class="fw-bold text-success mb-2"><i class="bi bi-lightbulb-fill text-warning me-1"></i>STAR Formulation Guide</h6>
-                <ul class="list-unstyled small text-muted mb-0">
-                    <li class="mb-1"><strong>S - Situation:</strong> Set context, team stakes, and problem.</li>
-                    <li class="mb-1"><strong>T - Task:</strong> State what you were tasked to accomplish.</li>
-                    <li class="mb-1"><strong>A - Action:</strong> Focus on your specific technical execution.</li>
-                    <li><strong>R - Result:</strong> Conclude with measurable impact & numbers.</li>
+                <h6 class="fw-bold text-dark small mb-2"><i class="bi bi-shield-check text-primary me-1"></i>Bar-Raiser Evaluation Tips</h6>
+                <ul class="list-unstyled small text-muted mb-0 d-flex flex-column gap-1">
+                    <li><i class="bi bi-check2 text-success me-1"></i><strong>Optimal Cadence:</strong> Aim for 90 to 180 seconds (~150-300 words).</li>
+                    <li><i class="bi bi-check2 text-success me-1"></i><strong>Use "I" Not "We":</strong> Highlight what YOU architected or resolved.</li>
+                    <li><i class="bi bi-check2 text-success me-1"></i><strong>Include Metrics:</strong> Numbers validate that your result was real.</li>
                 </ul>
             </div>
         </div>
 
-        <!-- Right: Interactive Answer & Live STAR Evaluator -->
+        <!-- Right: Interactive Answer Studio & Live STAR Evaluator -->
         <div class="col-lg-7">
+            <!-- Active Question & Practice Studio Card -->
             <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <span class="badge bg-primary-subtle text-primary" id="active-q-type">{{ questions[0].type }}</span>
                     <span class="small text-muted" id="active-q-num">Question 1 of {{ questions|length }}</span>
                 </div>
-                <div class="d-flex align-items-center gap-2 mb-3">
-                    <h5 class="fw-bold text-dark mb-0 flex-grow-1" id="active-q-text">{{ questions[0].question }}</h5>
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <h5 class="fw-bold text-body mb-0 flex-grow-1" id="active-q-text">{{ questions[0].question }}</h5>
                     <button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 flex-shrink-0" id="speak-q-btn" title="Listen to Question (AI Voice)">
                         <i class="bi bi-volume-up-fill"></i> <span>Listen</span>
                     </button>
                 </div>
-                <p class="small text-muted mb-3" id="active-q-criteria"><i class="bi bi-info-circle me-1"></i>{{ questions[0].evaluation_criteria }}</p>
-
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <label class="form-label small fw-semibold mb-0">Your Answer (Type or speak using the STAR method):</label>
-                        <span id="speech-indicator" class="badge bg-danger-subtle text-danger border border-danger-subtle d-none">
-                            <span class="spinner-grow spinner-grow-sm me-1" style="width: 0.6rem; height: 0.6rem;"></span> Recording Audio...
-                        </span>
-                    </div>
-                    <textarea id="user-answer-box" class="form-control" rows="6" placeholder="During my time at... our team encountered... I took ownership by... and the final outcome was..."></textarea>
+                <div class="p-2 border rounded bg-body-tertiary small text-secondary mb-3" id="active-q-criteria">
+                    <i class="bi bi-info-circle me-1 text-primary"></i><strong>Interviewer Listening For:</strong> {{ questions[0].evaluation_criteria }}
                 </div>
 
-                <div class="d-flex justify-content-between align-items-center">
-                    <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" id="mic-btn">
-                        <i class="bi bi-mic-fill"></i> <span id="mic-btn-text">Voice Input</span>
-                    </button>
+                <!-- Studio Answer Toolbar: Live Stopwatch & Word Count -->
+                <div class="mb-3">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-2">
+                        <label class="form-label small fw-semibold mb-0 text-body">
+                            Your STAR Answer (Type or record using the microphone):
+                        </label>
+                        <div class="d-flex align-items-center gap-2">
+                            <!-- Live Stopwatch Controls -->
+                            <div class="d-flex align-items-center gap-1 bg-light border px-2 py-1 rounded small">
+                                <i class="bi bi-stopwatch text-danger"></i>
+                                <span id="stopwatch-display" class="font-monospace fw-bold text-body">00:00</span>
+                                <button type="button" class="btn btn-link btn-sm p-0 text-secondary text-decoration-none ms-1" id="timer-toggle-btn" title="Start/Pause Timer">
+                                    <i class="bi bi-play-fill" id="timer-icon"></i>
+                                </button>
+                                <button type="button" class="btn btn-link btn-sm p-0 text-secondary text-decoration-none" id="timer-reset-btn" title="Reset Timer">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                            </div>
+                            <span id="timer-pace-badge" class="badge bg-light text-secondary border small">0s</span>
+                            <span id="word-count-badge" class="badge bg-light text-secondary border small">0 words</span>
+                            <span id="speech-indicator" class="badge bg-danger-subtle text-danger border border-danger-subtle d-none">
+                                <span class="spinner-grow spinner-grow-sm me-1" style="width: 0.6rem; height: 0.6rem;"></span> Recording...
+                            </span>
+                        </div>
+                    </div>
+                    <textarea id="user-answer-box" class="form-control" rows="7" placeholder="During my time at... our team encountered a critical challenge where... I took personal ownership by architecting... As a result, we reduced latency by 35% and shipped ahead of schedule..."></textarea>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" id="mic-btn">
+                            <i class="bi bi-mic-fill"></i> <span id="mic-btn-text">Voice Input</span>
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" id="clear-answer-btn">
+                            Clear
+                        </button>
+                    </div>
                     <button class="btn btn-primary-custom" id="submit-answer-btn">
                         <i class="bi bi-stars me-1"></i> Evaluate with STAR AI
                     </button>
                 </div>
             </div>
 
-            <!-- Dynamic Evaluation Result Card -->
+            <!-- Deep STAR Evaluation Results Card -->
             <div id="eval-result-card" class="card p-4 custom-card border-0 bg-white shadow-sm d-none">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-speedometer2 text-primary me-2"></i>STAR Evaluation Result</h5>
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <h5 class="fw-bold text-body mb-0">
+                            <i class="bi bi-speedometer2 text-primary me-2"></i>STAR Evaluation Result
+                        </h5>
+                        <span id="eval-tier-badge" class="badge bg-success small">Strong Hire</span>
+                    </div>
                     <span class="fs-4 fw-bold text-success" id="eval-score">--/100</span>
                 </div>
 
                 <!-- Speech Delivery Analytics Banner -->
-                <div id="speech-analytics-box" class="card border-0 bg-light p-3 mb-3">
+                <div id="speech-analytics-box" class="card border-0 bg-body-tertiary p-3 mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h6 class="fw-bold small mb-0"><i class="bi bi-soundwave text-info me-1"></i>Spoken Delivery & Cadence Analytics</h6>
                         <span class="badge bg-info-subtle text-info fw-semibold" id="delivery-score-badge">Score: --</span>
                     </div>
-                    <div class="row g-2 text-center small">
+                    <div class="row g-2 text-center small mb-2">
                         <div class="col-4">
                             <div class="bg-white p-2 rounded border">
                                 <span class="text-secondary d-block" style="font-size: 0.72rem;">Speaking Pace</span>
@@ -121,49 +278,199 @@
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="row g-2 mb-3 text-center">
-                    <div class="col-3">
-                        <div class="p-2 border rounded bg-light">
-                            <small class="text-muted d-block">Situation</small>
-                            <strong id="eval-s-score">--</strong>
-                        </div>
-                    </div>
-                    <div class="col-3">
-                        <div class="p-2 border rounded bg-light">
-                            <small class="text-muted d-block">Task</small>
-                            <strong id="eval-t-score">--</strong>
-                        </div>
-                    </div>
-                    <div class="col-3">
-                        <div class="p-2 border rounded bg-light">
-                            <small class="text-muted d-block">Action</small>
-                            <strong id="eval-a-score">--</strong>
-                        </div>
-                    </div>
-                    <div class="col-3">
-                        <div class="p-2 border rounded bg-light">
-                            <small class="text-muted d-block">Result</small>
-                            <strong id="eval-r-score">--</strong>
-                        </div>
+                    <div id="detected-fillers-wrap" class="d-none small text-secondary">
+                        <span class="fw-semibold">Detected Fillers:</span> <span id="detected-fillers-chips"></span>
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <h6 class="fw-bold text-success small mb-1"><i class="bi bi-check-circle me-1"></i>Key Strengths:</h6>
-                    <ul class="small text-muted ps-3 mb-0" id="eval-strengths"></ul>
+                <!-- 4 STAR Dimension Progress Bars & Breakdown -->
+                <div class="card border-0 bg-body-tertiary p-3 mb-3">
+                    <h6 class="fw-bold small text-body mb-3"><i class="bi bi-pie-chart-fill text-primary me-1"></i>STAR Dimension Breakdown</h6>
+                    
+                    <!-- Situation -->
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="fw-semibold text-body"><strong class="text-info">S</strong> - Situation (Context & Scope)</span>
+                            <strong id="eval-s-score">--%</strong>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div id="eval-s-bar" class="progress-bar bg-info" style="width: 0%;"></div>
+                        </div>
+                        <p class="small text-muted mt-1 mb-0" id="eval-s-feedback"></p>
+                    </div>
+
+                    <!-- Task -->
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="fw-semibold text-body"><strong class="text-primary">T</strong> - Task (Challenge & Goal)</span>
+                            <strong id="eval-t-score">--%</strong>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div id="eval-t-bar" class="progress-bar bg-primary" style="width: 0%;"></div>
+                        </div>
+                        <p class="small text-muted mt-1 mb-0" id="eval-t-feedback"></p>
+                    </div>
+
+                    <!-- Action -->
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="fw-semibold text-body"><strong class="text-success">A</strong> - Action (Engineering Ownership)</span>
+                            <strong id="eval-a-score">--%</strong>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div id="eval-a-bar" class="progress-bar bg-success" style="width: 0%;"></div>
+                        </div>
+                        <p class="small text-muted mt-1 mb-0" id="eval-a-feedback"></p>
+                    </div>
+
+                    <!-- Result -->
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center small mb-1">
+                            <span class="fw-semibold text-body"><strong class="text-warning-emphasis">R</strong> - Result (Measurable Metrics)</span>
+                            <strong id="eval-r-score">--%</strong>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div id="eval-r-bar" class="progress-bar bg-warning" style="width: 0%;"></div>
+                        </div>
+                        <p class="small text-muted mt-1 mb-0" id="eval-r-feedback"></p>
+                    </div>
                 </div>
 
-                <div class="mb-3">
-                    <h6 class="fw-bold text-warning-emphasis small mb-1"><i class="bi bi-exclamation-triangle me-1"></i>Areas for Improvement:</h6>
-                    <ul class="small text-muted ps-3 mb-0" id="eval-improvements"></ul>
+                <!-- Strengths & Improvements -->
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <div class="card p-3 border-0 bg-success-subtle h-100">
+                            <h6 class="fw-bold text-success small mb-2"><i class="bi bi-check-circle-fill me-1"></i>Key Strengths:</h6>
+                            <ul class="small text-body ps-3 mb-0" id="eval-strengths"></ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card p-3 border-0 bg-warning-subtle h-100">
+                            <h6 class="fw-bold text-warning-emphasis small mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>Areas for Improvement:</h6>
+                            <ul class="small text-body ps-3 mb-0" id="eval-improvements"></ul>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="p-3 bg-light border rounded">
-                    <h6 class="fw-bold text-primary small mb-1"><i class="bi bi-stars me-1"></i>Polished Exemplar Answer:</h6>
-                    <p class="small text-dark mb-0 fst-italic" id="eval-exemplar"></p>
+                <!-- Polished Exemplar Answer -->
+                <div class="p-3 bg-body-tertiary border rounded mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <h6 class="fw-bold text-primary small mb-0"><i class="bi bi-stars me-1"></i>Polished Exemplar Response (Staff/Lead Caliber):</h6>
+                        <button class="btn btn-sm btn-outline-primary py-0 px-2" id="copy-exemplar-btn" style="font-size: 0.72rem;">
+                            <i class="bi bi-clipboard me-1"></i>Copy Exemplar
+                        </button>
+                    </div>
+                    <p class="small text-body mb-0 fst-italic" id="eval-exemplar"></p>
                 </div>
+
+                <!-- Advance Next Question -->
+                <div class="d-flex justify-content-end">
+                    <button type="button" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" id="next-q-btn">
+                        <span>Next Question</span> <i class="bi bi-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Switch Target Role Modal -->
+<div class="modal fade" id="switchJobModal" tabindex="-1" aria-labelledby="switchJobModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content custom-card border-0">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="switchJobModalLabel">
+                    <i class="bi bi-arrow-repeat text-primary me-2"></i>Select Role for Interview Practice
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <ul class="nav nav-pills mb-3" id="jobModalTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active btn-sm" id="tab-apps" data-bs-toggle="pill" data-bs-target="#content-apps" type="button" role="tab">
+                            Active Applications ({{ user_apps|length }})
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link btn-sm" id="tab-saved" data-bs-toggle="pill" data-bs-target="#content-saved" type="button" role="tab">
+                            Saved Roles ({{ user_saved|length }})
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link btn-sm" id="tab-other" data-bs-toggle="pill" data-bs-target="#content-other" type="button" role="tab">
+                            Verified Tech Roles ({{ other_jobs|length }})
+                        </button>
+                    </li>
+                </ul>
+
+                <div class="tab-content" id="jobModalTabContent">
+                    <!-- Applications Tab -->
+                    <div class="tab-pane fade show active" id="content-apps" role="tabpanel">
+                        {% if user_apps %}
+                            <div class="d-flex flex-column gap-2">
+                                {% for a in user_apps %}
+                                    {% if a.job %}
+                                        <div class="p-3 border rounded d-flex justify-content-between align-items-center bg-body-tertiary">
+                                            <div>
+                                                <div class="fw-bold text-body small">{{ a.job.title }}</div>
+                                                <div class="text-secondary small">{{ a.job.company }} • {{ a.job.location or 'Remote' }}</div>
+                                            </div>
+                                            <a href="{{ url_for('interview.start_interview', job_id=a.job.id) }}" class="btn btn-sm btn-primary-custom">
+                                                Practice Role &rarr;
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted small mb-0 py-3 text-center">No active applications yet. Apply to jobs from Discovery to practice them here.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Saved Jobs Tab -->
+                    <div class="tab-pane fade" id="content-saved" role="tabpanel">
+                        {% if user_saved %}
+                            <div class="d-flex flex-column gap-2">
+                                {% for s in user_saved %}
+                                    {% if s.job %}
+                                        <div class="p-3 border rounded d-flex justify-content-between align-items-center bg-body-tertiary">
+                                            <div>
+                                                <div class="fw-bold text-body small">{{ s.job.title }}</div>
+                                                <div class="text-secondary small">{{ s.job.company }} • {{ s.job.location or 'Remote' }}</div>
+                                            </div>
+                                            <a href="{{ url_for('interview.start_interview', job_id=s.job.id) }}" class="btn btn-sm btn-primary-custom">
+                                                Practice Role &rarr;
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted small mb-0 py-3 text-center">No saved roles found. Bookmark roles in Job Discovery to practice anytime.</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Other Verified Jobs Tab -->
+                    <div class="tab-pane fade" id="content-other" role="tabpanel">
+                        <div class="d-flex flex-column gap-2">
+                            {% for j in other_jobs %}
+                                <div class="p-3 border rounded d-flex justify-content-between align-items-center bg-body-tertiary">
+                                    <div>
+                                        <div class="fw-bold text-body small">{{ j.title }}</div>
+                                        <div class="text-secondary small">{{ j.company }} • {{ j|format_job_salary }}</div>
+                                    </div>
+                                    <a href="{{ url_for('interview.start_interview', job_id=j.id) }}" class="btn btn-sm btn-primary-custom">
+                                        Practice Role &rarr;
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-top">
+                <a href="{{ url_for('interview.interview_hub') }}" class="btn btn-sm btn-outline-secondary">Go to Interview Hub</a>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -174,8 +481,85 @@ const currentJobId = {{ job.id }};
 const questionsData = {{ questions|tojson }};
 let currentIndex = 0;
 let activeQuestionText = (questionsData && questionsData.length > 0) ? (questionsData[0].question || "") : "";
-let speechStartTime = null;
-let speechDurationSeconds = null;
+
+// Track per-question evaluated scores
+const evaluatedScores = {};
+
+// Stopwatch State
+let stopwatchInterval = null;
+let stopwatchSeconds = 0;
+let isStopwatchRunning = false;
+
+function formatSeconds(sec) {
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+function updateStopwatchUI() {
+    document.getElementById('stopwatch-display').textContent = formatSeconds(stopwatchSeconds);
+    const paceBadge = document.getElementById('timer-pace-badge');
+    if (stopwatchSeconds < 60) {
+        paceBadge.className = 'badge bg-light text-secondary border small';
+        paceBadge.textContent = stopwatchSeconds + 's (Brief)';
+    } else if (stopwatchSeconds <= 180) {
+        paceBadge.className = 'badge bg-success-subtle text-success border border-success-subtle small';
+        paceBadge.textContent = stopwatchSeconds + 's (Optimal STAR)';
+    } else {
+        paceBadge.className = 'badge bg-warning-subtle text-warning-emphasis border border-warning-subtle small';
+        paceBadge.textContent = stopwatchSeconds + 's (Long)';
+    }
+}
+
+function startStopwatch() {
+    if (isStopwatchRunning) return;
+    isStopwatchRunning = true;
+    document.getElementById('timer-icon').className = 'bi bi-pause-fill';
+    stopwatchInterval = setInterval(() => {
+        stopwatchSeconds++;
+        updateStopwatchUI();
+    }, 1000);
+}
+
+function pauseStopwatch() {
+    if (!isStopwatchRunning) return;
+    isStopwatchRunning = false;
+    document.getElementById('timer-icon').className = 'bi bi-play-fill';
+    if (stopwatchInterval) clearInterval(stopwatchInterval);
+}
+
+function resetStopwatch() {
+    pauseStopwatch();
+    stopwatchSeconds = 0;
+    updateStopwatchUI();
+}
+
+document.getElementById('timer-toggle-btn').addEventListener('click', () => {
+    if (isStopwatchRunning) pauseStopwatch();
+    else startStopwatch();
+});
+
+document.getElementById('timer-reset-btn').addEventListener('click', resetStopwatch);
+
+// Word Counter
+const answerBox = document.getElementById('user-answer-box');
+answerBox.addEventListener('input', function() {
+    const text = this.value.trim();
+    const words = text ? text.split(/\s+/).length : 0;
+    const estSec = Math.round((words / 130) * 60);
+    document.getElementById('word-count-badge').textContent = `${words} words • ~${estSec}s`;
+
+    // Auto-start timer on first typing if not running
+    if (words > 2 && !isStopwatchRunning && stopwatchSeconds === 0) {
+        startStopwatch();
+    }
+});
+
+document.getElementById('clear-answer-btn').addEventListener('click', function() {
+    answerBox.value = '';
+    document.getElementById('word-count-badge').textContent = '0 words';
+    resetStopwatch();
+});
 
 // Read Aloud Question via Web Speech Synthesis
 document.getElementById('speak-q-btn').addEventListener('click', function() {
@@ -184,6 +568,17 @@ document.getElementById('speak-q-btn').addEventListener('click', function() {
         const utterance = new SpeechSynthesisUtterance(activeQuestionText);
         utterance.rate = 0.95;
         utterance.pitch = 1.0;
+        const btn = this;
+        btn.classList.add('btn-info');
+        btn.classList.remove('btn-outline-info');
+        utterance.onend = () => {
+            btn.classList.remove('btn-info');
+            btn.classList.add('btn-outline-info');
+        };
+        utterance.onerror = () => {
+            btn.classList.remove('btn-info');
+            btn.classList.add('btn-outline-info');
+        };
         window.speechSynthesis.speak(utterance);
     } else {
         alert('Text-to-speech is not supported on this browser.');
@@ -206,8 +601,8 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
         for (let i = event.resultIndex; i < event.results.length; ++i) {
             transcript += event.results[i][0].transcript;
         }
-        const box = document.getElementById('user-answer-box');
-        box.value = (box.value + ' ' + transcript).trim();
+        answerBox.value = (answerBox.value + ' ' + transcript).trim();
+        answerBox.dispatchEvent(new Event('input'));
     };
 
     recognition.onerror = function(event) {
@@ -216,9 +611,7 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     };
 
     recognition.onend = function() {
-        if (isRecording) {
-            stopRecording();
-        }
+        if (isRecording) stopRecording();
     };
 }
 
@@ -228,8 +621,8 @@ function startRecording() {
         return;
     }
     isRecording = true;
-    speechStartTime = Date.now();
     recognition.start();
+    startStopwatch();
     document.getElementById('mic-btn-text').textContent = 'Stop Recording';
     document.getElementById('mic-btn').classList.replace('btn-outline-danger', 'btn-danger');
     document.getElementById('speech-indicator').classList.remove('d-none');
@@ -237,9 +630,7 @@ function startRecording() {
 
 function stopRecording() {
     isRecording = false;
-    if (speechStartTime) {
-        speechDurationSeconds = Math.max(1, (Date.now() - speechStartTime) / 1000);
-    }
+    pauseStopwatch();
     if (recognition) {
         try { recognition.stop(); } catch(e) {}
     }
@@ -249,13 +640,11 @@ function stopRecording() {
 }
 
 document.getElementById('mic-btn').addEventListener('click', function() {
-    if (isRecording) {
-        stopRecording();
-    } else {
-        startRecording();
-    }
+    if (isRecording) stopRecording();
+    else startRecording();
 });
 
+// Update Question Selection and Dynamic STAR hints
 function setQuestion(index) {
     if (!questionsData || index < 0 || index >= questionsData.length) return;
     currentIndex = index;
@@ -263,19 +652,28 @@ function setQuestion(index) {
     activeQuestionText = q.question;
 
     document.querySelectorAll('.question-btn').forEach((btn, idx) => {
-        if (idx === index) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
+        if (idx === index) btn.classList.add('active');
+        else btn.classList.remove('active');
     });
 
-    document.getElementById('active-q-type').textContent = q.type || 'Behavioral';
+    document.getElementById('active-q-type').textContent = q.type || 'Behavioral / Ownership';
     document.getElementById('active-q-num').textContent = `Question ${index + 1} of ${questionsData.length}`;
     document.getElementById('active-q-text').textContent = q.question;
-    document.getElementById('active-q-criteria').innerHTML = '<i class="bi bi-info-circle me-1"></i>' + (q.evaluation_criteria || '');
-    document.getElementById('user-answer-box').value = '';
+    document.getElementById('active-q-criteria').innerHTML = '<i class="bi bi-info-circle me-1 text-primary"></i><strong>Interviewer Listening For:</strong> ' + (q.evaluation_criteria || 'Evaluate technical ownership, trade-offs, and STAR methodology.');
+
+    // Dynamic Question STAR Guide Hints
+    const sg = q.star_guide || {};
+    document.getElementById('star-hint-situation').textContent = sg.situation || 'Establish the project scope and team constraints.';
+    document.getElementById('star-hint-task').textContent = sg.task || 'Identify the specific problem you were tasked to solve.';
+    document.getElementById('star-hint-action').textContent = sg.action || 'Detail your personal technical decisions and trade-offs.';
+    document.getElementById('star-hint-result').textContent = sg.result || 'Quantify measurable impact with metrics or milestones.';
+
+    // Reset Answer Input & Timer
+    answerBox.value = '';
+    document.getElementById('word-count-badge').textContent = '0 words';
+    resetStopwatch();
     document.getElementById('eval-result-card').classList.add('d-none');
+
     if (isRecording) stopRecording();
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
 }
@@ -287,16 +685,45 @@ document.querySelectorAll('.question-btn').forEach(btn => {
     });
 });
 
+// Next Question Button inside evaluation card
+document.getElementById('next-q-btn').addEventListener('click', function() {
+    if (currentIndex + 1 < questionsData.length) {
+        setQuestion(currentIndex + 1);
+        window.scrollTo({ top: document.querySelector('.card.custom-card').offsetTop, behavior: 'smooth' });
+    } else {
+        alert('You have reached the end of this interview question set! Great work completing your mock session.');
+    }
+});
+
+// Copy Exemplar Answer
+document.getElementById('copy-exemplar-btn').addEventListener('click', function() {
+    const text = document.getElementById('eval-exemplar').textContent;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.getElementById('copy-exemplar-btn');
+            btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Copied!';
+            setTimeout(() => {
+                btn.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copy Exemplar';
+            }, 2000);
+        });
+    }
+});
+
+// Submit & Evaluate Answer
 document.getElementById('submit-answer-btn').addEventListener('click', function() {
     if (isRecording) stopRecording();
-    const answer = document.getElementById('user-answer-box').value.trim();
+    pauseStopwatch();
+    const answer = answerBox.value.trim();
     if (!answer) {
-        alert('Please enter or speak your answer before evaluating.');
+        alert('Please enter or record your answer before evaluating.');
         return;
     }
+
     const btn = this;
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Evaluating with STAR AI...';
+
+    const recordedDuration = stopwatchSeconds > 0 ? stopwatchSeconds : null;
 
     fetch("{{ url_for('interview.evaluate_answer') }}", {
         method: "POST",
@@ -305,7 +732,7 @@ document.getElementById('submit-answer-btn').addEventListener('click', function(
             job_id: currentJobId,
             question: activeQuestionText,
             answer: answer,
-            duration_seconds: speechDurationSeconds
+            duration_seconds: recordedDuration
         })
     })
     .then(r => r.json())
@@ -314,12 +741,63 @@ document.getElementById('submit-answer-btn').addEventListener('click', function(
         btn.innerHTML = '<i class="bi bi-stars me-1"></i> Evaluate with STAR AI';
         if (data.success && data.evaluation) {
             const ev = data.evaluation;
-            document.getElementById('eval-score').textContent = ev.overall_score + '/100';
+            const score = ev.overall_score || 0;
+            document.getElementById('eval-score').textContent = score + '/100';
+
+            // Performance Tier Badge
+            const tierBadge = document.getElementById('eval-tier-badge');
+            if (score >= 80) {
+                tierBadge.className = 'badge bg-success small';
+                tierBadge.textContent = 'Strong Hire';
+            } else if (score >= 65) {
+                tierBadge.className = 'badge bg-primary small';
+                tierBadge.textContent = 'Promising';
+            } else {
+                tierBadge.className = 'badge bg-warning-subtle text-warning-emphasis small';
+                tierBadge.textContent = 'Needs Practice';
+            }
+
+            // Save evaluated score for this question & update list badge
+            evaluatedScores[currentIndex] = score;
+            const statusBadge = document.getElementById('q-status-' + currentIndex);
+            if (statusBadge) {
+                statusBadge.className = 'badge bg-success-subtle text-success border border-success-subtle small';
+                statusBadge.textContent = score + '% ✓';
+            }
+
+            // Update Session Progress Bar & Average Score
+            const evaluatedCount = Object.keys(evaluatedScores).length;
+            const pct = Math.round((evaluatedCount / questionsData.length) * 100);
+            document.getElementById('session-progress-bar').style.width = pct + '%';
+            document.getElementById('session-progress-text').textContent = `${evaluatedCount} of ${questionsData.length} Evaluated (${pct}%)`;
+
+            const sumScores = Object.values(evaluatedScores).reduce((a, b) => a + b, 0);
+            const avgScore = Math.round(sumScores / evaluatedCount);
+            document.getElementById('session-avg-badge').textContent = `Session Avg: ${avgScore}%`;
+            document.getElementById('session-avg-badge').className = 'badge bg-primary-subtle text-primary border small';
+
+            // 4 STAR Dimensions
             const sb = ev.star_breakdown || {};
-            document.getElementById('eval-s-score').textContent = (sb.situation ? sb.situation.score : '--') + '%';
-            document.getElementById('eval-t-score').textContent = (sb.task ? sb.task.score : '--') + '%';
-            document.getElementById('eval-a-score').textContent = (sb.action ? sb.action.score : '--') + '%';
-            document.getElementById('eval-r-score').textContent = (sb.result ? sb.result.score : '--') + '%';
+            const sVal = sb.situation ? sb.situation.score : 0;
+            const tVal = sb.task ? sb.task.score : 0;
+            const aVal = sb.action ? sb.action.score : 0;
+            const rVal = sb.result ? sb.result.score : 0;
+
+            document.getElementById('eval-s-score').textContent = sVal + '%';
+            document.getElementById('eval-s-bar').style.width = sVal + '%';
+            document.getElementById('eval-s-feedback').textContent = sb.situation ? sb.situation.feedback : '';
+
+            document.getElementById('eval-t-score').textContent = tVal + '%';
+            document.getElementById('eval-t-bar').style.width = tVal + '%';
+            document.getElementById('eval-t-feedback').textContent = sb.task ? sb.task.feedback : '';
+
+            document.getElementById('eval-a-score').textContent = aVal + '%';
+            document.getElementById('eval-a-bar').style.width = aVal + '%';
+            document.getElementById('eval-a-feedback').textContent = sb.action ? sb.action.feedback : '';
+
+            document.getElementById('eval-r-score').textContent = rVal + '%';
+            document.getElementById('eval-r-bar').style.width = rVal + '%';
+            document.getElementById('eval-r-feedback').textContent = sb.result ? sb.result.feedback : '';
 
             // Speech Analytics
             if (ev.speech_analytics) {
@@ -331,14 +809,27 @@ document.getElementById('submit-answer-btn').addEventListener('click', function(
                 document.getElementById('speech-filler-ratio').textContent = sp.filler_ratio_percent + '% of words';
                 document.getElementById('speech-pace-tip').textContent = sp.pace_tip || 'Steady delivery';
                 document.getElementById('speech-pace-tip').title = sp.pace_tip || '';
+
+                const fillerWrap = document.getElementById('detected-fillers-wrap');
+                const fillerChips = document.getElementById('detected-fillers-chips');
+                if (sp.detected_fillers && Object.keys(sp.detected_fillers).length > 0) {
+                    fillerWrap.classList.remove('d-none');
+                    fillerChips.innerHTML = Object.entries(sp.detected_fillers)
+                        .map(([w, c]) => `<span class="badge bg-danger-subtle text-danger border border-danger-subtle me-1">${w}: ${c}</span>`)
+                        .join('');
+                } else {
+                    fillerWrap.classList.add('d-none');
+                }
             }
 
+            // Strengths and Areas for Improvement
             const strengthsList = document.getElementById('eval-strengths');
             strengthsList.innerHTML = (ev.strengths || []).map(s => `<li>${s}</li>`).join('');
 
             const impList = document.getElementById('eval-improvements');
             impList.innerHTML = (ev.areas_for_improvement || []).map(i => `<li>${i}</li>`).join('');
 
+            // Exemplar Response
             document.getElementById('eval-exemplar').textContent = ev.improved_exemplar_answer || '';
             document.getElementById('eval-result-card').classList.remove('d-none');
             document.getElementById('eval-result-card').scrollIntoView({ behavior: 'smooth' });
