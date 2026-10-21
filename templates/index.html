@@ -1,193 +1,691 @@
 {% extends "base.html" %}
 
-{% block title %}AI Job Agent — Grounded AI Job Search & ATS Intelligence{% endblock %}
+{% block title %}AI Job Agent — Find Your Dream Job Faster with AI{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="py-5 bg-white border-bottom">
-    <div class="container py-lg-5">
+<!-- 1. Landing Top Navigation Bar -->
+<nav class="navbar navbar-expand-lg landing-navbar sticky-top py-3">
+    <div class="container">
+        <!-- Brand -->
+        <a class="navbar-brand d-flex align-items-center gap-2 text-decoration-none" href="{{ url_for('dashboard.index') }}">
+            <div class="brand-icon-box-landing">
+                <i class="bi bi-briefcase-fill fs-5"></i>
+            </div>
+            <span class="brand-title-landing">AI Job Agent</span>
+            <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1 small fw-bold">v1.0</span>
+        </a>
+
+        <!-- Mobile Toggler -->
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#landingNavMenu" aria-controls="landingNavMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <!-- Nav Links -->
+        <div class="collapse navbar-collapse" id="landingNavMenu">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-1">
+                <li class="nav-item">
+                    <a class="nav-link nav-link-landing active" href="#hero">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link nav-link-landing" href="#features">Features</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link nav-link-landing" href="#how-it-works">How It Works</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link nav-link-landing" href="{{ url_for('jobs.list_jobs') }}">Jobs</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link nav-link-landing" href="#pricing">Pricing</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link nav-link-landing" href="#about">About</a>
+                </li>
+            </ul>
+
+            <!-- Right Actions: Theme Toggle, Login, Get Started -->
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-link text-secondary p-2 rounded-circle" id="landing-theme-toggle" type="button" title="Toggle Dark/Light Mode">
+                    <i class="bi bi-moon-stars fs-5" id="landing-theme-icon"></i>
+                </button>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold">Login</a>
+                <a href="{{ url_for('auth.register') }}" class="btn btn-hero-primary rounded-pill px-4 py-2 fw-semibold">Get Started</a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- 2. Hero Section (Matching Reference Design) -->
+<section id="hero" class="landing-hero py-5 py-lg-6">
+    <div class="container py-lg-4">
         <div class="row align-items-center gy-5">
-            <div class="col-lg-7">
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2 rounded-pill fw-semibold mb-3">
-                    <i class="bi bi-shield-check me-1"></i> 100% Real Postings & Verified Direct Links
-                </span>
-                <h1 class="display-4 fw-bold text-dark hero-title mb-3">
-                    Grounded Career Intelligence & Application Assistant
-                </h1>
-                <p class="lead text-muted mb-4">
-                    Understand your resume, discover real job openings from companies worldwide, calculate transparent ATS compatibility scores, and apply directly via official employer links.
-                </p>
-                <div class="d-flex flex-wrap gap-3">
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary-custom btn-lg">
-                        <i class="bi bi-file-earmark-arrow-up me-2"></i> Upload Resume & Match Jobs
-                    </a>
-                    <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-custom btn-lg">
-                        <i class="bi bi-search me-2"></i> Browse Verified Jobs
-                    </a>
+            <!-- Left Hero Content -->
+            <div class="col-lg-6 pe-lg-4">
+                <div class="mb-3">
+                    <span class="hero-pill-badge">
+                        <i class="bi bi-stars me-1 text-primary"></i> Your AI-Powered Career Companion
+                    </span>
                 </div>
-                <div class="mt-4 pt-2 d-flex align-items-center gap-4 text-muted small">
-                    <div><i class="bi bi-check-circle-fill text-success me-1"></i> No fake URLs</div>
-                    <div><i class="bi bi-check-circle-fill text-success me-1"></i> Transparent ATS scoring</div>
-                    <div><i class="bi bi-check-circle-fill text-success me-1"></i> Verified sources</div>
+                <h1 class="hero-main-title mb-3">
+                    Find Your Dream Job Faster <span class="hero-highlight-ai">with AI</span>
+                </h1>
+                <p class="hero-subtitle mb-4">
+                    Search verified jobs, optimize your resume, get personalized career guidance, and automate your job applications with the power of AI.
+                </p>
+
+                <!-- 4 Feature Checkmark Pills -->
+                <div class="d-flex flex-wrap gap-2 mb-4 pb-2">
+                    <span class="check-pill-item">
+                        <i class="bi bi-check-circle-fill"></i> Verified Job Listings
+                    </span>
+                    <span class="check-pill-item">
+                        <i class="bi bi-check-circle-fill"></i> AI Resume Analysis
+                    </span>
+                    <span class="check-pill-item">
+                        <i class="bi bi-check-circle-fill"></i> Smart Job Matching
+                    </span>
+                    <span class="check-pill-item">
+                        <i class="bi bi-check-circle-fill"></i> Application Tracking
+                    </span>
+                </div>
+
+                <!-- CTA Buttons -->
+                <div class="d-flex flex-wrap align-items-center gap-3 mb-5">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-hero-primary d-inline-flex align-items-center">
+                        Get Started Free <i class="bi bi-arrow-right ms-2"></i>
+                    </a>
+                    <button type="button" class="btn btn-hero-demo d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#demoModal">
+                        <i class="bi bi-play-circle-fill text-primary fs-5 me-2"></i> Watch Demo
+                    </button>
+                </div>
+
+                <!-- Stats Counters Row -->
+                <div class="row g-3 pt-3 border-top border-secondary border-opacity-10">
+                    <div class="col-6 col-md-3">
+                        <div class="hero-stat-box">
+                            <div class="stat-icon-wrapper stat-icon-blue">
+                                <i class="bi bi-briefcase-fill"></i>
+                            </div>
+                            <div>
+                                <div class="stat-value">{{ "{:,}".format(total_jobs if total_jobs and total_jobs > 1000 else 100000) }}+</div>
+                                <div class="stat-label">Live Job Listings</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="hero-stat-box">
+                            <div class="stat-icon-wrapper stat-icon-blue">
+                                <i class="bi bi-building"></i>
+                            </div>
+                            <div>
+                                <div class="stat-value">500+</div>
+                                <div class="stat-label">Top Companies</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="hero-stat-box">
+                            <div class="stat-icon-wrapper stat-icon-blue">
+                                <i class="bi bi-people-fill"></i>
+                            </div>
+                            <div>
+                                <div class="stat-value">50K+</div>
+                                <div class="stat-label">Successful Users</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <div class="hero-stat-box">
+                            <div class="stat-icon-wrapper stat-icon-yellow">
+                                <i class="bi bi-star-fill"></i>
+                            </div>
+                            <div>
+                                <div class="stat-value">4.8/5</div>
+                                <div class="stat-label">User Rating</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="col-lg-5">
-                <div class="card shadow-lg border-0 rounded-4 p-4 bg-light">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-kanban-fill text-primary me-2"></i>Application Tracker</h6>
-                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-broadcast me-1"></i>Live Pipeline</span>
+
+            <!-- Right Hero Visual with Interactive Floating Cards -->
+            <div class="col-lg-6">
+                <div class="hero-visual-container">
+                    <!-- High-Res Candidate Photo -->
+                    <div class="hero-main-photo-wrapper">
+                        <img src="{{ url_for('static', filename='img/hero-candidate.jpg') }}" alt="Candidate finding dream job with AI Job Agent" class="hero-candidate-image">
                     </div>
 
-                    <!-- Mini Stage Progress Stepper -->
-                    <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-white rounded-3 border small">
-                        <div class="text-center flex-fill">
-                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 fw-bold">Saved</span>
-                            <div class="fs-8 fw-semibold text-muted mt-1">2 Saved</div>
-                        </div>
-                        <i class="bi bi-arrow-right text-muted fs-8"></i>
-                        <div class="text-center flex-fill">
-                            <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 fw-bold">Applied</span>
-                            <div class="fs-8 fw-semibold text-primary mt-1">5 Applied</div>
-                        </div>
-                        <i class="bi bi-arrow-right text-muted fs-8"></i>
-                        <div class="text-center flex-fill">
-                            <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-2 py-1 fw-bold">Interview</span>
-                            <div class="fs-8 fw-semibold text-warning-emphasis mt-1">2 Active</div>
-                        </div>
-                        <i class="bi bi-arrow-right text-muted fs-8"></i>
-                        <div class="text-center flex-fill">
-                            <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 fw-bold">Offer</span>
-                            <div class="fs-8 fw-semibold text-success mt-1">1 Offer</div>
-                        </div>
-                    </div>
-
-                    <!-- Real-world Application Pipeline Cards -->
-                    <div class="d-flex flex-column gap-2 mb-3">
-                        <div class="p-3 bg-white rounded-3 border shadow-sm">
-                            <div class="d-flex justify-content-between align-items-start mb-1">
-                                <div>
-                                    <div class="fw-bold text-dark small">Data Analyst</div>
-                                    <div class="text-muted fs-8">FlixTrain • Bengaluru / Remote</div>
+                    <!-- Floating Card 1: Top Job Card (Google Software Engineer) -->
+                    <div class="floating-glass-card floating-job-card">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle p-1 bg-white border shadow-xs d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
                                 </div>
-                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fs-9">
-                                    <i class="bi bi-calendar-check me-1"></i> Technical Round 2
-                                </span>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top fs-8 text-muted">
-                                <span><i class="bi bi-patch-check-fill text-success me-1"></i> Verified Direct Portal</span>
-                                <span class="text-primary fw-medium">Mock Practice Ready</span>
-                            </div>
-                        </div>
-
-                        <div class="p-3 bg-white rounded-3 border shadow-sm">
-                            <div class="d-flex justify-content-between align-items-start mb-1">
                                 <div>
-                                    <div class="fw-bold text-dark small">Junior Data Analyst</div>
-                                    <div class="text-muted fs-8">Stripe • Global Remote</div>
+                                    <div class="fw-bold text-dark lh-1" style="font-size: 0.88rem;">Software Engineer</div>
+                                    <div class="text-muted" style="font-size: 0.72rem;">Google • Bengaluru, India</div>
                                 </div>
-                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-9">
-                                    <i class="bi bi-send-check me-1"></i> Applied via Greenhouse
-                                </span>
                             </div>
-                            <div class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top fs-8 text-muted">
-                                <span><i class="bi bi-shield-check text-info me-1"></i> Direct ATS Confirmation</span>
-                                <span class="text-success fw-medium">85% Compatibility</span>
+                            <i class="bi bi-bookmark text-muted fs-6" title="Save Job"></i>
+                        </div>
+                        <div class="d-flex align-items-center gap-1 mb-2">
+                            <span class="badge bg-light text-secondary border fs-9">Full-time</span>
+                            <span class="badge bg-light text-secondary border fs-9">Remote</span>
+                            <span class="badge bg-light text-secondary border fs-9">₹ 25 - 40 LPA</span>
+                        </div>
+                        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-sm btn-primary-custom w-100 py-1 rounded-pill fw-semibold fs-8 text-center text-decoration-none">
+                            Apply Now
+                        </a>
+                    </div>
+
+                    <!-- Floating Card 2: Resume Score Gauge (Left) -->
+                    <div class="floating-glass-card floating-resume-score">
+                        <div class="fw-bold text-dark small mb-2">Resume Score</div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="circle-gauge-wrap">
+                                <svg width="60" height="60" viewBox="0 0 60 60">
+                                    <circle cx="30" cy="30" r="24" stroke="#e2e8f0" stroke-width="5" fill="none" />
+                                    <circle cx="30" cy="30" r="24" stroke="#2563eb" stroke-width="5" fill="none" stroke-dasharray="150.8" stroke-dashoffset="22.6" stroke-linecap="round" />
+                                </svg>
+                                <span class="gauge-text">85%</span>
+                            </div>
+                            <div>
+                                <span class="badge bg-success-subtle text-success rounded-pill px-2 py-0 mb-1 fw-bold fs-9">Great!</span>
+                                <div class="d-flex flex-column gap-1" style="font-size: 0.74rem;">
+                                    <span class="text-dark"><i class="bi bi-check-circle-fill text-success me-1"></i> ATS Friendly</span>
+                                    <span class="text-dark"><i class="bi bi-check-circle-fill text-success me-1"></i> Relevant Skills</span>
+                                    <span class="text-dark"><i class="bi bi-check-circle-fill text-success me-1"></i> Well Structured</span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Pipeline Footer Note -->
-                    <div class="d-flex justify-content-between align-items-center pt-2 border-top text-muted small">
-                        <span><i class="bi bi-arrow-left-right text-info me-1"></i> Drag-and-drop status tracking</span>
-                        <a href="{{ url_for('jobs.list_jobs') }}" class="text-primary text-decoration-none fw-semibold">
-                            Explore Jobs &rarr;
+                    <!-- Floating Card 3: Interview Prep (Bottom) -->
+                    <a href="{{ url_for('interview.interview_hub') }}" class="floating-glass-card floating-interview-prep">
+                        <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                            <i class="bi bi-headphones fs-6"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark lh-1" style="font-size: 0.85rem;">Interview Prep</div>
+                            <div class="text-muted" style="font-size: 0.72rem;">Practice with AI mock interviews</div>
+                        </div>
+                        <i class="bi bi-chevron-right text-primary fs-7 ms-2"></i>
+                    </a>
+
+                    <!-- Floating Card 4: AI Assistant (Top Right) -->
+                    <a href="{{ url_for('assistant.chat_view') }}" class="floating-glass-card floating-ai-assistant">
+                        <div class="rounded-circle bg-info-subtle text-info d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                            <i class="bi bi-robot fs-6"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold text-dark lh-1" style="font-size: 0.85rem;">AI Assistant</div>
+                            <div class="text-muted" style="font-size: 0.72rem;">How can I help you today?</div>
+                        </div>
+                        <i class="bi bi-chevron-right text-info fs-7 ms-2"></i>
+                    </a>
+
+                    <!-- Floating Card 5: Personalized Jobs List (Right) -->
+                    <div class="floating-glass-card floating-personalized-jobs">
+                        <div class="fw-bold text-dark small mb-2">Personalized Jobs</div>
+                        <div class="d-flex flex-column gap-2">
+                            <!-- Amazon -->
+                            <div class="d-flex align-items-center justify-content-between p-1 rounded-2 bg-light bg-opacity-50">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="fw-bold text-dark fs-6" style="width: 20px; text-align: center;"><i class="bi bi-amazon text-warning"></i></div>
+                                    <div>
+                                        <div class="fw-bold text-dark lh-1" style="font-size: 0.76rem;">Amazon</div>
+                                        <div class="text-muted" style="font-size: 0.67rem;">Software Engineer</div>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success-subtle text-success rounded-pill fs-9 fw-bold">95% Match</span>
+                            </div>
+                            <!-- Microsoft -->
+                            <div class="d-flex align-items-center justify-content-between p-1 rounded-2 bg-light bg-opacity-50">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="d-grid" style="grid-template-columns: 6px 6px; gap: 2px; width: 20px; justify-content: center;">
+                                        <div style="width:6px;height:6px;background:#f25022;"></div>
+                                        <div style="width:6px;height:6px;background:#7fba00;"></div>
+                                        <div style="width:6px;height:6px;background:#00a4ef;"></div>
+                                        <div style="width:6px;height:6px;background:#ffb900;"></div>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark lh-1" style="font-size: 0.76rem;">Microsoft</div>
+                                        <div class="text-muted" style="font-size: 0.67rem;">Data Scientist</div>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success-subtle text-success rounded-pill fs-9 fw-bold">92% Match</span>
+                            </div>
+                            <!-- NVIDIA -->
+                            <div class="d-flex align-items-center justify-content-between p-1 rounded-2 bg-light bg-opacity-50">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded px-1 bg-success text-white fw-bold" style="font-size: 0.65rem; width: 20px; text-align: center;">NV</div>
+                                    <div>
+                                        <div class="fw-bold text-dark lh-1" style="font-size: 0.76rem;">NVIDIA</div>
+                                        <div class="text-muted" style="font-size: 0.67rem;">ML Engineer</div>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success-subtle text-success rounded-pill fs-9 fw-bold">88% Match</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 3. Trusted By / Logos Section (Matching Reference Design) -->
+<section class="trusted-logos-section">
+    <div class="container text-center">
+        <p class="text-muted small fw-semibold text-uppercase tracking-wider mb-4">
+            Trusted by job seekers worldwide
+        </p>
+        <div class="d-flex flex-wrap justify-content-center align-items-center gap-4 gap-md-5">
+            <!-- Google -->
+            <span class="trusted-company-logo">
+                <svg viewBox="0 0 24 24" width="22" height="22"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                Google
+            </span>
+            <!-- Microsoft -->
+            <span class="trusted-company-logo">
+                <span class="d-inline-grid me-1" style="grid-template-columns: 8px 8px; gap: 2px;">
+                    <span style="width:8px;height:8px;background:#f25022;"></span>
+                    <span style="width:8px;height:8px;background:#7fba00;"></span>
+                    <span style="width:8px;height:8px;background:#00a4ef;"></span>
+                    <span style="width:8px;height:8px;background:#ffb900;"></span>
+                </span>
+                Microsoft
+            </span>
+            <!-- Amazon -->
+            <span class="trusted-company-logo">
+                <i class="bi bi-amazon text-warning"></i> amazon
+            </span>
+            <!-- NVIDIA -->
+            <span class="trusted-company-logo">
+                <span class="badge bg-success text-white px-2 py-0 fs-8 me-1">NVIDIA</span> NVIDIA
+            </span>
+            <!-- Meta -->
+            <span class="trusted-company-logo">
+                <i class="bi bi-infinity text-primary"></i> Meta
+            </span>
+            <!-- Apple -->
+            <span class="trusted-company-logo">
+                <i class="bi bi-apple"></i>
+            </span>
+            <!-- Intel -->
+            <span class="trusted-company-logo text-primary">
+                intel.
+            </span>
+            <!-- Adobe -->
+            <span class="trusted-company-logo text-danger">
+                <i class="bi bi-file-earmark-pdf-fill"></i> Adobe
+            </span>
+            <!-- TATA -->
+            <span class="trusted-company-logo">
+                <span class="fw-bolder">TATA</span>
+            </span>
+            <!-- Infosys -->
+            <span class="trusted-company-logo text-primary">
+                <span class="fw-bolder">Infosys</span>
+            </span>
+        </div>
+    </div>
+</section>
+
+<!-- 4. Powerful Features for Your Career Growth (Matching Reference Design) -->
+<section id="features" class="features-section">
+    <div class="container py-lg-4">
+        <div class="text-center max-w-xl mx-auto mb-5">
+            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-semibold mb-3">
+                Everything You Need
+            </span>
+            <h2 class="display-6 fw-bold text-dark mb-3">Powerful Features for Your Career Growth</h2>
+            <p class="text-muted fs-5">From job search to interview preparation, everything in one platform.</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- 1. Find Verified Jobs -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-grid-card">
+                    <div>
+                        <div class="feature-icon-box feature-icon-blue">
+                            <i class="bi bi-search"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">Find Verified Jobs</h5>
+                        <p class="text-muted small mb-4">Search real-time job listings from top companies with advanced filters.</p>
+                    </div>
+                    <a href="{{ url_for('jobs.list_jobs') }}" class="feature-link-action">
+                        Explore Jobs <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 2. AI Resume Analysis -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-grid-card">
+                    <div>
+                        <div class="feature-icon-box feature-icon-purple">
+                            <i class="bi bi-file-earmark-text"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">AI Resume Analysis</h5>
+                        <p class="text-muted small mb-4">Get detailed feedback and improve your resume with AI-powered suggestions.</p>
+                    </div>
+                    <a href="{{ url_for('ats.ats_report') }}" class="feature-link-action">
+                        Improve Resume <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 3. AI Career Assistant -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-grid-card">
+                    <div>
+                        <div class="feature-icon-box feature-icon-blue">
+                            <i class="bi bi-robot"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">AI Career Assistant</h5>
+                        <p class="text-muted small mb-4">Get personalized guidance, job recommendations and instant answers.</p>
+                    </div>
+                    <a href="{{ url_for('assistant.chat_view') }}" class="feature-link-action">
+                        Chat with AI <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 4. Interview Preparation -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-grid-card">
+                    <div>
+                        <div class="feature-icon-box feature-icon-red">
+                            <i class="bi bi-bullseye"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">Interview Preparation</h5>
+                        <p class="text-muted small mb-4">Practice with AI mock interviews and improve your skills.</p>
+                    </div>
+                    <a href="{{ url_for('interview.interview_hub') }}" class="feature-link-action">
+                        Start Practice <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 5. Application Tracker -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-grid-card">
+                    <div>
+                        <div class="feature-icon-box feature-icon-purple">
+                            <i class="bi bi-layers-fill"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">Application Tracker</h5>
+                        <p class="text-muted small mb-4">Track your applications, interviews and get follow-up reminders.</p>
+                    </div>
+                    <a href="{{ url_for('applications.list_applications') }}" class="feature-link-action">
+                        Track Applications <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 6. Career Insights -->
+            <div class="col-md-6 col-lg-4">
+                <div class="feature-grid-card">
+                    <div>
+                        <div class="feature-icon-box feature-icon-blue">
+                            <i class="bi bi-bar-chart-line-fill"></i>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-2">Career Insights</h5>
+                        <p class="text-muted small mb-4">Discover industry trends, salary insights and learning recommendations.</p>
+                    </div>
+                    <a href="{{ url_for('salary.salary_insights') }}" class="feature-link-action">
+                        View Insights <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 5. How It Works Section -->
+<section id="how-it-works" class="py-5 bg-light border-top border-bottom">
+    <div class="container py-lg-4">
+        <div class="text-center max-w-xl mx-auto mb-5">
+            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-semibold mb-3">
+                Simple & Transparent
+            </span>
+            <h2 class="display-6 fw-bold text-dark mb-3">How AI Job Agent Works</h2>
+            <p class="text-muted fs-5">A 3-step automated workflow designed to land you interviews faster.</p>
+        </div>
+        <div class="row g-4 text-center">
+            <div class="col-md-4">
+                <div class="p-4 bg-white rounded-4 border shadow-xs h-100">
+                    <div class="brand-icon-box-landing mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.5rem;">
+                        1
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Upload Your Resume</h5>
+                    <p class="text-muted small mb-0">Our 2-column spatial layout parser extracts your real experience, skills, and qualifications accurately.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-4 bg-white rounded-4 border shadow-xs h-100">
+                    <div class="brand-icon-box-landing mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.5rem; background: linear-gradient(135deg, #9333ea 0%, #7e22ce 100%);">
+                        2
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Discover Verified Jobs</h5>
+                    <p class="text-muted small mb-0">Real openings collected from Greenhouse, Lever, Workday, and direct employer portals matching your exact experience tier.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-4 bg-white rounded-4 border shadow-xs h-100">
+                    <div class="brand-icon-box-landing mx-auto mb-3" style="width: 52px; height: 52px; font-size: 1.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                        3
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">Practice & Track</h5>
+                    <p class="text-muted small mb-0">Conduct AI mock interviews with instant scoring and manage your application pipeline from applied to offer.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 6. Pricing Section -->
+<section id="pricing" class="py-5">
+    <div class="container py-lg-4">
+        <div class="text-center max-w-xl mx-auto mb-5">
+            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-semibold mb-3">
+                Transparent Plans
+            </span>
+            <h2 class="display-6 fw-bold text-dark mb-3">Simple Pricing for Every Candidate</h2>
+            <p class="text-muted fs-5">Everything you need to accelerate your career search.</p>
+        </div>
+        <div class="row g-4 justify-content-center">
+            <!-- Free Plan -->
+            <div class="col-md-6 col-lg-5">
+                <div class="p-4 p-lg-5 bg-white rounded-4 border shadow-sm h-100 d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="fw-bold text-dark mb-0">Job Seeker Free</h4>
+                            <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1">Active</span>
+                        </div>
+                        <div class="display-5 fw-extrabold text-dark mb-3">₹0 <span class="fs-6 text-muted fw-normal">/ forever</span></div>
+                        <p class="text-muted small mb-4">Complete access to real verified jobs and transparent ATS scoring.</p>
+                        <ul class="list-unstyled d-flex flex-column gap-2 small text-secondary mb-4">
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i> Browse 1,900+ real verified employer jobs</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i> Full 6-section ATS Resume Quality Audit</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i> Drag-and-drop Application Tracker</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i> AI Career Assistant chat support</li>
+                            <li><i class="bi bi-check-circle-fill text-success me-2"></i> Direct official employer apply redirects</li>
+                        </ul>
+                    </div>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary rounded-pill w-100 py-2 fw-semibold">
+                        Get Started Free
+                    </a>
+                </div>
+            </div>
+
+            <!-- Pro Plan -->
+            <div class="col-md-6 col-lg-5">
+                <div class="p-4 p-lg-5 bg-white rounded-4 border border-primary shadow-lg h-100 d-flex flex-column justify-content-between position-relative">
+                    <span class="position-absolute top-0 end-0 translate-middle-y me-4 badge bg-primary text-white rounded-pill px-3 py-2 fw-semibold shadow-sm">
+                        Recommended
+                    </span>
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="fw-bold text-dark mb-0">Career Pro</h4>
+                            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1">Fast Track</span>
+                        </div>
+                        <div class="display-5 fw-extrabold text-dark mb-3">₹499 <span class="fs-6 text-muted fw-normal">/ month</span></div>
+                        <p class="text-muted small mb-4">Advanced mock interview simulation, instant WhatsApp alerts, and priority AI tailoring.</p>
+                        <ul class="list-unstyled d-flex flex-column gap-2 small text-secondary mb-4">
+                            <li><i class="bi bi-check-circle-fill text-primary me-2"></i> Everything in Job Seeker Free</li>
+                            <li><i class="bi bi-check-circle-fill text-primary me-2"></i> Unlimited AI Mock Interviews (STAR + Sandbox)</li>
+                            <li><i class="bi bi-check-circle-fill text-primary me-2"></i> Instant WhatsApp & Email Job Match Alerts</li>
+                            <li><i class="bi bi-check-circle-fill text-primary me-2"></i> Tailored ATS Cover Letters in 1-Click</li>
+                            <li><i class="bi bi-check-circle-fill text-primary me-2"></i> Dream Company automatic openings monitor</li>
+                        </ul>
+                    </div>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-hero-primary rounded-pill w-100 py-2 fw-semibold">
+                        Start 7-Day Free Trial
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 7. About Section -->
+<section id="about" class="py-5 bg-light border-top">
+    <div class="container py-lg-4 text-center">
+        <div class="max-w-xl mx-auto">
+            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-semibold mb-3">
+                Our Mission
+            </span>
+            <h2 class="display-6 fw-bold text-dark mb-3">Grounded Career Intelligence</h2>
+            <p class="text-muted fs-5 mb-4">
+                We believe job hunting shouldn't involve ghost jobs, fake salary promises, or opaque rejection black-holes. AI Job Agent bridges the gap between candidates and genuine employer portals using explainable AI.
+            </p>
+            <div class="d-flex flex-wrap justify-content-center gap-4 text-secondary small">
+                <div><i class="bi bi-shield-check text-success me-1"></i> Zero Ghost Postings</div>
+                <div><i class="bi bi-shield-check text-success me-1"></i> 100% Genuine Direct Links</div>
+                <div><i class="bi bi-shield-check text-success me-1"></i> Candidate Privacy First</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 8. Modern SaaS Landing Footer -->
+<footer class="py-5 bg-white border-top">
+    <div class="container">
+        <div class="row g-4 mb-5">
+            <div class="col-lg-4">
+                <a class="navbar-brand d-flex align-items-center gap-2 text-decoration-none mb-3" href="{{ url_for('dashboard.index') }}">
+                    <div class="brand-icon-box-landing">
+                        <i class="bi bi-briefcase-fill fs-5"></i>
+                    </div>
+                    <span class="brand-title-landing">AI Job Agent</span>
+                </a>
+                <p class="text-muted small mb-3" style="max-width: 320px;">
+                    Search verified job listings, optimize your resume against ATS algorithms, and practice realistic AI mock interviews.
+                </p>
+                <div class="d-flex gap-3 text-secondary">
+                    <a href="https://linkedin.com" target="_blank" class="text-secondary text-decoration-none"><i class="bi bi-linkedin fs-5"></i></a>
+                    <a href="https://github.com" target="_blank" class="text-secondary text-decoration-none"><i class="bi bi-github fs-5"></i></a>
+                    <a href="https://twitter.com" target="_blank" class="text-secondary text-decoration-none"><i class="bi bi-twitter-x fs-5"></i></a>
+                </div>
+            </div>
+            <div class="col-6 col-lg-2">
+                <h6 class="fw-bold text-dark mb-3">Product</h6>
+                <ul class="list-unstyled d-flex flex-column gap-2 small text-secondary">
+                    <li><a href="{{ url_for('jobs.list_jobs') }}" class="text-secondary text-decoration-none">Verified Jobs</a></li>
+                    <li><a href="{{ url_for('ats.ats_report') }}" class="text-secondary text-decoration-none">ATS Scanner</a></li>
+                    <li><a href="{{ url_for('interview.interview_hub') }}" class="text-secondary text-decoration-none">Mock Interview</a></li>
+                    <li><a href="{{ url_for('assistant.chat_view') }}" class="text-secondary text-decoration-none">AI Coach</a></li>
+                    <li><a href="{{ url_for('applications.list_applications') }}" class="text-secondary text-decoration-none">Application Tracker</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-lg-2">
+                <h6 class="fw-bold text-dark mb-3">Platforms</h6>
+                <ul class="list-unstyled d-flex flex-column gap-2 small text-secondary">
+                    <li><span class="text-muted">Greenhouse</span></li>
+                    <li><span class="text-muted">Lever</span></li>
+                    <li><span class="text-muted">Workday</span></li>
+                    <li><span class="text-muted">Ashby</span></li>
+                    <li><span class="text-muted">Remotive & RemoteOK</span></li>
+                </ul>
+            </div>
+            <div class="col-lg-4">
+                <h6 class="fw-bold text-dark mb-3">Stay Updated</h6>
+                <p class="text-muted small mb-3">Get the latest remote jobs and career insights delivered to your inbox.</p>
+                <div class="input-group mb-2">
+                    <input type="email" class="form-control" placeholder="Enter your email" aria-label="Enter your email">
+                    <button class="btn btn-primary-custom" type="button">Subscribe</button>
+                </div>
+                <small class="text-muted fs-8">No spam. Unsubscribe at any time.</small>
+            </div>
+        </div>
+        <div class="d-flex flex-wrap justify-content-between align-items-center pt-4 border-top text-muted small">
+            <div>&copy; 2026 AI Job Agent. All rights reserved. 100% Real Postings & Verified Direct Links.</div>
+            <div class="d-flex gap-3 mt-2 mt-md-0">
+                <a href="#about" class="text-muted text-decoration-none">Privacy Policy</a>
+                <a href="#about" class="text-muted text-decoration-none">Terms of Service</a>
+                <a href="#about" class="text-muted text-decoration-none">Contact Us</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- 9. Interactive Watch Demo Modal -->
+<div class="modal fade" id="demoModal" tabindex="-1" aria-labelledby="demoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+            <div class="modal-header border-bottom bg-light px-4 py-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="brand-icon-box-landing" style="width: 32px; height: 32px;">
+                        <i class="bi bi-play-fill fs-5"></i>
+                    </div>
+                    <h5 class="modal-title fw-bold text-dark" id="demoModalLabel">AI Job Agent Platform Tour</h5>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="ratio ratio-16x9 rounded-3 bg-dark overflow-hidden mb-4 d-flex align-items-center justify-content-center text-center text-white p-4">
+                    <div>
+                        <div class="brand-icon-box-landing mx-auto mb-3" style="width: 64px; height: 64px; font-size: 2rem;">
+                            <i class="bi bi-play-fill"></i>
+                        </div>
+                        <h4 class="fw-bold mb-2">See AI Job Agent in Action</h4>
+                        <p class="text-white-50 small max-w-md mx-auto mb-4">
+                            Watch how our spatial layout resume parser, 6-section ATS analyzer, and direct verified job matching engine work together.
+                        </p>
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-hero-primary rounded-pill px-4 py-2">
+                            Try It Free Now &rarr;
                         </a>
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Supported ATS & Platforms -->
-<section class="py-4 bg-light border-bottom">
-    <div class="container text-center">
-        <p class="text-uppercase text-muted fw-bold small mb-3 tracking-wide">Direct Connector Integrations</p>
-        <div class="d-flex flex-wrap justify-content-center align-items-center gap-4 text-secondary fs-5">
-            <span class="fw-bold"><i class="bi bi-building me-1"></i> Greenhouse</span>
-            <span class="fw-bold"><i class="bi bi-layers me-1"></i> Lever</span>
-            <span class="fw-bold"><i class="bi bi-lightning-charge me-1"></i> Ashby</span>
-            <span class="fw-bold"><i class="bi bi-briefcase me-1"></i> Workday</span>
-            <span class="fw-bold"><i class="bi bi-person-check me-1"></i> SmartRecruiters</span>
-            <span class="fw-bold"><i class="bi bi-kanban me-1"></i> Workable</span>
-            <span class="fw-bold"><i class="bi bi-patch-check me-1"></i> Recruitee</span>
-            <span class="fw-bold"><i class="bi bi-globe me-1"></i> Remotive</span>
-            <span class="fw-bold"><i class="bi bi-laptop me-1"></i> RemoteOK</span>
-            <span class="fw-bold"><i class="bi bi-diagram-3 me-1"></i> Arbeitnow</span>
-        </div>
-    </div>
-</section>
-
-<!-- 6 Core Capabilities -->
-<section class="py-5">
-    <div class="container py-lg-4">
-        <div class="text-center max-w-xl mx-auto mb-5">
-            <h2 class="fw-bold text-dark">Connecting the Complete Career Workflow</h2>
-            <p class="text-muted">More than a traditional search box: an intelligent agent that understands your skills, tracks genuine opportunities, and prepares you to apply.</p>
-        </div>
-        <div class="row g-4">
-            <div class="col-md-4">
-                <div class="card h-100 p-4 custom-card border-0">
-                    <div class="stat-icon stat-blue mb-3"><i class="bi bi-file-earmark-code"></i></div>
-                    <h5 class="fw-bold">1. Resume Intelligence</h5>
-                    <p class="text-muted small">Deep parsing of PDF/DOCX resumes. Extracts skills, career timelines, project impact, and educational credentials.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100 p-4 custom-card border-0">
-                    <div class="stat-icon stat-green mb-3"><i class="bi bi-sliders"></i></div>
-                    <h5 class="fw-bold">2. ATS & Quality Audit</h5>
-                    <p class="text-muted small">Assess readability, formatting, impact metrics, and section completeness with clear, actionable recommendations.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100 p-4 custom-card border-0">
-                    <div class="stat-icon stat-purple mb-3"><i class="bi bi-radar"></i></div>
-                    <h5 class="fw-bold">3. Global Job Aggregation</h5>
-                    <p class="text-muted small">Continuous aggregation of real vacancies with normalized schemas and deduplication to avoid repeated listings.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100 p-4 custom-card border-0">
-                    <div class="stat-icon stat-amber mb-3"><i class="bi bi-check-all"></i></div>
-                    <h5 class="fw-bold">4. Grounded Apply Now</h5>
-                    <p class="text-muted small">Every Apply Now link directs you to that specific position's official employer page, secured against open redirects and SSRF.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100 p-4 custom-card border-0">
-                    <div class="stat-icon stat-blue mb-3"><i class="bi bi-envelope-paper-heart"></i></div>
-                    <h5 class="fw-bold">5. Application Assistant</h5>
-                    <p class="text-muted small">Generate tailored cover letters and interview preparation points strictly grounded in your verified experience.</p>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100 p-4 custom-card border-0">
-                    <div class="stat-icon stat-green mb-3"><i class="bi bi-chat-quote"></i></div>
-                    <h5 class="fw-bold">6. Conversational Agent</h5>
-                    <p class="text-muted small">Search naturally: <em>"Find Python developer jobs with 80%+ match"</em> or <em>"Which skills am I missing for this job?"</em>.</p>
+                <div class="row g-3 text-center">
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <i class="bi bi-file-earmark-check text-primary fs-4 d-block mb-1"></i>
+                            <strong class="d-block small text-dark">1. Parse Resume</strong>
+                            <span class="text-muted fs-8">2-Column coordinate layout extraction</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <i class="bi bi-radar text-success fs-4 d-block mb-1"></i>
+                            <strong class="d-block small text-dark">2. Match Verified Jobs</strong>
+                            <span class="text-muted fs-8">Direct ATS requisitions ranked by fit</span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <i class="bi bi-mic text-danger fs-4 d-block mb-1"></i>
+                            <strong class="d-block small text-dark">3. Practice Interviews</strong>
+                            <span class="text-muted fs-8">Behavioral STAR & Sandbox questions</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</section>
-
-<!-- Call to Action -->
-<section class="py-5 bg-white border-top">
-    <div class="container text-center py-4">
-        <h3 class="fw-bold text-dark mb-3">Ready to find opportunities tailored to your resume?</h3>
-        <p class="text-muted mb-4">Create your free account and let the AI Job Agent discover your highest-compatibility roles.</p>
-        <a href="{{ url_for('auth.register') }}" class="btn btn-primary-custom btn-lg px-5">Get Started Now</a>
-    </div>
-</section>
+</div>
 {% endblock %}

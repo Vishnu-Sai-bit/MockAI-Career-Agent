@@ -1,0 +1,474 @@
+/* ==========================================================================
+   AI Job Agent — Modern SaaS Landing Page Styles (Matching Reference)
+   ========================================================================== */
+
+:root {
+    --landing-primary: #2563eb;
+    --landing-primary-hover: #1d4ed8;
+    --landing-primary-light: #eff6ff;
+    --landing-accent: #3b82f6;
+    --landing-text-dark: #0f172a;
+    --landing-text-muted: #64748b;
+    --landing-bg-light: #ffffff;
+    --landing-card-bg: rgba(255, 255, 255, 0.95);
+    --landing-border: #e2e8f0;
+}
+
+[data-bs-theme="dark"] {
+    --landing-primary: #3b82f6;
+    --landing-primary-hover: #60a5fa;
+    --landing-primary-light: rgba(59, 130, 246, 0.15);
+    --landing-text-dark: #f8fafc;
+    --landing-text-muted: #94a3b8;
+    --landing-bg-light: #0b1329;
+    --landing-card-bg: rgba(15, 23, 42, 0.92);
+    --landing-border: rgba(255, 255, 255, 0.1);
+}
+
+/* 1. Landing Top Navigation */
+.landing-navbar {
+    background-color: var(--landing-card-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--landing-border);
+    transition: all 0.25s ease;
+    z-index: 1040;
+}
+
+.brand-icon-box-landing {
+    width: 38px;
+    height: 38px;
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+}
+
+.brand-title-landing {
+    font-size: 1.25rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--landing-text-dark);
+}
+
+.nav-link-landing {
+    font-weight: 500;
+    color: var(--landing-text-muted) !important;
+    padding: 0.5rem 1rem !important;
+    transition: color 0.18s ease;
+    font-size: 0.95rem;
+}
+
+.nav-link-landing:hover,
+.nav-link-landing.active {
+    color: var(--landing-primary) !important;
+}
+
+/* 2. Hero Section */
+.landing-hero {
+    position: relative;
+    background: radial-gradient(1200px circle at 85% 15%, rgba(59, 130, 246, 0.08), transparent 60%),
+                radial-gradient(800px circle at 10% 80%, rgba(99, 102, 241, 0.05), transparent 50%),
+                var(--landing-bg-light);
+    overflow: hidden;
+}
+
+.hero-pill-badge {
+    display: inline-flex;
+    align-items: center;
+    background: var(--landing-primary-light);
+    color: var(--landing-primary);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    border-radius: 9999px;
+    padding: 0.4rem 1.1rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.hero-main-title {
+    font-size: clamp(2.5rem, 4.5vw, 4rem);
+    font-weight: 900;
+    letter-spacing: -0.035em;
+    line-height: 1.1;
+    color: var(--landing-text-dark);
+}
+
+.hero-highlight-ai {
+    color: #2563eb;
+    position: relative;
+    display: inline-block;
+}
+
+.hero-highlight-ai::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -6px;
+    width: 100%;
+    height: 8px;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 12' preserveAspectRatio='none'%3E%3Cpath d='M0,7 Q40,0 100,6' stroke='%233b82f6' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center bottom;
+    background-size: 100% 100%;
+    opacity: 0.85;
+}
+
+.hero-subtitle {
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: var(--landing-text-muted);
+    max-width: 580px;
+}
+
+.check-pill-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #166534;
+    background-color: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 9999px;
+    padding: 0.4rem 0.9rem;
+}
+
+[data-bs-theme="dark"] .check-pill-item {
+    background-color: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.25);
+    color: #86efac;
+}
+
+.btn-hero-primary {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    color: #ffffff !important;
+    border: none;
+    border-radius: 9999px;
+    padding: 0.85rem 1.8rem;
+    font-weight: 600;
+    font-size: 1.05rem;
+    box-shadow: 0 10px 25px -5px rgba(37, 99, 235, 0.4);
+    transition: all 0.2s ease;
+}
+
+.btn-hero-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 30px -5px rgba(37, 99, 235, 0.5);
+}
+
+.btn-hero-demo {
+    background: transparent;
+    color: var(--landing-text-dark) !important;
+    border: 1.5px solid var(--landing-border);
+    border-radius: 9999px;
+    padding: 0.85rem 1.8rem;
+    font-weight: 600;
+    font-size: 1.05rem;
+    transition: all 0.2s ease;
+}
+
+.btn-hero-demo:hover {
+    background: var(--landing-primary-light);
+    border-color: var(--landing-primary);
+    color: var(--landing-primary) !important;
+    transform: translateY(-2px);
+}
+
+/* Hero Stats Row */
+.hero-stat-box {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.stat-icon-wrapper {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+
+.stat-icon-blue {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.stat-icon-yellow {
+    background: #fefce8;
+    color: #eab308;
+}
+
+[data-bs-theme="dark"] .stat-icon-blue {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+}
+
+[data-bs-theme="dark"] .stat-icon-yellow {
+    background: rgba(234, 179, 8, 0.2);
+    color: #facc15;
+}
+
+.stat-value {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--landing-text-dark);
+    line-height: 1.1;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: var(--landing-text-muted);
+    font-weight: 500;
+}
+
+/* 3. Hero Visual & Floating Cards */
+.hero-visual-container {
+    position: relative;
+    width: 100%;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+}
+
+.hero-main-photo-wrapper {
+    position: relative;
+    border-radius: 32px;
+    overflow: hidden;
+    box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.18);
+    border: 3px solid rgba(255, 255, 255, 0.85);
+}
+
+.hero-candidate-image {
+    width: 100%;
+    height: auto;
+    max-height: 480px;
+    object-fit: cover;
+    display: block;
+    border-radius: 30px;
+}
+
+/* Floating Glass Cards */
+.floating-glass-card {
+    position: absolute;
+    background: var(--landing-card-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--landing-border);
+    border-radius: 18px;
+    box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.5);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+    z-index: 10;
+}
+
+.floating-glass-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 28px 55px -12px rgba(0, 0, 0, 0.22);
+}
+
+/* Position 1: Top Job Card */
+.floating-job-card {
+    top: 5px;
+    left: 4%;
+    width: 290px;
+    padding: 1rem;
+    animation: float-gentle 6s ease-in-out infinite;
+}
+
+/* Position 2: Resume Score Card */
+.floating-resume-score {
+    bottom: 22%;
+    left: -20px;
+    width: 240px;
+    padding: 0.95rem;
+    animation: float-gentle 7s ease-in-out infinite 1s;
+}
+
+/* Position 3: Interview Prep Pill */
+.floating-interview-prep {
+    bottom: 0px;
+    left: 8%;
+    padding: 0.65rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: float-gentle 6.5s ease-in-out infinite 2s;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Position 4: AI Assistant Pill */
+.floating-ai-assistant {
+    top: 10px;
+    right: 2%;
+    padding: 0.65rem 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    animation: float-gentle 7.5s ease-in-out infinite 1.5s;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Position 5: Personalized Jobs List */
+.floating-personalized-jobs {
+    top: 36%;
+    right: -24px;
+    width: 245px;
+    padding: 0.95rem;
+    animation: float-gentle 8s ease-in-out infinite 0.5s;
+}
+
+@keyframes float-gentle {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+/* Circular Score Gauge */
+.circle-gauge-wrap {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+}
+
+.circle-gauge-wrap svg {
+    transform: rotate(-90deg);
+}
+
+.circle-gauge-wrap .gauge-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--landing-text-dark);
+}
+
+/* 4. Trusted Logos Bar */
+.trusted-logos-section {
+    border-top: 1px solid var(--landing-border);
+    border-bottom: 1px solid var(--landing-border);
+    background: var(--landing-bg-light);
+    padding: 2.2rem 0;
+}
+
+.trusted-company-logo {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--landing-text-muted);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 1.25rem;
+    text-decoration: none;
+}
+
+.trusted-company-logo:hover {
+    color: var(--landing-text-dark);
+    transform: translateY(-2px);
+}
+
+/* 5. Powerful Features Section */
+.features-section {
+    padding: 5rem 0;
+    background: var(--landing-bg-light);
+}
+
+.feature-grid-card {
+    background: var(--landing-card-bg);
+    border: 1px solid var(--landing-border);
+    border-radius: 22px;
+    padding: 2rem 1.8rem;
+    height: 100%;
+    display: flex;
+    flex-column: column;
+    justify-content: space-between;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+}
+
+.feature-grid-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 20px 40px -10px rgba(37, 99, 235, 0.12);
+}
+
+.feature-icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    margin-bottom: 1.4rem;
+}
+
+.feature-icon-blue {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.feature-icon-purple {
+    background: #faf5ff;
+    color: #9333ea;
+}
+
+.feature-icon-red {
+    background: #fef2f2;
+    color: #ef4444;
+}
+
+.feature-link-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--landing-primary);
+    text-decoration: none;
+    transition: gap 0.2s ease;
+}
+
+.feature-link-action:hover {
+    color: var(--landing-primary-hover);
+    gap: 0.6rem;
+}
+
+/* 6. Responsive adjustments */
+@media (max-width: 991.98px) {
+    .floating-glass-card {
+        position: static !important;
+        width: 100% !important;
+        animation: none !important;
+        margin-bottom: 1rem;
+    }
+    .hero-visual-container {
+        padding: 1rem 0;
+    }
+    .hero-main-photo-wrapper {
+        margin-bottom: 1.5rem;
+    }
+    .floating-resume-score,
+    .floating-job-card,
+    .floating-personalized-jobs,
+    .floating-interview-prep,
+    .floating-ai-assistant {
+        transform: none !important;
+    }
+}
