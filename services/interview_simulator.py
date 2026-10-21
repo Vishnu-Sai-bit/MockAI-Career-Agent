@@ -10,13 +10,17 @@ class InterviewSimulator:
     def __init__(self, gemini_service: Optional[GeminiService] = None):
         self.gemini = gemini_service or GeminiService()
 
-    def generate_interview_questions(self, job: Job, profile: CandidateProfile) -> List[Dict[str, Any]]:
+    def generate_interview_questions(self, job: Job, profile: Optional[CandidateProfile] = None) -> List[Dict[str, Any]]:
         """
         Generates role-specific behavioral, technical, and scenario questions tailored to the vacancy.
         """
+        candidate_skills = (profile.skills if profile and profile.skills else []) or []
+        skills_str = ", ".join(candidate_skills) if candidate_skills else "software engineering, problem solving, architecture"
+        primary_skill = candidate_skills[0] if candidate_skills else "software engineering"
+
         prompt = f"""You are a principal bar raiser and senior engineering hiring manager.
 Generate 4 high-yield interview questions for an interview for the role of {job.title} at {job.company}.
-Tailor the questions to test the candidate's actual skills ({', '.join(profile.skills or [])}) against the company's job requirements.
+Tailor the questions to test the candidate's actual skills ({skills_str}) against the company's job requirements.
 
 JOB DESCRIPTION:
 {job.description[:3000]}
@@ -51,7 +55,7 @@ Format output as a valid JSON array of objects:
             {
                 "id": 1,
                 "type": "Behavioral / Ownership",
-                "question": f"Tell me about a complex project where you leveraged {profile.skills[0] if profile.skills else 'software engineering'} under tight deadlines. How did you prioritize?",
+                "question": f"Tell me about a complex project where you leveraged {primary_skill} under tight deadlines. How did you prioritize?",
                 "evaluation_criteria": "Look for clear context, personal ownership, trade-off analysis, and measurable deliverables.",
                 "star_guide": {
                     "situation": "Describe the business problem and timeline constraints.",

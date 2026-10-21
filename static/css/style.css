@@ -645,6 +645,12 @@ footer {
     color: #f8fafc !important;
 }
 
+[data-bs-theme="dark"] .list-group-item.active {
+    background-color: #2563eb !important;
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
 /* Borders & Code Previews */
 [data-bs-theme="dark"] .border,
 [data-bs-theme="dark"] .border-top,

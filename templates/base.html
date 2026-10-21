@@ -83,12 +83,6 @@
                 </div>
                 <ul class="nav flex-column mb-3 sidebar-nav">
                     <li class="nav-item">
-                        <a class="sidebar-link {% if 'assistant' in request.endpoint %}active{% endif %}" href="{{ url_for('assistant.chat_view') }}">
-                            <i class="bi bi-chat-dots-fill text-info"></i>
-                            <span>AI Career Coach</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="sidebar-link {% if 'ats' in request.endpoint %}active{% endif %}" href="{{ url_for('ats.ats_report') }}">
                             <i class="bi bi-graph-up-arrow text-warning"></i>
                             <span>ATS Match Report</span>
@@ -104,6 +98,12 @@
                         <a class="sidebar-link {% if 'salary' in request.endpoint %}active{% endif %}" href="{{ url_for('salary.salary_home') }}">
                             <i class="bi bi-cash-stack text-success"></i>
                             <span>Salary Intelligence</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="sidebar-link {% if 'assistant' in request.endpoint %}active{% endif %}" href="{{ url_for('assistant.chat_view') }}">
+                            <i class="bi bi-chat-dots-fill text-info"></i>
+                            <span>AI Career Coach</span>
                         </a>
                     </li>
                 </ul>

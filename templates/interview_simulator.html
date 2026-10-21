@@ -28,7 +28,7 @@
                 <h6 class="fw-bold text-dark mb-3"><i class="bi bi-list-check text-primary me-2"></i>Interview Questions ({{ questions|length }})</h6>
                 <div class="list-group list-group-flush" id="question-list">
                     {% for q in questions %}
-                        <button type="button" class="list-group-item list-group-item-action p-3 rounded-3 mb-2 question-btn {% if loop.first %}active{% endif %}" data-q-id="{{ q.id }}" data-question="{{ q.question }}" data-type="{{ q.type }}" data-criteria="{{ q.evaluation_criteria }}">
+                        <button type="button" class="list-group-item list-group-item-action p-3 rounded-3 mb-2 question-btn {% if loop.first %}active{% endif %}" data-index="{{ loop.index0 }}">
                             <div class="d-flex justify-content-between align-items-center mb-1">
                                 <span class="badge bg-secondary-subtle text-secondary small">{{ q.type }}</span>
                                 <small class="fw-bold">Q{{ loop.index }}</small>
@@ -170,8 +170,10 @@
 </div>
 
 <script>
-let currentJobId = {{ job.id }};
-let activeQuestionText = "{{ questions[0].question }}";
+const currentJobId = {{ job.id }};
+const questionsData = {{ questions|tojson }};
+let currentIndex = 0;
+let activeQuestionText = (questionsData && questionsData.length > 0) ? (questionsData[0].question || "") : "";
 let speechStartTime = null;
 let speechDurationSeconds = null;
 
@@ -254,18 +256,34 @@ document.getElementById('mic-btn').addEventListener('click', function() {
     }
 });
 
+function setQuestion(index) {
+    if (!questionsData || index < 0 || index >= questionsData.length) return;
+    currentIndex = index;
+    const q = questionsData[index];
+    activeQuestionText = q.question;
+
+    document.querySelectorAll('.question-btn').forEach((btn, idx) => {
+        if (idx === index) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    document.getElementById('active-q-type').textContent = q.type || 'Behavioral';
+    document.getElementById('active-q-num').textContent = `Question ${index + 1} of ${questionsData.length}`;
+    document.getElementById('active-q-text').textContent = q.question;
+    document.getElementById('active-q-criteria').innerHTML = '<i class="bi bi-info-circle me-1"></i>' + (q.evaluation_criteria || '');
+    document.getElementById('user-answer-box').value = '';
+    document.getElementById('eval-result-card').classList.add('d-none');
+    if (isRecording) stopRecording();
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+}
+
 document.querySelectorAll('.question-btn').forEach(btn => {
     btn.addEventListener('click', function() {
-        document.querySelectorAll('.question-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        activeQuestionText = this.getAttribute('data-question');
-        document.getElementById('active-q-text').textContent = activeQuestionText;
-        document.getElementById('active-q-type').textContent = this.getAttribute('data-type');
-        document.getElementById('active-q-criteria').innerHTML = '<i class="bi bi-info-circle me-1"></i>' + this.getAttribute('data-criteria');
-        document.getElementById('user-answer-box').value = '';
-        document.getElementById('eval-result-card').classList.add('d-none');
-        if (isRecording) stopRecording();
-        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        const idx = parseInt(this.getAttribute('data-index'), 10);
+        setQuestion(idx);
     });
 });
 
@@ -323,6 +341,7 @@ document.getElementById('submit-answer-btn').addEventListener('click', function(
 
             document.getElementById('eval-exemplar').textContent = ev.improved_exemplar_answer || '';
             document.getElementById('eval-result-card').classList.remove('d-none');
+            document.getElementById('eval-result-card').scrollIntoView({ behavior: 'smooth' });
         } else {
             alert('Evaluation failed: ' + (data.error || 'Server error'));
         }

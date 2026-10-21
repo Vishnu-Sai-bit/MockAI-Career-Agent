@@ -1,6 +1,8 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
 from flask_login import login_required, current_user
 from models.job import Job
+from models.job_match import SavedJob
+from models.application import Application
 from services.interview_simulator import InterviewSimulator
 
 interview_bp = Blueprint("interview", __name__, url_prefix="/interview")
@@ -10,15 +12,15 @@ simulator = InterviewSimulator()
 @interview_bp.route("/hub")
 @login_required
 def interview_hub():
-    from models.application import Application
-    from models.job import SavedJob
     app = Application.query.filter_by(user_id=current_user.id).order_by(Application.created_at.desc()).first()
     if app:
         return redirect(url_for("interview.start_interview", job_id=app.job_id))
     saved = SavedJob.query.filter_by(user_id=current_user.id).order_by(SavedJob.saved_at.desc()).first()
     if saved:
         return redirect(url_for("interview.start_interview", job_id=saved.job_id))
-    job = Job.query.filter_by(status="active").order_by(Job.published_at.desc()).first()
+    job = Job.query.filter_by(status="active").order_by(Job.published_at.desc(), Job.created_at.desc()).first()
+    if not job:
+        job = Job.query.order_by(Job.created_at.desc()).first()
     if job:
         return redirect(url_for("interview.start_interview", job_id=job.id))
     flash("No active jobs found for interview practice.", "warning")
