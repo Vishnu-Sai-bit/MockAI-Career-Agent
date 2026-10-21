@@ -71,8 +71,11 @@ class ResumeAnalyzer:
             contact_score + skills_score + exp_score + edu_score + proj_score + cert_score,
             1
         )
+        section_quality = max(0.0, min(100.0, section_quality))
 
-        overall_quality = quality_score_q
+        # Overall Intrinsic ATS Quality Score is strictly the exact sum of the 6 core machine-readable sections:
+        # Contact (10%) + Skills (30%) + Experience (20%) + Education (15%) + Projects (15%) + Certifications (10%) = 100%
+        overall_quality = section_quality
         if not raw_text_clean and not data:
             overall_quality = 20.0
 
