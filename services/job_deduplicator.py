@@ -32,10 +32,11 @@ class JobDeduplicator:
             if job.company.lower() == cand_company and cand_company:
                 title_sim = fuzz.ratio(job.title.lower(), cand_title)
                 if title_sim >= 92:
-                    # Check location alignment or remote overlap
+                    # Identical or near-identical role at same company (>=95% title match), or matching location
                     j_loc = job.location.lower()
                     if (
-                        j_loc == cand_loc
+                        title_sim >= 95
+                        or j_loc == cand_loc
                         or "remote" in (j_loc + cand_loc)
                         or "worldwide" in (j_loc + cand_loc)
                         or not cand_loc
