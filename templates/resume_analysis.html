@@ -1,415 +1,329 @@
 {% extends "base.html" %}
 
-{% block title %}Resume Analysis — AI Job Agent{% endblock %}
+{% block title %}Resume Intelligence & Profile — AI Job Agent{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-lg-4 py-4">
-    {% set candidate_name = (profile.full_name if profile and profile.full_name else None) or 'Vishnu Sai' %}
-    {% set resume_score = resume.ats_quality_score|round(0)|int if (resume and resume.ats_quality_score) else 85 %}
-    {% set parsed = resume.parsed_data if (resume and resume.parsed_data) else {} %}
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold mb-1"><i class="bi bi-file-earmark-person text-primary me-2"></i>Extracted Resume Intelligence</h3>
+            <p class="text-muted small mb-0">Review and verify extracted data from <strong>{{ resume.filename }}</strong>. Correct any values below.</p>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <form method="POST" action="{{ url_for('resume.analyze_with_gemini') }}" class="m-0">
+                <button type="submit" class="btn btn-outline-primary"><i class="bi bi-stars me-1"></i> Analyze with Gemini</button>
+            </form>
+            <a href="{{ url_for('ats.ats_report') }}" class="btn btn-outline-custom"><i class="bi bi-graph-up-arrow me-1"></i> ATS Quality Audit</a>
+            <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary-custom"><i class="bi bi-search me-1"></i> View Matching Jobs</a>
+        </div>
+    </div>
 
-    <!-- 1. Header Banner & Quote Callout (Matching Image 5) -->
-    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-        <div class="row align-items-center gy-3">
+    {% set gemini = resume.ats_feedback.get('gemini_critique') if resume.ats_feedback else None %}
+    {% if gemini %}
+        <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4 border-start border-4 border-primary">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-stars me-2"></i>Gemini AI Resume Intelligence & Diagnostic</h5>
+                    <small class="text-muted">In-depth ATS assessment powered by Google Gemini</small>
+                </div>
+                <span class="badge bg-primary-subtle text-primary border">Estimated ATS Quality: {{ gemini.get('ats_score_estimate', 85) }}/100</span>
+            </div>
+
+            <div class="p-3 bg-light rounded-3 mb-3 border">
+                <h6 class="fw-bold mb-1 text-dark"><i class="bi bi-info-circle-fill text-primary me-1"></i> Executive Summary</h6>
+                <p class="text-muted small mb-0">{{ gemini.get('executive_summary', '') }}</p>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <div class="p-3 bg-success-subtle rounded-3 border border-success-subtle h-100">
+                        <h6 class="fw-bold text-success mb-2"><i class="bi bi-check-circle-fill me-1"></i> Key Strengths</h6>
+                        <ul class="text-secondary small mb-0 ps-3">
+                            {% for s in gemini.get('key_strengths', []) %}
+                                <li class="mb-1">{{ s }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 bg-danger-subtle rounded-3 border border-danger-subtle h-100">
+                        <h6 class="fw-bold text-danger mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i> Critical Weaknesses & Gaps</h6>
+                        <ul class="text-secondary small mb-0 ps-3">
+                            {% for w in gemini.get('critical_weaknesses_and_gaps', []) %}
+                                <li class="mb-1">{{ w }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            {% if gemini.get('actionable_bullet_rewrites') %}
+                <div class="mb-3">
+                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-pencil-square text-warning me-1"></i> Actionable Bullet Point Improvements</h6>
+                    <div class="d-flex flex-column gap-2">
+                        {% for r in gemini.get('actionable_bullet_rewrites', []) %}
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="text-muted small mb-1"><strong>Before / Concept:</strong> <em>"{{ r.get('original_or_concept') }}"</em></div>
+                                <div class="text-success small fw-semibold mb-1"><strong>Recommended Rewrite:</strong> "{{ r.get('recommended_rewrite') }}"</div>
+                                <div class="text-muted small"><strong>Rationale:</strong> {{ r.get('rationale') }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+
+            {% if gemini.get('ats_formatting_advice') %}
+                <div>
+                    <h6 class="fw-bold text-dark mb-1"><i class="bi bi-file-earmark-check text-info me-1"></i> ATS Scanner Formatting Advice</h6>
+                    <ul class="text-muted small mb-0 ps-3">
+                        {% for a in gemini.get('ats_formatting_advice', []) %}
+                            <li>{{ a }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="alert alert-light border shadow-sm d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <i class="bi bi-stars text-primary fs-5 me-2"></i>
+                <strong>Unlock Deep Gemini AI Analysis</strong>: Extract categorized skills, identify missing metrics, and get instant bullet point rewrites.
+            </div>
+            <form method="POST" action="{{ url_for('resume.analyze_with_gemini') }}" class="m-0">
+                <button type="submit" class="btn btn-sm btn-primary-custom">
+                    <i class="bi bi-cpu me-1"></i> Run Gemini AI Analysis
+                </button>
+            </form>
+        </div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('resume.update_parsed_profile') }}">
+        <div class="row g-4">
+            <!-- Left Column: Personal info & skills -->
             <div class="col-lg-7">
-                <h2 class="fw-bold text-dark mb-1 tracking-tight">Resume Analysis</h2>
-                <p class="text-muted small mb-0">Get detailed feedback and improve your resume with AI-powered suggestions.</p>
-            </div>
-            <div class="col-lg-5 text-lg-end">
-                <div class="d-inline-flex align-items-center gap-2.5 p-2.5 rounded-3 bg-light border text-start">
-                    <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                        <i class="bi bi-chat-quote-fill text-primary fs-6"></i>
-                    </div>
-                    <div>
-                        <small class="fw-semibold text-dark d-block fs-8">"A strong resume gets more interviews."</small>
-                        <span class="text-muted fs-9">Let AI analyze your resume and provide personalized improvement suggestions.</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 2. Navigation Tabs (Matching Image 5) -->
-    <div class="card border-0 shadow-sm rounded-4 bg-white p-2 mb-4">
-        <ul class="nav nav-pills gap-1 flex-nowrap overflow-x-auto" id="resumeTabs" role="tablist">
-            <li class="nav-item">
-                <button class="nav-link active py-2 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-upload">
-                    Upload & Analyze
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-score">
-                    Resume Score
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-skills">
-                    Skills Analysis
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-suggestions">
-                    Improvement Suggestions
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-rewrite">
-                    AI Rewrite
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-cover">
-                    Cover Letter
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-ats">
-                    ATS Check
-                </button>
-            </li>
-        </ul>
-    </div>
-
-    <!-- 3. Top Row Cards (Image 5: Upload Dropzone + Active Resume + ATS Compatibility + Target Job Match) -->
-    <div class="row g-4 mb-4">
-        <!-- 3.1 Upload Your Resume Dropzone Card -->
-        <div class="col-lg-3 col-md-6">
-            <div class="card p-4 rounded-4 border shadow-sm bg-white h-100 text-center d-flex flex-column justify-content-center align-items-center">
-                <h6 class="fw-bold text-dark mb-1">Upload Your Resume</h6>
-                <small class="text-muted fs-9 mb-3">Upload your resume in PDF or DOCX format (Max 5 MB)</small>
-
-                <div class="p-4 rounded-4 border-2 border-dashed w-100 mb-3 bg-light d-flex flex-column align-items-center justify-content-center" style="border-style: dashed; border-color: #CBD5E1 !important;">
-                    <div class="avatar-md rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center mb-2" style="width: 48px; height: 48px;">
-                        <i class="bi bi-cloud-arrow-up-fill fs-4"></i>
-                    </div>
-                    <span class="fs-9 text-muted mb-2">Drag & drop your resume here</span>
-                    <span class="fs-9 text-muted mb-2">or</span>
-                    <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-primary-custom btn-sm px-3 py-1 fs-8">
-                        Choose File
-                    </a>
-                </div>
-                <span class="text-muted fs-9">Supported formats: PDF, DOCX</span>
-            </div>
-        </div>
-
-        <!-- 3.2 Active Resume Card (Vishnu_Sai_Resume.pdf + 85% Score) -->
-        <div class="col-lg-4 col-md-6">
-            <div class="card p-4 rounded-4 border shadow-sm bg-white h-100">
-                <div class="p-2.5 rounded-3 bg-light border d-flex justify-content-between align-items-center mb-3">
-                    <div class="d-flex align-items-center gap-2.5">
-                        <i class="bi bi-file-earmark-pdf-fill text-danger fs-3"></i>
-                        <div>
-                            <strong class="fs-8 text-dark d-block">{{ resume.filename if resume else 'Vishnu_Sai_Resume.pdf' }}</strong>
-                            <small class="text-muted fs-9">Uploaded on Oct 18, 2026 · 425 KB</small>
+                <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-person-lines-fill text-info me-2"></i>Candidate Profile</h5>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Full Name</label>
+                            <input type="text" name="full_name" class="form-control" value="{{ profile.full_name }}">
                         </div>
-                    </div>
-                    <a href="{{ url_for('resume.upload_resume') }}" class="text-muted hover-danger" title="Replace Resume">
-                        <i class="bi bi-trash fs-6"></i>
-                    </a>
-                </div>
-
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="position-relative d-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
-                        <svg viewBox="0 0 36 36" style="width: 80px; height: 80px; transform: rotate(-90deg);">
-                            <path stroke="#F1F5F9" stroke-width="3.8" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            <path stroke="#10B981" stroke-width="3.8" stroke-dasharray="{{ resume_score }}, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        </svg>
-                        <div class="position-absolute text-center">
-                            <span class="fs-5 fw-bold text-dark d-block lh-1">{{ resume_score }}%</span>
-                            <small class="text-muted fs-9">Overall</small>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Professional Headline</label>
+                            <input type="text" name="headline" class="form-control" value="{{ profile.headline }}" placeholder="e.g. Senior Full-Stack Engineer">
                         </div>
-                    </div>
-                    <div>
-                        <h6 class="fw-bold text-dark mb-1 fs-8">Great Resume!</h6>
-                        <small class="text-muted fs-9 d-block">Your resume is well-structured and ATS-friendly. A few improvements can make it even stronger.</small>
-                    </div>
-                </div>
-
-                <div class="d-flex flex-column gap-1 fs-9 text-muted">
-                    <div><i class="bi bi-check-circle-fill text-success me-1.5"></i> Good structure</div>
-                    <div><i class="bi bi-check-circle-fill text-success me-1.5"></i> Relevant skills found</div>
-                    <div><i class="bi bi-check-circle-fill text-success me-1.5"></i> ATS friendly format</div>
-                    <div><i class="bi bi-check-circle-fill text-success me-1.5"></i> Clear work experience</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 3.3 ATS Compatibility Card -->
-        <div class="col-lg-3 col-md-6">
-            <div class="card p-4 rounded-4 border shadow-sm bg-white h-100">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="fw-bold text-dark mb-0 fs-8">ATS Compatibility</h6>
-                    <span class="badge bg-success-subtle text-success fs-9 border border-success-subtle">
-                        <i class="bi bi-check-circle-fill me-1"></i> Passed
-                    </span>
-                </div>
-
-                <div class="d-flex flex-column gap-2.5 mb-2">
-                    <div>
-                        <div class="d-flex justify-content-between fs-9 mb-1">
-                            <span class="text-muted">Formatting</span>
-                            <strong class="text-dark">92%</strong>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold d-flex justify-content-between">
+                                <span>Present Address (From Resume)</span>
+                                <span class="badge bg-light text-muted border">Current Residence</span>
+                            </label>
+                            <input type="text" name="location" class="form-control" value="{{ profile.location }}" placeholder="e.g. Dharmavaram, Andhra Pradesh, India">
+                            <div class="form-text fs-8 text-muted">Current hometown/contact address found on your resume.</div>
                         </div>
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-primary" style="width: 92%;"></div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold d-flex justify-content-between">
+                                <span>Preferred Job Locations</span>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-geo-alt-fill me-1"></i>Target Cities</span>
+                            </label>
+                            <input type="text" name="preferred_cities" class="form-control" value="{{ profile.preferred_cities|join(', ') if profile.preferred_cities else 'Bengaluru, Hyderabad, Remote' }}" placeholder="e.g. Bengaluru, Hyderabad, Pune, Remote">
+                            <div class="form-text fs-8 text-muted">Comma-separated target cities where you want to work.</div>
                         </div>
-                    </div>
-                    <div>
-                        <div class="d-flex justify-content-between fs-9 mb-1">
-                            <span class="text-muted">Keywords</span>
-                            <strong class="text-dark">80%</strong>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Experience (Years)</label>
+                            <input type="number" step="0.5" name="experience_years" class="form-control" value="{{ profile.experience_years }}">
                         </div>
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-primary" style="width: 80%;"></div>
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-check pt-3">
+                                <input class="form-check-input" type="checkbox" name="open_to_relocation" id="relocCheck" {% if profile.open_to_relocation %}checked{% endif %}>
+                                <label class="form-check-label small fw-semibold" for="relocCheck">
+                                    <i class="bi bi-airplane-engines text-primary me-1"></i> Open to Relocation (Across India / Global)
+                                </label>
+                                <div class="form-text fs-8 text-muted">Never restricts job matches just because of present address.</div>
+                            </div>
                         </div>
-                    </div>
-                    <div>
-                        <div class="d-flex justify-content-between fs-9 mb-1">
-                            <span class="text-muted">Skills Match</span>
-                            <strong class="text-dark">85%</strong>
-                        </div>
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-primary" style="width: 85%;"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="d-flex justify-content-between fs-9 mb-1">
-                            <span class="text-muted">Content Quality</span>
-                            <strong class="text-dark">88%</strong>
-                        </div>
-                        <div class="progress" style="height: 6px;">
-                            <div class="progress-bar bg-primary" style="width: 88%;"></div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Executive Summary</label>
+                            <textarea name="summary" class="form-control" rows="3">{{ profile.summary }}</textarea>
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- 3.4 Target Job Match Card -->
-        <div class="col-lg-2 col-md-6">
-            <div class="card p-4 rounded-4 border shadow-sm bg-white h-100 text-center">
-                <label class="form-label fw-semibold text-dark fs-9 mb-1">Target Job Match</label>
-                <select class="form-select form-select-sm fs-9 mb-3">
-                    <option selected>Software Engineer</option>
-                    <option>Full Stack Developer</option>
-                    <option>Backend Developer</option>
-                </select>
-
-                <div class="position-relative d-inline-flex align-items-center justify-content-center mx-auto mb-2" style="width: 64px; height: 64px;">
-                    <svg viewBox="0 0 36 36" style="width: 64px; height: 64px; transform: rotate(-90deg);">
-                        <path stroke="#F1F5F9" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        <path stroke="#10B981" stroke-width="4" stroke-dasharray="92, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    </svg>
-                    <span class="position-absolute fs-8 fw-bold text-dark">92%</span>
-                </div>
-                <strong class="fs-9 text-success d-block mb-1">Strong Match</strong>
-                <small class="text-muted fs-9 d-block">Your resume matches well with Software Engineer roles.</small>
-            </div>
-        </div>
-    </div>
-
-    <!-- 4. Bottom Row Cards (Image 5: Extracted Info + Skills Bar Chart + Top Suggestions) -->
-    <div class="row g-4 mb-4">
-        <!-- 4.1 Extracted Information Card -->
-        <div class="col-lg-4">
-            <div class="card p-4 rounded-4 border shadow-sm bg-white h-100">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="fw-bold text-dark mb-0 fs-8">Extracted Information</h6>
-                    <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-9 text-decoration-none"><i class="bi bi-pencil me-1"></i>Edit</a>
-                </div>
-
-                <div class="d-flex flex-column gap-2.5 fs-8">
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-person text-primary"></i>
-                        <span class="text-muted" style="min-width: 90px;">Name:</span>
-                        <strong class="text-dark">{{ candidate_name }}</strong>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-envelope text-primary"></i>
-                        <span class="text-muted" style="min-width: 90px;">Email:</span>
-                        <span class="text-dark">{{ current_user.email }}</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-telephone text-primary"></i>
-                        <span class="text-muted" style="min-width: 90px;">Phone:</span>
-                        <span class="text-dark">{{ profile.phone or '+91 98765 43210' }}</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-geo-alt text-primary"></i>
-                        <span class="text-muted" style="min-width: 90px;">Location:</span>
-                        <span class="text-dark">{{ profile.location or 'Bengaluru, India' }}</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-briefcase text-primary"></i>
-                        <span class="text-muted" style="min-width: 90px;">Experience:</span>
-                        <span class="text-dark">{{ profile.experience_years or '3+' }} years</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-mortarboard text-primary"></i>
-                        <span class="text-muted" style="min-width: 90px;">Education:</span>
-                        <span class="text-dark">B.Tech in Computer Science</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <i class="bi bi-person-badge text-primary"></i>
-                        <span class="text-muted" style="min-width: 90px;">Current Role:</span>
-                        <span class="text-dark">{{ profile.headline or 'Software Engineer' }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 4.2 Key Skills Found & Skill Match Analysis Bar Chart -->
-        <div class="col-lg-4">
-            <div class="card p-4 rounded-4 border shadow-sm bg-white h-100">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="fw-bold text-dark mb-0 fs-8">Key Skills Found</h6>
-                    <a href="{{ url_for('dashboard.settings') }}" class="text-primary fs-9 text-decoration-none">Edit Skills</a>
-                </div>
-
-                <!-- Skill Pills (Image 5) -->
-                <div class="d-flex flex-wrap gap-1 mb-3 fs-9">
-                    <span class="badge bg-primary-subtle text-primary border">Python</span>
-                    <span class="badge bg-primary-subtle text-primary border">JavaScript</span>
-                    <span class="badge bg-primary-subtle text-primary border">Flask</span>
-                    <span class="badge bg-light text-dark border">HTML</span>
-                    <span class="badge bg-light text-dark border">CSS</span>
-                    <span class="badge bg-light text-dark border">SQL</span>
-                    <span class="badge bg-light text-dark border">MySQL</span>
-                    <span class="badge bg-light text-dark border">React</span>
-                    <span class="badge bg-light text-dark border">Machine Learning</span>
-                    <span class="badge bg-light text-dark border">AWS</span>
-                    <span class="badge bg-light text-dark border">Docker</span>
-                    <span class="badge bg-light text-dark border">Git</span>
-                    <span class="badge bg-light text-dark border">Problem Solving</span>
-                    <span class="badge bg-light text-dark border">Team Collaboration</span>
-                </div>
-
-                <!-- Skill Match Analysis Comparison Bar Chart (Your Skills vs Industry Demand) -->
-                <div class="pt-2 border-top">
+                <!-- Skills Management -->
+                <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="fw-bold text-dark fs-9">Skill Match Analysis</span>
-                        <div class="d-flex gap-2 fs-9">
-                            <span class="d-flex align-items-center gap-1"><span class="rounded-circle" style="width: 8px; height: 8px; background: #2563EB;"></span> Your Skills</span>
-                            <span class="d-flex align-items-center gap-1"><span class="rounded-circle" style="width: 8px; height: 8px; background: #93C5FD;"></span> Industry Demand</span>
-                        </div>
+                        <h5 class="fw-bold mb-0"><i class="bi bi-cpu text-primary me-2"></i>Extracted Technical Skills</h5>
+                        <span class="badge bg-primary-subtle text-primary border">{{ profile.skills|length }} Skills Detected</span>
                     </div>
-
-                    <!-- CSS Bar Chart -->
-                    <div class="d-flex justify-content-between align-items-end h-100 pt-2" style="height: 110px;">
-                        <div class="text-center flex-grow-1">
-                            <div class="d-flex justify-content-center align-items-end gap-1" style="height: 80px;">
-                                <div class="bg-primary rounded-top" style="width: 12px; height: 90%;"></div>
-                                <div class="bg-primary-subtle rounded-top" style="width: 12px; height: 75%;"></div>
-                            </div>
-                            <small class="text-muted fs-9 d-block mt-1">Python</small>
-                        </div>
-                        <div class="text-center flex-grow-1">
-                            <div class="d-flex justify-content-center align-items-end gap-1" style="height: 80px;">
-                                <div class="bg-primary rounded-top" style="width: 12px; height: 70%;"></div>
-                                <div class="bg-primary-subtle rounded-top" style="width: 12px; height: 85%;"></div>
-                            </div>
-                            <small class="text-muted fs-9 d-block mt-1">JS</small>
-                        </div>
-                        <div class="text-center flex-grow-1">
-                            <div class="d-flex justify-content-center align-items-end gap-1" style="height: 80px;">
-                                <div class="bg-primary rounded-top" style="width: 12px; height: 60%;"></div>
-                                <div class="bg-primary-subtle rounded-top" style="width: 12px; height: 70%;"></div>
-                            </div>
-                            <small class="text-muted fs-9 d-block mt-1">SQL</small>
-                        </div>
-                        <div class="text-center flex-grow-1">
-                            <div class="d-flex justify-content-center align-items-end gap-1" style="height: 80px;">
-                                <div class="bg-primary rounded-top" style="width: 12px; height: 75%;"></div>
-                                <div class="bg-primary-subtle rounded-top" style="width: 12px; height: 80%;"></div>
-                            </div>
-                            <small class="text-muted fs-9 d-block mt-1">React</small>
-                        </div>
-                        <div class="text-center flex-grow-1">
-                            <div class="d-flex justify-content-center align-items-end gap-1" style="height: 80px;">
-                                <div class="bg-primary rounded-top" style="width: 12px; height: 50%;"></div>
-                                <div class="bg-primary-subtle rounded-top" style="width: 12px; height: 65%;"></div>
-                            </div>
-                            <small class="text-muted fs-9 d-block mt-1">AWS</small>
+                    <p class="text-muted small">Comma-separated list of recognized skills used for job matching:</p>
+                    <textarea name="skills" class="form-control font-monospace small" rows="3">{{ profile.skills|join(', ') }}</textarea>
+                    
+                    <div class="mt-3">
+                        <small class="text-muted d-block mb-1 fw-semibold">Recognized Skill Pills:</small>
+                        <div class="d-flex flex-wrap gap-1">
+                            {% for skill in profile.skills %}
+                                <span class="skill-pill matched"><i class="bi bi-check2"></i> {{ skill }}</span>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- 4.3 Top Improvement Suggestions Card (Image 5) -->
-        <div class="col-lg-4">
-            <div class="card p-4 rounded-4 border shadow-sm bg-white h-100">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="fw-bold text-dark mb-0 fs-8"><i class="bi bi-stars text-primary me-1"></i>Top Improvement Suggestions</h6>
-                </div>
-
-                <div class="d-flex flex-column gap-2">
-                    <div class="p-2.5 rounded-3 bg-light border d-flex justify-content-between align-items-center text-dark hover-card" style="cursor: pointer;">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-graph-up text-primary fs-5"></i>
-                            <div>
-                                <span class="fw-bold fs-8 d-block">Add Quantifiable Achievements</span>
-                                <small class="text-muted fs-9">Include metrics to showcase impact (e.g. "Improved performance by 40%").</small>
-                            </div>
-                        </div>
-                        <i class="bi bi-chevron-right text-muted fs-9"></i>
-                    </div>
-
-                    <div class="p-2.5 rounded-3 bg-light border d-flex justify-content-between align-items-center text-dark hover-card" style="cursor: pointer;">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-bullseye text-danger fs-5"></i>
-                            <div>
-                                <span class="fw-bold fs-8 d-block">Include Relevant Keywords</span>
-                                <small class="text-muted fs-9">Add more industry-relevant keywords for better ATS matching.</small>
-                            </div>
-                        </div>
-                        <i class="bi bi-chevron-right text-muted fs-9"></i>
-                    </div>
-
-                    <div class="p-2.5 rounded-3 bg-light border d-flex justify-content-between align-items-center text-dark hover-card" style="cursor: pointer;">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-folder-check text-warning fs-5"></i>
-                            <div>
-                                <span class="fw-bold fs-8 d-block">Highlight Key Projects</span>
-                                <small class="text-muted fs-9">Showcase tech stack architecture and production outcomes.</small>
-                            </div>
-                        </div>
-                        <i class="bi bi-chevron-right text-muted fs-9"></i>
-                    </div>
-
-                    <div class="p-2.5 rounded-3 bg-light border d-flex justify-content-between align-items-center text-dark hover-card" style="cursor: pointer;">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-file-earmark-text text-success fs-5"></i>
-                            <div>
-                                <span class="fw-bold fs-8 d-block">Improve Summary Section</span>
-                                <small class="text-muted fs-9">Write a strong professional summary tailored to your target role.</small>
-                            </div>
-                        </div>
-                        <i class="bi bi-chevron-right text-muted fs-9"></i>
-                    </div>
+                <div class="text-end">
+                    <button type="submit" class="btn btn-primary-custom px-4 py-2">
+                        <i class="bi bi-save me-1"></i> Save Changes & Recalculate Matches
+                    </button>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- 5. Bottom Action Buttons Bar (Matching Image 5) -->
-    <div class="card border-0 shadow-sm rounded-4 bg-white p-3">
-        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-            <a href="{{ url_for('resume.export_resume', resume_id=resume.id) if resume else '#' }}" class="btn btn-primary-custom fs-8 px-4 py-2">
-                <i class="bi bi-download me-1"></i> Download Improved Resume
-            </a>
-            <div class="d-flex flex-wrap gap-2">
-                <a href="{{ url_for('assistant.chat_view', initial_query='Improve my resume') }}" class="btn btn-outline-custom fs-8 px-3 py-2">
-                    <i class="bi bi-stars text-primary me-1"></i> Get AI Suggestions
-                </a>
-                <a href="{{ url_for('applications.list_applications') }}" class="btn btn-outline-custom fs-8 px-3 py-2">
-                    <i class="bi bi-envelope-paper text-info me-1"></i> Generate Cover Letter
-                </a>
-                <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-outline-custom fs-8 px-3 py-2">
-                    <i class="bi bi-grid text-secondary me-1"></i> Try Different Templates
-                </a>
+            <!-- Right Column: Extracted Projects & Experience & Education -->
+            <div class="col-lg-5">
+                <!-- Google XYZ Bullet Point Optimizer Studio -->
+                <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4 border-start border-4 border-info">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold mb-0 text-info"><i class="bi bi-magic me-1"></i>Google XYZ Bullet Optimizer</h6>
+                        <span class="badge bg-info-subtle text-info border border-info-subtle" style="font-size: 0.7rem;">Active Voice</span>
+                    </div>
+                    <p class="text-muted small mb-2">Transform weak resume bullets into <em>"Accomplished [X] measured by [Y], by doing [Z]"</em> with quantified metrics.</p>
+                    <div class="mb-2">
+                        <textarea id="raw-bullet-input" class="form-control form-control-sm mb-2" rows="2" placeholder="e.g. Worked on Python backend API and improved performance..."></textarea>
+                        <button type="button" class="btn btn-sm btn-info text-white w-100 fw-semibold" id="btn-optimize-bullet">
+                            <i class="bi bi-stars me-1"></i> Transform with XYZ Formula
+                        </button>
+                    </div>
+
+                    <!-- Optimized Results Box -->
+                    <div id="optimized-bullets-box" class="d-none mt-3 p-3 bg-light rounded border">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold text-success small"><i class="bi bi-check-circle me-1"></i>Optimized XYZ Variations:</span>
+                            <small class="text-muted" id="xyz-critique"></small>
+                        </div>
+                        <div id="xyz-variations-list" class="d-flex flex-column gap-2 mb-2"></div>
+                        <div class="border-top pt-2">
+                            <small class="fw-bold text-secondary d-block mb-1">Recommended Metrics to Quantify:</small>
+                            <ul class="small text-muted ps-3 mb-0" id="xyz-metrics-list"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Projects -->
+                <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-folder-check text-success me-2"></i>Extracted Projects</h5>
+                    {% set projects = resume.parsed_data.get('projects', []) %}
+                    {% if projects %}
+                        <div class="d-flex flex-column gap-3">
+                            {% for p in projects %}
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <h6 class="fw-bold mb-1 text-dark">{{ p.get('title', 'Project') }}</h6>
+                                    <p class="text-muted small mb-0">{{ p.get('description', '') }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted small mb-0">No distinct projects section detected in raw text.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Work Experience Roles -->
+                <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-briefcase text-warning me-2"></i>Work Experience</h5>
+                    {% set exp = resume.parsed_data.get('experience', []) %}
+                    {% if exp %}
+                        <div class="d-flex flex-column gap-3">
+                            {% for role in exp %}
+                                <div class="p-3 bg-light rounded-3 border">
+                                    <h6 class="fw-bold mb-1 text-dark">{{ role.get('title', 'Position') }}</h6>
+                                    <ul class="text-muted small mb-0 ps-3">
+                                        {% for detail in role.get('details', [])[:3] %}
+                                            <li>{{ detail }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted small mb-0">Estimated experience: <strong>{{ profile.experience_years }} years</strong>.</p>
+                    {% endif %}
+                </div>
+
+                <!-- Education -->
+                <div class="card p-4 custom-card border-0 bg-white shadow-sm">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-mortarboard text-secondary me-2"></i>Education</h5>
+                    {% set edu = resume.parsed_data.get('education', []) %}
+                    {% if edu %}
+                        {% for item in edu %}
+                            <div class="p-3 bg-light rounded-3 border mb-2">
+                                <h6 class="fw-bold mb-1 text-dark">{{ item.get('degree', 'Degree') }}</h6>
+                                <p class="text-muted small mb-0">{{ item.get('institution', 'University') }}</p>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted small mb-0">No specific degree keyword detected.</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
-    </div>
+    </form>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('btn-optimize-bullet').addEventListener('click', function() {
+    const raw = document.getElementById('raw-bullet-input').value.trim();
+    if (!raw) {
+        alert('Please enter a bullet point or project description first.');
+        return;
+    }
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Optimizing with XYZ Formula...';
+
+    fetch("{{ url_for('resume.optimize_bullet') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bullet: raw, target_role: "{{ profile.headline or 'Software Engineer' }}" })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars me-1"></i> Transform with XYZ Formula';
+        if (data.success && data.result) {
+            const res = data.result;
+            document.getElementById('xyz-critique').textContent = res.critique || 'Google XYZ Formula';
+            const varList = document.getElementById('xyz-variations-list');
+            varList.innerHTML = (res.optimized_bullets || []).map((b, i) => `
+                <div class="p-2 bg-white rounded border d-flex justify-content-between align-items-center gap-2">
+                    <span class="small text-dark fw-semibold">${b}</span>
+                    <button type="button" class="btn btn-sm btn-outline-primary copy-bullet-btn flex-shrink-0" data-text="${b.replace(/"/g, '&quot;')}">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            const metricsList = document.getElementById('xyz-metrics-list');
+            metricsList.innerHTML = (res.impact_metrics || []).map(m => `<li>${m}</li>`).join('');
+
+            document.getElementById('optimized-bullets-box').classList.remove('d-none');
+
+            document.querySelectorAll('.copy-bullet-btn').forEach(cBtn => {
+                cBtn.addEventListener('click', function() {
+                    const text = this.getAttribute('data-text');
+                    navigator.clipboard.writeText(text).then(() => {
+                        this.innerHTML = '<i class="bi bi-check2"></i>';
+                        this.classList.replace('btn-outline-primary', 'btn-success');
+                        setTimeout(() => {
+                            this.innerHTML = '<i class="bi bi-clipboard"></i>';
+                            this.classList.replace('btn-success', 'btn-outline-primary');
+                        }, 2000);
+                    });
+                });
+            });
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars me-1"></i> Transform with XYZ Formula';
+        alert('Optimization error: ' + err);
+    });
+});
+</script>
 {% endblock %}

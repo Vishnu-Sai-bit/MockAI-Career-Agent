@@ -135,10 +135,12 @@ def safe_apply_redirect(job_id):
 
     # Live re-verification (skipped in test mode)
     if not current_app.config.get("TESTING"):
-        verifier = JobVerifier(timeout=4)
+        verifier = JobVerifier(timeout=5)
         is_live, status_details = verifier.verify_job(job)
         if not is_live:
-            flash(f"Notice: The official source indicates this posting may have closed ({status_details}).", "warning")
+            job.status = "closed"
+            db.session.commit()
+            flash(f"Notice: The official source indicates this posting has closed ({status_details}).", "warning")
             return redirect(url_for("jobs.job_details", job_id=job.id))
 
     # Safe external redirect to verified source posting

@@ -1,13 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AI Job Agent — Verified Career & Job Assistant{% endblock %}</title>
-    <!-- Google Fonts: Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -24,282 +20,323 @@
     </script>
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-body-tertiary">
-    <!-- Offcanvas Navigation Sidebar (Matching Images 3, 4, 5) -->
-    <div class="offcanvas offcanvas-start border-end shadow-lg" tabindex="-1" id="appSidebar" aria-labelledby="appSidebarLabel" style="width: 280px; background-color: var(--color-card-bg, #FFFFFF) !important;">
-        <div class="offcanvas-header border-bottom pb-3">
+<body>
+    <!-- Offcanvas Navigation Sidebar -->
+    <div class="offcanvas offcanvas-start text-bg-dark border-end border-secondary shadow-lg" tabindex="-1" id="appSidebar" aria-labelledby="appSidebarLabel" style="width: 320px; background-color: #0b1120 !important;">
+        <div class="offcanvas-header border-bottom border-secondary pb-3">
             <div class="d-flex align-items-center gap-2">
-                <div class="brand-logo-icon shadow-xs" style="width: 36px; height: 36px; font-size: 1.1rem; background: #2563EB; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white;">
-                    <i class="bi bi-briefcase-fill"></i>
+                <div class="rounded-circle bg-info bg-opacity-25 p-2 text-info d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                    <i class="bi bi-cpu-fill fs-5"></i>
                 </div>
                 <div>
-                    <div class="d-flex align-items-center gap-1.5">
-                        <h6 class="offcanvas-title fw-bold text-dark mb-0" id="appSidebarLabel">AI Job Agent</h6>
-                        <span class="badge" style="background: rgba(37, 99, 235, 0.12); color: #2563EB; font-size: 0.65rem; padding: 0.15rem 0.45rem;">v1.0</span>
-                    </div>
-                    <small class="text-muted" style="font-size: 0.72rem;">Your AI Career Companion</small>
+                    <h6 class="offcanvas-title fw-bold text-white mb-0" id="appSidebarLabel">AI Job Agent</h6>
+                    <small class="text-secondary" style="font-size: 0.75rem;">Verified Platforms & Career AI</small>
                 </div>
             </div>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body d-flex flex-column p-3">
             {% if current_user.is_authenticated %}
-                <!-- Navigation Menu (Images 3, 4, 5 sidebar order) -->
-                <ul class="nav flex-column gap-1 mb-auto">
+                <!-- Candidate Quick Card -->
+                <div class="card border-0 mb-3" style="background-color: #162032;">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold" style="width: 36px; height: 36px;">
+                                {{ current_user.email[0].upper() }}
+                            </div>
+                            <div class="overflow-hidden">
+                                <div class="fw-semibold text-white text-truncate small">{{ current_user.candidate_profile.full_name or current_user.email.split('@')[0] }}</div>
+                                <div class="text-secondary text-truncate" style="font-size: 0.72rem;">{{ current_user.candidate_profile.headline or 'Data Science & AI Engineer' }}</div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 mt-2">
+                            <a href="{{ url_for('dashboard.sync_jobs') }}" class="btn btn-sm btn-outline-info flex-grow-1 py-1" style="font-size: 0.75rem;">
+                                <i class="bi bi-arrow-repeat me-1"></i> Sync Fresh Jobs
+                            </a>
+                            <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-sm btn-outline-secondary py-1" style="font-size: 0.75rem;" title="Upload Resume">
+                                <i class="bi bi-upload"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Navigation Section 1: Discovery -->
+                <div class="nav-section-title text-uppercase text-secondary fw-bold px-2 mb-1" style="font-size: 0.68rem; letter-spacing: 0.05rem;">
+                    Job Discovery
+                </div>
+                <ul class="nav flex-column mb-3">
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center py-2 px-3 rounded-3 {% if request.endpoint in ['dashboard.dashboard', 'dashboard.index'] %}bg-primary text-white fw-semibold shadow-xs{% else %}text-secondary hover-bg-light{% endif %}" href="{{ url_for('dashboard.dashboard') }}">
-                            <i class="bi bi-house-door-fill me-2.5 {% if request.endpoint in ['dashboard.dashboard', 'dashboard.index'] %}text-white{% else %}text-muted{% endif %}"></i>
-                            <span>Dashboard</span>
+                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2 rounded hover-bg-dark" href="{{ url_for('jobs.list_jobs') }}">
+                            <span><i class="bi bi-briefcase-fill text-info me-2"></i> Discover Jobs</span>
+                            <span class="badge bg-success text-white" style="font-size: 0.65rem;">Freshest</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center justify-content-between py-2 px-3 rounded-3 {% if request.endpoint == 'jobs.list_jobs' %}bg-primary text-white fw-semibold shadow-xs{% else %}text-secondary hover-bg-light{% endif %}" href="{{ url_for('jobs.list_jobs') }}">
-                            <div>
-                                <i class="bi bi-search me-2.5 {% if request.endpoint == 'jobs.list_jobs' %}text-white{% else %}text-muted{% endif %}"></i>
-                                <span>Find Jobs</span>
-                            </div>
+                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2 rounded hover-bg-dark" href="{{ url_for('jobs.saved_jobs') }}">
+                            <span><i class="bi bi-bookmark-fill text-warning me-2"></i> Saved Jobs</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center justify-content-between py-2 px-3 rounded-3 {% if request.endpoint == 'assistant.chat_view' %}bg-primary text-white fw-semibold shadow-xs{% else %}text-secondary hover-bg-light{% endif %}" href="{{ url_for('assistant.chat_view') }}">
-                            <div>
-                                <i class="bi bi-chat-dots-fill me-2.5 {% if request.endpoint == 'assistant.chat_view' %}text-white{% else %}text-muted{% endif %}"></i>
-                                <span>AI Assistant</span>
-                            </div>
+                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2 rounded hover-bg-dark" href="{{ url_for('alerts.alerts_home') }}">
+                            <span><i class="bi bi-bell-fill text-warning me-2"></i> Smart Job Alerts</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center justify-content-between py-2 px-3 rounded-3 {% if request.endpoint in ['resume.resume_analysis', 'resume.upload_resume', 'ats.ats_report'] %}bg-primary text-white fw-semibold shadow-xs{% else %}text-secondary hover-bg-light{% endif %}" href="{{ url_for('resume.resume_analysis') }}">
-                            <div>
-                                <i class="bi bi-file-earmark-person-fill me-2.5 {% if request.endpoint in ['resume.resume_analysis', 'resume.upload_resume'] %}text-white{% else %}text-muted{% endif %}"></i>
-                                <span>Resume</span>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center justify-content-between py-2 px-3 rounded-3 {% if request.endpoint == 'applications.list_applications' %}bg-primary text-white fw-semibold shadow-xs{% else %}text-secondary hover-bg-light{% endif %}" href="{{ url_for('applications.list_applications') }}">
-                            <div>
-                                <i class="bi bi-briefcase-fill me-2.5 {% if request.endpoint == 'applications.list_applications' %}text-white{% else %}text-muted{% endif %}"></i>
-                                <span>Applications</span>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center justify-content-between py-2 px-3 rounded-3 {% if request.endpoint in ['interview.interview_hub', 'interview.start_interview', 'interview.coding_challenge'] %}bg-primary text-white fw-semibold shadow-xs{% else %}text-secondary hover-bg-light{% endif %}" href="{{ url_for('interview.interview_hub') }}">
-                            <div>
-                                <i class="bi bi-mortarboard-fill me-2.5 {% if request.endpoint in ['interview.interview_hub', 'interview.start_interview'] %}text-white{% else %}text-muted{% endif %}"></i>
-                                <span>Interview Prep</span>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center justify-content-between py-2 px-3 rounded-3 {% if request.endpoint == 'salary.salary_home' %}bg-primary text-white fw-semibold shadow-xs{% else %}text-secondary hover-bg-light{% endif %}" href="{{ url_for('salary.salary_home') }}">
-                            <div>
-                                <i class="bi bi-graph-up-arrow me-2.5 {% if request.endpoint == 'salary.salary_home' %}text-white{% else %}text-muted{% endif %}"></i>
-                                <span>Career Insights</span>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center justify-content-between py-2 px-3 rounded-3 {% if request.endpoint == 'alerts.alerts_home' %}bg-primary text-white fw-semibold shadow-xs{% else %}text-secondary hover-bg-light{% endif %}" href="{{ url_for('alerts.alerts_home') }}">
-                            <div>
-                                <i class="bi bi-calendar-event me-2.5 {% if request.endpoint == 'alerts.alerts_home' %}text-white{% else %}text-muted{% endif %}"></i>
-                                <span>Calendar</span>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center justify-content-between py-2 px-3 rounded-3 text-secondary hover-bg-light" href="{{ url_for('alerts.alerts_home') }}">
-                            <div>
-                                <i class="bi bi-chat-left-text me-2.5 text-muted"></i>
-                                <span>Messages</span>
-                            </div>
-                            <span class="badge bg-danger rounded-circle" style="font-size: 0.65rem; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center;">3</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center justify-content-between py-2 px-3 rounded-3 {% if request.endpoint == 'jobs.saved_jobs' %}bg-primary text-white fw-semibold shadow-xs{% else %}text-secondary hover-bg-light{% endif %}" href="{{ url_for('jobs.saved_jobs') }}">
-                            <div>
-                                <i class="bi bi-bookmark-fill me-2.5 {% if request.endpoint == 'jobs.saved_jobs' %}text-white{% else %}text-muted{% endif %}"></i>
-                                <span>Saved Jobs</span>
-                            </div>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link d-flex align-items-center justify-content-between py-2 px-3 rounded-3 {% if request.endpoint == 'dashboard.settings' %}bg-primary text-white fw-semibold shadow-xs{% else %}text-secondary hover-bg-light{% endif %}" href="{{ url_for('dashboard.settings') }}">
-                            <div>
-                                <i class="bi bi-gear-fill me-2.5 {% if request.endpoint == 'dashboard.settings' %}text-white{% else %}text-muted{% endif %}"></i>
-                                <span>Settings</span>
-                            </div>
+                        <a class="nav-link text-light d-flex align-items-center justify-content-between py-2 px-2 rounded hover-bg-dark" href="{{ url_for('watchlist.view_watchlist') }}">
+                            <span><i class="bi bi-star-fill text-warning me-2"></i> Dream Companies</span>
+                            <span class="badge bg-warning text-dark" style="font-size: 0.65rem;">Watchlist</span>
                         </a>
                     </li>
                 </ul>
 
-                <!-- Bottom Upgrade to Pro Banner (Images 3, 4, 5) -->
-                <div class="card border-0 rounded-4 p-3 mt-3 text-center" style="background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(79, 70, 229, 0.08) 100%); border: 1px solid rgba(37, 99, 235, 0.2) !important;">
-                    <div class="mb-2">
-                        <i class="bi bi-award-fill text-warning fs-3"></i>
-                    </div>
-                    <h6 class="fw-bold text-dark mb-1 fs-8">Upgrade to Pro</h6>
-                    <p class="text-muted fs-9 mb-2">Get unlimited AI analysis, more job matches and advanced features.</p>
-                    <a href="{{ url_for('dashboard.settings') }}" class="btn btn-primary-custom btn-sm w-100 py-1.5 fs-8">Upgrade Now →</a>
+                <!-- Navigation Section 2: Applications & AI Tools -->
+                <div class="nav-section-title text-uppercase text-secondary fw-bold px-2 mb-1" style="font-size: 0.68rem; letter-spacing: 0.05rem;">
+                    Applications & AI Suite
                 </div>
+                <ul class="nav flex-column mb-3">
+                    <li class="nav-item">
+                        <a class="nav-link text-light py-2 px-2 rounded hover-bg-dark" href="{{ url_for('applications.list_applications') }}">
+                            <i class="bi bi-kanban-fill text-primary me-2"></i> Applications Kanban
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light py-2 px-2 rounded hover-bg-dark" href="{{ url_for('interview.interview_hub') }}">
+                            <i class="bi bi-mic-fill text-danger me-2"></i> AI Mock Interview (STAR)
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light py-2 px-2 rounded hover-bg-dark" href="{{ url_for('salary.salary_home') }}">
+                            <i class="bi bi-cash-stack text-success me-2"></i> Salary Intelligence & Counter
+                        </a>
+                    </li>
+                </ul>
 
-                <div class="pt-3 border-top mt-3 text-center">
-                    <a class="text-danger small text-decoration-none" href="{{ url_for('auth.logout') }}">
-                        <i class="bi bi-box-arrow-right me-1"></i> Sign Out
-                    </a>
+                <!-- Navigation Section 3: Resume & Analytics -->
+                <div class="nav-section-title text-uppercase text-secondary fw-bold px-2 mb-1" style="font-size: 0.68rem; letter-spacing: 0.05rem;">
+                    Resume & Analytics
                 </div>
+                <ul class="nav flex-column mb-3">
+                    <li class="nav-item">
+                        <a class="nav-link text-light py-2 px-2 rounded hover-bg-dark" href="{{ url_for('resume.resume_analysis') }}">
+                            <i class="bi bi-file-earmark-person-fill text-info me-2"></i> Resume Skills & Profile
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light py-2 px-2 rounded hover-bg-dark" href="{{ url_for('ats.ats_report') }}">
+                            <i class="bi bi-graph-up-arrow text-warning me-2"></i> ATS Match Breakdown
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-light py-2 px-2 rounded hover-bg-dark" href="{{ url_for('assistant.chat_view') }}">
+                            <i class="bi bi-chat-dots-fill text-info me-2"></i> 24/7 AI Career Coach
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Navigation Section 4: System -->
+                <div class="nav-section-title text-uppercase text-secondary fw-bold px-2 mb-1" style="font-size: 0.68rem; letter-spacing: 0.05rem;">
+                    Settings & System
+                </div>
+                <ul class="nav flex-column mb-auto">
+                    <li class="nav-item">
+                        <a class="nav-link text-light py-2 px-2 rounded hover-bg-dark" href="{{ url_for('dashboard.settings') }}">
+                            <i class="bi bi-sliders me-2 text-secondary"></i> Candidate Preferences
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger py-2 px-2 rounded hover-bg-dark" href="{{ url_for('auth.logout') }}">
+                            <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+                        </a>
+                    </li>
+                </ul>
             {% else %}
                 <div class="p-3 text-center my-auto">
-                    <p class="text-muted small mb-3">Sign in or register to unlock verified jobs, ATS matching, and AI career guidance.</p>
+                    <p class="text-secondary small mb-3">Sign in or register to unlock verified jobs, ATS matching formula, and full AI career tools.</p>
                     <a href="{{ url_for('auth.login') }}" class="btn btn-primary-custom w-100 mb-2">Sign In</a>
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-custom w-100">Get Started</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light w-100">Get Started</a>
                 </div>
             {% endif %}
+
+            <div class="border-top border-secondary pt-3 mt-3 text-center">
+                <span class="badge bg-dark border border-secondary text-secondary" style="font-size: 0.7rem;">
+                    14 Platforms Connected & Monitored
+                </span>
+            </div>
         </div>
     </div>
 
-    <!-- Main Top Navbar (Matching Images 3, 4, 5) -->
-    <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top py-2.5 shadow-xs">
+    <!-- Main Top Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom sticky-top">
         <div class="container-fluid px-lg-4">
-            <div class="d-flex align-items-center gap-2">
-                <button class="btn btn-light btn-sm d-flex align-items-center gap-1 border" type="button" data-bs-toggle="offcanvas" data-bs-target="#appSidebar" aria-controls="appSidebar" title="Toggle Navigation">
-                    <i class="bi bi-list fs-5 text-dark"></i>
+            <div class="d-flex align-items-center">
+                <button class="btn btn-outline-light btn-sm me-2 d-flex align-items-center gap-1 border-secondary" type="button" data-bs-toggle="offcanvas" data-bs-target="#appSidebar" aria-controls="appSidebar" title="Open Navigation Drawer">
+                    <i class="bi bi-layout-sidebar-inset fs-6 text-info"></i>
+                    <span class="d-none d-sm-inline fw-semibold small">Menu</span>
                 </button>
-                <a class="navbar-brand d-flex align-items-center gap-2 m-0" href="{{ url_for('dashboard.index') }}">
-                    <div class="brand-logo-icon shadow-xs" style="width: 34px; height: 34px; background: #2563EB; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white;">
-                        <i class="bi bi-briefcase-fill"></i>
-                    </div>
-                    <span class="fw-bold text-dark fs-6 tracking-tight">AI Job Agent</span>
-                    <span class="badge" style="background: rgba(37, 99, 235, 0.1); color: #2563EB; font-size: 0.65rem;">v1.0</span>
+                <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('dashboard.index') }}">
+                    <i class="bi bi-cpu-fill text-info fs-4"></i>
+                    <span>AI Job Agent</span>
+                    <span class="badge bg-secondary text-light fs-8 px-2 py-1 ms-1">Verified</span>
                 </a>
             </div>
-
-            {% if current_user.is_authenticated %}
-                <!-- Center Global Search Input with + Ask AI Button -->
-                <div class="d-none d-md-block flex-grow-1 mx-4" style="max-width: 480px;">
-                    <form action="{{ url_for('jobs.list_jobs') }}" method="GET" class="m-0">
-                        <div class="input-group input-group-sm rounded-pill overflow-hidden border bg-light">
-                            <span class="input-group-text bg-transparent border-0 text-muted ps-3"><i class="bi bi-search"></i></span>
-                            <input type="text" name="q" class="form-control bg-transparent border-0 fs-8" placeholder="Search jobs, companies, or ask AI anything...">
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Right Action Icons: Ask AI, Notifications, User Avatar (Images 3, 4, 5) -->
-                <div class="d-flex align-items-center gap-3 ms-auto">
-                    <a href="{{ url_for('assistant.chat_view') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3 fs-8 d-none d-sm-inline-flex align-items-center gap-1">
-                        <i class="bi bi-stars"></i> Ask AI
-                    </a>
-                    
-                    <a href="{{ url_for('alerts.alerts_home') }}" class="position-relative text-secondary p-1" title="Notifications">
-                        <i class="bi bi-bell fs-5"></i>
-                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-white rounded-circle"></span>
-                    </a>
-
-                    <!-- User Profile Dropdown: Vishnu Sai -->
-                    {% set user_full_name = current_user.candidate_profile.full_name or 'Vishnu Sai' %}
-                    <div class="dropdown">
-                        <button class="btn btn-light btn-sm d-flex align-items-center gap-2 border-0 bg-transparent p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <div class="rounded-circle text-white fw-bold d-flex align-items-center justify-content-center shadow-xs" style="width: 36px; height: 36px; background: linear-gradient(135deg, #2563EB, #4F46E5); font-size: 0.9rem;">
-                                {{ user_full_name[0]|upper }}
-                            </div>
-                            <div class="text-start d-none d-lg-block leading-tight">
-                                <span class="fw-bold text-dark fs-8 d-block">{{ user_full_name }}</span>
-                                <small class="text-muted fs-9">Software Engineer</small>
-                            </div>
-                            <i class="bi bi-chevron-down text-muted fs-9 d-none d-lg-inline"></i>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNavbar">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'dashboard.dashboard' %}active{% endif %}" href="{{ url_for('dashboard.dashboard') }}">
+                                <i class="bi bi-grid-1x2-fill me-1"></i> Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'jobs.list_jobs' %}active{% endif %}" href="{{ url_for('jobs.list_jobs') }}">
+                                <i class="bi bi-briefcase-fill me-1"></i> Discover Jobs
+                                <span class="badge bg-success-subtle text-success border border-success-subtle ms-1" style="font-size: 0.68rem;">Fresh</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.endpoint == 'applications.list_applications' %}active{% endif %}" href="{{ url_for('applications.list_applications') }}">
+                                <i class="bi bi-kanban-fill me-1"></i> Applications
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if 'ats' in request.endpoint %}active{% endif %}" href="{{ url_for('ats.ats_report') }}">
+                                <i class="bi bi-graph-up-arrow me-1"></i> ATS Report
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="aiToolsDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-stars text-warning me-1"></i> AI Tools
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark shadow border-secondary">
+                                <li><a class="dropdown-item py-2" href="{{ url_for('salary.salary_home') }}"><i class="bi bi-cash-stack text-success me-2"></i> Salary Intelligence</a></li>
+                                <li><a class="dropdown-item py-2" href="{{ url_for('alerts.alerts_home') }}"><i class="bi bi-bell text-warning me-2"></i> Smart Job Alerts</a></li>
+                                <li><a class="dropdown-item py-2" href="{{ url_for('interview.interview_hub') }}"><i class="bi bi-mic text-danger me-2"></i> AI Mock Interview</a></li>
+                                <li><a class="dropdown-item py-2" href="{{ url_for('resume.resume_analysis') }}"><i class="bi bi-file-earmark-person text-info me-2"></i> Resume Analysis</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-info fw-semibold {% if request.endpoint == 'assistant.chat_view' %}active{% endif %}" href="{{ url_for('assistant.chat_view') }}">
+                                <i class="bi bi-chat-dots-fill me-1"></i> AI Assistant
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('jobs.list_jobs') }}">
+                                <i class="bi bi-search me-1"></i> Browse Real Jobs
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-lg-center gap-2">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="btn btn-sm btn-outline-info d-flex align-items-center gap-1" href="{{ url_for('dashboard.sync_jobs') }}" title="Fetch freshest jobs from 14 platforms">
+                                <i class="bi bi-arrow-repeat"></i> <span class="d-none d-xl-inline">Sync</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('jobs.saved_jobs') }}" title="Saved Jobs">
+                                <i class="bi bi-bookmark-fill text-warning"></i> Saved
+                            </a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle fs-5"></i>
+                                <span>{{ current_user.email.split('@')[0] }}</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end shadow">
+                                <li><a class="dropdown-item" href="{{ url_for('dashboard.settings') }}"><i class="bi bi-gear me-2"></i> Settings & Preferences</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('resume.upload_resume') }}"><i class="bi bi-upload me-2"></i> Upload New Resume</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i> Sign Out</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">Sign In</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="btn btn-primary-custom" href="{{ url_for('auth.register') }}">Get Started</a>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item ms-lg-1">
+                        <button class="btn btn-sm btn-outline-secondary border-secondary d-flex align-items-center px-2 py-1" id="theme-toggle" title="Toggle Dark/Light Mode">
+                            <i class="bi bi-moon-stars text-warning" id="theme-icon"></i>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 fs-8 mt-2">
-                            <li class="px-3 py-2 border-bottom">
-                                <span class="fw-bold text-dark d-block">{{ user_full_name }}</span>
-                                <small class="text-muted">{{ current_user.email }}</small>
-                            </li>
-                            <li><a class="dropdown-menu-item dropdown-item py-2" href="{{ url_for('dashboard.dashboard') }}"><i class="bi bi-house-door me-2"></i> Dashboard</a></li>
-                            <li><a class="dropdown-menu-item dropdown-item py-2" href="{{ url_for('resume.resume_analysis') }}"><i class="bi bi-file-earmark-person me-2"></i> Resume Analysis</a></li>
-                            <li><a class="dropdown-menu-item dropdown-item py-2" href="{{ url_for('dashboard.settings') }}"><i class="bi bi-sliders me-2"></i> Preferences & Settings</a></li>
-                            <li><hr class="dropdown-divider my-1"></li>
-                            <li><a class="dropdown-menu-item dropdown-item py-2 text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i> Sign Out</a></li>
-                        </ul>
-                    </div>
-                </div>
-            {% else %}
-                <div class="d-flex align-items-center gap-2 ms-auto">
-                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-custom btn-sm px-3">Sign In</a>
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary-custom btn-sm px-3">Get Started</a>
-                </div>
-            {% endif %}
+                    </li>
+                </ul>
+            </div>
         </div>
     </nav>
 
-    <!-- Main Dynamic Content Container -->
-    <main class="flex-grow-1">
-        <!-- Flash Alert Messages -->
-        <div class="container-fluid px-lg-4 mt-3">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ 'danger' if category in ['error', 'danger'] else category }} alert-dismissible fade show rounded-3 shadow-xs fs-8 mb-3" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
-        </div>
+    <!-- Flash Messages -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
 
+    <!-- Main Content -->
+    <main class="flex-grow-1">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer class="py-4 mt-5 bg-white border-top">
+    <footer class="py-4 mt-5">
         <div class="container text-center">
             <div class="row align-items-center gy-3">
                 <div class="col-md-6 text-md-start">
-                    <p class="mb-0 small text-dark"><strong>AI Job Agent v1.0</strong> — Verified Career & Job Search Companion.</p>
-                    <small class="text-muted">Real employer applications verified across Workday, Greenhouse, Lever, and official portals.</small>
+                    <p class="mb-0 small text-light"><strong>AI Job Agent</strong> — Real Source Grounding & ATS Career Intelligence.</p>
+                    <small class="text-secondary">Official Apply links are strictly preserved to genuine employer career portals.</small>
                 </div>
                 <div class="col-md-6 text-md-end">
-                    <span class="badge bg-light border text-secondary me-1">Google</span>
-                    <span class="badge bg-light border text-secondary me-1">Microsoft</span>
-                    <span class="badge bg-light border text-secondary me-1">Amazon</span>
-                    <span class="badge bg-light border text-secondary me-1">NVIDIA</span>
-                    <span class="badge bg-light border text-secondary me-1">TATA</span>
-                    <span class="badge bg-light border text-secondary">Infosys</span>
+                    <span class="badge bg-dark border border-secondary text-secondary me-1">Greenhouse</span>
+                    <span class="badge bg-dark border border-secondary text-secondary me-1">Lever</span>
+                    <span class="badge bg-dark border border-secondary text-secondary me-1">Ashby</span>
+                    <span class="badge bg-dark border border-secondary text-secondary me-1">Workday</span>
+                    <span class="badge bg-dark border border-secondary text-secondary me-1">Remotive</span>
+                    <span class="badge bg-dark border border-secondary text-secondary">Arbeitnow</span>
                 </div>
             </div>
         </div>
     </footer>
 
-    <!-- Mobile Bottom Navigation Bar (Matching Mobile View in Infographic) -->
-    {% if current_user.is_authenticated %}
-    <nav class="mobile-bottom-nav bg-white border-top shadow-sm">
-        <a href="{{ url_for('dashboard.dashboard') }}" class="mobile-nav-link {% if request.endpoint == 'dashboard.dashboard' %}active text-primary{% endif %}">
-            <i class="bi bi-house-door-fill"></i>
-            <span>Home</span>
-        </a>
-        <a href="{{ url_for('jobs.list_jobs') }}" class="mobile-nav-link {% if request.endpoint == 'jobs.list_jobs' %}active text-primary{% endif %}">
-            <i class="bi bi-briefcase-fill"></i>
-            <span>Jobs</span>
-        </a>
-        <a href="{{ url_for('assistant.chat_view') }}" class="mobile-nav-link {% if request.endpoint == 'assistant.chat_view' %}active text-primary{% endif %}">
-            <i class="bi bi-chat-dots-fill"></i>
-            <span>AI Chat</span>
-        </a>
-        <a href="{{ url_for('applications.list_applications') }}" class="mobile-nav-link {% if request.endpoint == 'applications.list_applications' %}active text-primary{% endif %}">
-            <i class="bi bi-kanban-fill"></i>
-            <span>Applications</span>
-        </a>
-        <a href="{{ url_for('dashboard.settings') }}" class="mobile-nav-link {% if request.endpoint == 'dashboard.settings' %}active text-primary{% endif %}">
-            <i class="bi bi-person-circle"></i>
-            <span>Profile</span>
-        </a>
-    </nav>
-    {% endif %}
-
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    (function() {
+        const themeBtn = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        function updateThemeIcon(t) {
+            if (!themeIcon) return;
+            if (t === 'dark') {
+                themeIcon.className = 'bi bi-sun-fill text-warning';
+            } else {
+                themeIcon.className = 'bi bi-moon-stars text-warning';
+            }
+        }
+        updateThemeIcon(document.documentElement.getAttribute('data-bs-theme'));
+        if (themeBtn) {
+            themeBtn.addEventListener('click', function() {
+                const current = document.documentElement.getAttribute('data-bs-theme') || 'light';
+                const next = current === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-bs-theme', next);
+                localStorage.setItem('app-theme', next);
+                updateThemeIcon(next);
+            });
+        }
+    })();
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

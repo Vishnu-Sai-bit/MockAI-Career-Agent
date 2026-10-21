@@ -24,11 +24,11 @@
             <!-- Overall Compatibility Score -->
             <div class="col-lg-4">
                 <div class="card p-4 custom-card border-0 bg-white shadow-sm text-center h-100">
-                    <h6 class="fw-bold text-secondary mb-3">Job Compatibility Score</h6>
+                    <h6 class="fw-bold text-muted mb-3">Job Compatibility Score</h6>
                     <div class="score-circle mx-auto mb-3" style="--percent: {{ match.match_score|round(0)|int }};">
                         <div class="score-circle-inner">
-                            <span class="display-6 fw-bold text-white">{{ match.match_score|round(0)|int }}</span>
-                            <small class="text-secondary">/ 100</small>
+                            <span class="display-6 fw-bold">{{ match.match_score|round(0)|int }}</span>
+                            <small class="text-muted">/ 100</small>
                         </div>
                     </div>
                     <span class="badge {% if match.match_score >= 80 %}bg-success{% elif match.match_score >= 60 %}bg-warning text-dark{% else %}bg-secondary{% endif %} px-3 py-2 mb-3">
@@ -42,8 +42,8 @@
             <div class="col-lg-8">
                 <div class="card p-4 custom-card border-0 bg-white shadow-sm h-100">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold mb-0 text-white"><i class="bi bi-calculator text-primary me-2"></i>Formula Breakdown</h5>
-                        <code class="small text-secondary">M = 0.40S + 0.25E + 0.15K + 0.10P + 0.10Q</code>
+                        <h5 class="fw-bold mb-0"><i class="bi bi-calculator text-primary me-2"></i>Formula Breakdown</h5>
+                        <code class="small text-muted">M = 0.40S + 0.25E + 0.15K + 0.10P + 0.10Q</code>
                     </div>
                     {% set b = match.score_breakdown %}
                     <div class="d-flex flex-column gap-3">

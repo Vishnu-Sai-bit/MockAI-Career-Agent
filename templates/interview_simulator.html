@@ -1,718 +1,337 @@
 {% extends "base.html" %}
 
-{% block title %}Interview Preparation — AI Job Agent{% endblock %}
+{% block title %}AI Mock Interview for {{ job.title }} at {{ job.company }}{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-lg-4 py-4">
-    <!-- 1. Header Section -->
+<div class="container py-4">
+    <!-- Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-purple-subtle text-purple px-2.5 py-1 rounded-pill small fw-semibold" style="background: rgba(139, 92, 246, 0.12); color: #8B5CF6;">
-                    <i class="bi bi-mic-fill me-1"></i> AI Interview Studio
-                </span>
-                <span class="text-muted small">Tailored for active opportunities</span>
-            </div>
-            <h2 class="fw-bold text-dark mb-1 tracking-tight">Interview Preparation</h2>
-            <p class="text-muted small mb-0">Prepare for your interviews with role-specific AI mock simulations and instant feedback.</p>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small mb-1">
+                    <li class="breadcrumb-item"><a href="{{ url_for('jobs.job_details', job_id=job.id) }}">{{ job.title }}</a></li>
+                    <li class="breadcrumb-item active">AI Mock Interview</li>
+                </ol>
+            </nav>
+            <h3 class="fw-bold mb-0">🎙️ AI Mock Interview Simulator</h3>
+            <p class="text-muted small mb-0">Role-specific behavioral & technical questions tailored to <strong>{{ job.title }}</strong> at <strong>{{ job.company }}</strong>.</p>
         </div>
-
-        <!-- Role Selector Pill -->
-        <div class="d-flex align-items-center gap-2">
-            <div class="bg-white border rounded-pill px-3 py-1.5 shadow-xs d-flex align-items-center gap-2">
-                <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 28px; height: 28px;">
-                    <i class="bi bi-briefcase-fill fs-8"></i>
-                </div>
-                <div>
-                    <span class="fw-bold text-dark fs-8 d-block lh-1 text-truncate" style="max-width: 220px;">{{ job.title }}</span>
-                    <small class="text-muted fs-9">{{ job.company }} · {{ job.work_mode or 'Remote' }}</small>
-                </div>
-            </div>
-            <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-custom btn-sm">
-                <i class="bi bi-arrow-repeat me-1"></i> Change Role
-            </a>
-            <a href="{{ url_for('interview.coding_challenge', job_id=job.id) }}" class="btn btn-primary-custom btn-sm">
-                <i class="bi bi-code-square me-1"></i> Coding Challenge
-            </a>
+        <div>
+            <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="btn btn-outline-custom">Back to Job</a>
         </div>
     </div>
 
-    <!-- 2. AI Mock Interview Video Hero Card (Image 2) -->
-    <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-4" style="background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); color: #F8FAFC;">
-        <div class="p-3 p-lg-4 border-bottom border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
-            <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-danger px-2.5 py-1 rounded-pill d-flex align-items-center gap-1.5 small fw-semibold">
-                    <span class="spinner-grow spinner-grow-sm" style="width: 0.5rem; height: 0.5rem;"></span>
-                    LIVE AI MOCK INTERVIEW
-                </span>
-                <span class="text-white-50 fs-8 d-none d-md-inline">| Sarah (Senior Technical Recruiter)</span>
-            </div>
-            <div class="d-flex align-items-center gap-3">
-                <span class="badge bg-dark bg-opacity-75 border border-secondary border-opacity-50 text-white font-monospace px-3 py-1.5 fs-8" id="session-timer">
-                    <i class="bi bi-record-circle text-danger me-1"></i> 04:22
-                </span>
-                <span class="badge bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 px-2.5 py-1 rounded-pill fs-8">
-                    Question <span id="hero-q-num">1</span> of {{ questions|length }}
-                </span>
-            </div>
-        </div>
-
-        <div class="p-3 p-lg-5">
-            <div class="row g-4 align-items-center">
-                <!-- Main Interviewer Stream Simulation -->
-                <div class="col-lg-8">
-                    <div class="position-relative rounded-4 overflow-hidden bg-black shadow-inner" style="min-height: 340px; border: 1px solid rgba(255, 255, 255, 0.1);">
-                        <!-- AI Interviewer Visual Canvas -->
-                        <div class="d-flex flex-column justify-content-center align-items-center h-100 py-5 text-center px-4" style="background: radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, rgba(15, 23, 42, 0.8) 70%);">
-                            <div class="position-relative mb-3">
-                                <div class="avatar-xl rounded-circle shadow-lg d-flex align-items-center justify-content-center text-white fw-bold" style="width: 100px; height: 100px; background: linear-gradient(135deg, #6366F1, #8B5CF6); font-size: 2.2rem; border: 3px solid rgba(255, 255, 255, 0.2);">
-                                    AI
-                                </div>
-                                <span class="position-absolute bottom-0 end-0 p-2 bg-success border border-dark rounded-circle" title="AI Voice Ready"></span>
-                            </div>
-
-                            <h5 class="fw-bold text-white mb-1">AI Interviewer Persona: Sarah</h5>
-                            <p class="text-white-50 fs-8 mb-3">Lead Engineering Hiring Team · {{ job.company }}</p>
-
-                            <!-- Audio Waveform Animation -->
-                            <div class="d-flex align-items-center justify-content-center gap-1 mb-4" style="height: 24px;">
-                                <span class="waveform-bar"></span>
-                                <span class="waveform-bar active"></span>
-                                <span class="waveform-bar"></span>
-                                <span class="waveform-bar active"></span>
-                                <span class="waveform-bar"></span>
-                                <span class="waveform-bar active"></span>
-                                <span class="waveform-bar"></span>
-                            </div>
-
-                            <!-- Live Question Overlay Banner -->
-                            <div class="bg-dark bg-opacity-75 border border-secondary border-opacity-50 rounded-4 p-3 max-w-700 w-100 text-start">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span class="badge bg-primary-subtle text-primary fs-9" id="active-q-type-badge">{{ questions[0].type if questions else 'Technical' }}</span>
-                                    <button class="btn btn-sm btn-link text-info p-0 text-decoration-none fs-8" id="speak-q-btn">
-                                        <i class="bi bi-volume-up-fill me-1"></i> Replay Question
-                                    </button>
-                                </div>
-                                <h6 class="fw-semibold text-white mb-0" id="hero-active-question-text">
-                                    "{{ questions[0].question if questions else 'Can you walk me through your technical background and experience?' }}"
-                                </h6>
-                            </div>
-                        </div>
-
-                        <!-- Candidate Self-view inset window -->
-                        <div class="position-absolute bottom-0 end-0 m-3 p-1 rounded-3 bg-dark border border-secondary border-opacity-50 shadow d-none d-sm-block" style="width: 130px; height: 95px; background: #1E293B;">
-                            <div class="w-100 h-100 rounded-2 bg-secondary bg-opacity-25 d-flex flex-column align-items-center justify-content-center text-center">
-                                <i class="bi bi-person-video fs-4 text-white-50"></i>
-                                <span class="fs-9 text-white-50 mt-1">Camera: Ready</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Call Controls & Side Actions -->
-                <div class="col-lg-4">
-                    <div class="p-4 rounded-4 bg-dark bg-opacity-50 border border-secondary border-opacity-25 h-100 d-flex flex-column justify-content-between">
-                        <div>
-                            <h6 class="fw-bold text-white mb-2"><i class="bi bi-camera-video me-2 text-primary"></i>Session Controls</h6>
-                            <p class="text-white-50 fs-8 mb-4">You can speak aloud or type your answer using the STAR format. The AI tracks cadence, WPM, and clarity.</p>
-
-                            <!-- Audio / Mic Status -->
-                            <div class="p-3 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-25 mb-3">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span class="fs-8 text-white-50">Microphone</span>
-                                    <span class="badge bg-success-subtle text-success fs-9" id="mic-status-badge">Connected</span>
-                                </div>
-                                <div class="progress" style="height: 6px; background: rgba(255, 255, 255, 0.1);">
-                                    <div class="progress-bar bg-success" style="width: 65%;"></div>
-                                </div>
-                            </div>
-
-                            <div class="p-3 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-25 mb-4">
-                                <div class="d-flex justify-content-between align-items-center mb-1">
-                                    <span class="fs-8 text-white-50">Assessment Criteria</span>
-                                    <span class="badge bg-info-subtle text-info fs-9">STAR Model</span>
-                                </div>
-                                <small class="text-white-50 fs-9 d-block" id="active-criteria-text">
-                                    {{ questions[0].evaluation_criteria if questions else 'Assess technical depth, problem-solving, and communication clarity.' }}
-                                </small>
-                            </div>
-                        </div>
-
-                        <!-- Video Call Bottom Controls Bar -->
-                        <div>
-                            <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
-                                <button class="btn btn-outline-light rounded-circle p-2.5" id="hero-mic-toggle" title="Toggle Mic">
-                                    <i class="bi bi-mic-fill fs-5"></i>
-                                </button>
-                                <button class="btn btn-outline-light rounded-circle p-2.5" id="hero-cam-toggle" title="Toggle Video">
-                                    <i class="bi bi-camera-video-fill fs-5"></i>
-                                </button>
-                                <button class="btn btn-outline-secondary rounded-circle p-2.5" title="Settings">
-                                    <i class="bi bi-gear-fill fs-5"></i>
-                                </button>
-                                <button class="btn btn-danger rounded-circle p-2.5" title="End Session" onclick="alert('Interview session paused. Your scores are saved.')">
-                                    <i class="bi bi-telephone-x-fill fs-5"></i>
-                                </button>
-                            </div>
-                            <button class="btn btn-primary-custom w-100 py-2.5 fw-semibold shadow-sm" id="jump-to-answer-btn">
-                                Answer This Question <i class="bi bi-arrow-down-circle ms-1"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 3. Category Cards (4 across) (Image 2) -->
-    <div class="row g-3 mb-4">
-        <!-- 1. Technical Questions -->
-        <div class="col-6 col-lg-3">
-            <div class="card p-3.5 h-100 border-0 shadow-sm rounded-4 bg-white category-hover-card" style="transition: all 0.25s ease;">
-                <div class="avatar-md rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center mb-3" style="width: 46px; height: 46px; background: rgba(99, 102, 241, 0.12); color: #6366F1;">
-                    <i class="bi bi-code-slash fs-4"></i>
-                </div>
-                <h6 class="fw-bold text-dark mb-1">Technical Questions</h6>
-                <div class="badge bg-light text-secondary border fs-8 mb-2">200+ Questions</div>
-                <p class="text-muted fs-8 mb-3">Data Structures, Algorithms, System Design & Architecture.</p>
-                <a href="#topic-section" class="fw-semibold text-primary fs-8 text-decoration-none d-flex align-items-center gap-1 mt-auto">
-                    Start Practice <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-        <!-- 2. Behavioral Questions -->
-        <div class="col-6 col-lg-3">
-            <div class="card p-3.5 h-100 border-0 shadow-sm rounded-4 bg-white category-hover-card" style="transition: all 0.25s ease;">
-                <div class="avatar-md rounded-3 bg-purple-subtle text-purple d-flex align-items-center justify-content-center mb-3" style="width: 46px; height: 46px; background: rgba(139, 92, 246, 0.12); color: #8B5CF6;">
-                    <i class="bi bi-chat-heart-fill fs-4"></i>
-                </div>
-                <h6 class="fw-bold text-dark mb-1">Behavioral Questions</h6>
-                <div class="badge bg-light text-secondary border fs-8 mb-2">150+ Questions</div>
-                <p class="text-muted fs-8 mb-3">STAR Method, Conflict Resolution, Leadership & Teamwork.</p>
-                <a href="#topic-section" class="fw-semibold text-purple fs-8 text-decoration-none d-flex align-items-center gap-1 mt-auto" style="color: #8B5CF6;">
-                    Start Practice <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-        <!-- 3. System Design -->
-        <div class="col-6 col-lg-3">
-            <div class="card p-3.5 h-100 border-0 shadow-sm rounded-4 bg-white category-hover-card" style="transition: all 0.25s ease;">
-                <div class="avatar-md rounded-3 bg-amber-subtle text-amber d-flex align-items-center justify-content-center mb-3" style="width: 46px; height: 46px; background: rgba(245, 158, 11, 0.12); color: #F59E0B;">
-                    <i class="bi bi-diagram-3-fill fs-4"></i>
-                </div>
-                <h6 class="fw-bold text-dark mb-1">System Design</h6>
-                <div class="badge bg-light text-secondary border fs-8 mb-2">50+ Scenarios</div>
-                <p class="text-muted fs-8 mb-3">High Scale, Distributed Systems, Sharding & Microservices.</p>
-                <a href="#topic-section" class="fw-semibold text-amber fs-8 text-decoration-none d-flex align-items-center gap-1 mt-auto" style="color: #D97706;">
-                    Start Practice <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-
-        <!-- 4. Coding Exercises -->
-        <div class="col-6 col-lg-3">
-            <div class="card p-3.5 h-100 border-0 shadow-sm rounded-4 bg-white category-hover-card" style="transition: all 0.25s ease;">
-                <div class="avatar-md rounded-3 bg-success-subtle text-success d-flex align-items-center justify-content-center mb-3" style="width: 46px; height: 46px; background: rgba(16, 185, 129, 0.12); color: #10B981;">
-                    <i class="bi bi-laptop-fill fs-4"></i>
-                </div>
-                <h6 class="fw-bold text-dark mb-1">Coding Exercises</h6>
-                <div class="badge bg-light text-secondary border fs-8 mb-2">100+ Challenges</div>
-                <p class="text-muted fs-8 mb-3">Live Sandbox, Python, JavaScript, LeetCode style problems.</p>
-                <a href="{{ url_for('interview.coding_challenge', job_id=job.id) }}" class="fw-semibold text-success fs-8 text-decoration-none d-flex align-items-center gap-1 mt-auto">
-                    Open Sandbox <i class="bi bi-arrow-right"></i>
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <!-- 4. Practice by Topic & Question Bank (Image 3) -->
-    <div id="topic-section" class="card border-0 shadow-sm rounded-4 bg-white p-3 p-lg-4 mb-4">
-        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-            <div>
-                <h5 class="fw-bold text-dark mb-0">Practice by Topic</h5>
-                <small class="text-muted">Select a topic or choose from curated role-specific interview questions</small>
-            </div>
-            <div class="d-flex flex-wrap gap-1.5" id="topicFilterPills">
-                <button class="btn btn-sm btn-primary-custom rounded-pill px-3 fs-8 topic-pill active" data-topic="all">All Topics</button>
-                <button class="btn btn-sm btn-outline-custom rounded-pill px-3 fs-8 topic-pill" data-topic="technical">Technical</button>
-                <button class="btn btn-sm btn-outline-custom rounded-pill px-3 fs-8 topic-pill" data-topic="behavioral">Behavioral</button>
-                <button class="btn btn-sm btn-outline-custom rounded-pill px-3 fs-8 topic-pill" data-topic="system">System Design</button>
-                <button class="btn btn-sm btn-outline-custom rounded-pill px-3 fs-8 topic-pill" data-topic="python">Python</button>
-                <button class="btn btn-sm btn-outline-custom rounded-pill px-3 fs-8 topic-pill" data-topic="data">Data Structures</button>
-            </div>
-        </div>
-
-        <div class="row g-4">
-            <!-- Left: Question Bank & Answer Sandbox -->
-            <div class="col-lg-7">
-                <!-- Question Carousel / Selection List -->
-                <div class="d-flex flex-column gap-2 mb-4" id="practiceQuestionList">
+    <div class="row g-4">
+        <!-- Left: Question Carousel / Selector -->
+        <div class="col-lg-5">
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-3">
+                <h6 class="fw-bold text-dark mb-3"><i class="bi bi-list-check text-primary me-2"></i>Interview Questions ({{ questions|length }})</h6>
+                <div class="list-group list-group-flush" id="question-list">
                     {% for q in questions %}
-                        <div class="card p-3 border rounded-3 bg-light question-item-card {% if loop.first %}border-primary bg-white shadow-xs{% endif %}" data-q-id="{{ q.id }}" data-question="{{ q.question }}" data-type="{{ q.type }}" data-criteria="{{ q.evaluation_criteria }}" style="cursor: pointer;">
+                        <button type="button" class="list-group-item list-group-item-action p-3 rounded-3 mb-2 question-btn {% if loop.first %}active{% endif %}" data-q-id="{{ q.id }}" data-question="{{ q.question }}" data-type="{{ q.type }}" data-criteria="{{ q.evaluation_criteria }}">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <div class="d-flex align-items-center gap-1.5">
-                                    <span class="badge bg-primary-subtle text-primary fs-9">{{ q.type }}</span>
-                                    {% if loop.index == 1 %}
-                                        <span class="badge bg-success-subtle text-success fs-9">Easy</span>
-                                    {% elif loop.index == 2 %}
-                                        <span class="badge bg-warning-subtle text-warning-emphasis fs-9">Medium</span>
-                                    {% else %}
-                                        <span class="badge bg-danger-subtle text-danger fs-9">Hard</span>
-                                    {% endif %}
-                                </div>
-                                <small class="text-muted fs-8 fw-semibold">Q{{ loop.index }} of {{ questions|length }}</small>
+                                <span class="badge bg-secondary-subtle text-secondary small">{{ q.type }}</span>
+                                <small class="fw-bold">Q{{ loop.index }}</small>
                             </div>
-                            <div class="fw-semibold text-dark fs-8 mb-2">{{ q.question }}</div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted fs-9 text-truncate" style="max-width: 320px;">{{ q.evaluation_criteria }}</small>
-                                <button class="btn btn-sm btn-primary-custom py-0.5 px-2.5 fs-8 select-this-q-btn">Practice Now</button>
-                            </div>
-                        </div>
+                            <div class="fw-semibold small text-truncate-2">{{ q.question }}</div>
+                        </button>
                     {% endfor %}
                 </div>
+            </div>
 
-                <!-- Answer Input & STAR Evaluator Sandbox -->
-                <div class="card p-4 border rounded-4 bg-white shadow-xs" id="answer-sandbox">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <span class="badge bg-primary-subtle text-primary" id="active-q-type">{{ questions[0].type if questions else 'Technical' }}</span>
-                        <span class="small text-muted" id="active-q-num">Question 1 of {{ questions|length }}</span>
+            <!-- STAR Guide Card -->
+            <div class="card p-3 custom-card border-0 bg-white shadow-sm">
+                <h6 class="fw-bold text-success mb-2"><i class="bi bi-lightbulb-fill text-warning me-1"></i>STAR Formulation Guide</h6>
+                <ul class="list-unstyled small text-muted mb-0">
+                    <li class="mb-1"><strong>S - Situation:</strong> Set context, team stakes, and problem.</li>
+                    <li class="mb-1"><strong>T - Task:</strong> State what you were tasked to accomplish.</li>
+                    <li class="mb-1"><strong>A - Action:</strong> Focus on your specific technical execution.</li>
+                    <li><strong>R - Result:</strong> Conclude with measurable impact & numbers.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Right: Interactive Answer & Live STAR Evaluator -->
+        <div class="col-lg-7">
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <span class="badge bg-primary-subtle text-primary" id="active-q-type">{{ questions[0].type }}</span>
+                    <span class="small text-muted" id="active-q-num">Question 1 of {{ questions|length }}</span>
+                </div>
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <h5 class="fw-bold text-dark mb-0 flex-grow-1" id="active-q-text">{{ questions[0].question }}</h5>
+                    <button class="btn btn-sm btn-outline-info d-flex align-items-center gap-1 flex-shrink-0" id="speak-q-btn" title="Listen to Question (AI Voice)">
+                        <i class="bi bi-volume-up-fill"></i> <span>Listen</span>
+                    </button>
+                </div>
+                <p class="small text-muted mb-3" id="active-q-criteria"><i class="bi bi-info-circle me-1"></i>{{ questions[0].evaluation_criteria }}</p>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label small fw-semibold mb-0">Your Answer (Type or speak using the STAR method):</label>
+                        <span id="speech-indicator" class="badge bg-danger-subtle text-danger border border-danger-subtle d-none">
+                            <span class="spinner-grow spinner-grow-sm me-1" style="width: 0.6rem; height: 0.6rem;"></span> Recording Audio...
+                        </span>
                     </div>
+                    <textarea id="user-answer-box" class="form-control" rows="6" placeholder="During my time at... our team encountered... I took ownership by... and the final outcome was..."></textarea>
+                </div>
 
-                    <h5 class="fw-bold text-dark mb-1" id="active-q-text">{{ questions[0].question if questions else 'Tell me about yourself' }}</h5>
-                    <p class="small text-muted mb-3" id="active-q-criteria"><i class="bi bi-info-circle me-1"></i>{{ questions[0].evaluation_criteria if questions else '' }}</p>
-
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-1">
-                            <label class="form-label small fw-semibold mb-0">Your Answer (STAR Method: Situation, Task, Action, Result):</label>
-                            <span id="speech-indicator" class="badge bg-danger-subtle text-danger border border-danger-subtle d-none">
-                                <span class="spinner-grow spinner-grow-sm me-1" style="width: 0.5rem; height: 0.5rem;"></span> Recording Microphone...
-                            </span>
-                        </div>
-                        <textarea id="user-answer-box" class="form-control fs-8" rows="6" placeholder="During my time at... our team encountered... I took ownership by... and the final outcome was..."></textarea>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center">
-                        <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1.5" id="mic-btn">
-                            <i class="bi bi-mic-fill"></i> <span id="mic-btn-text">Voice Input</span>
-                        </button>
-                        <button class="btn btn-primary-custom px-4" id="submit-answer-btn">
-                            <i class="bi bi-stars me-1"></i> Evaluate with STAR AI
-                        </button>
-                    </div>
-
-                    <!-- Evaluation Result Panel -->
-                    <div id="eval-result-card" class="mt-4 pt-3 border-top d-none">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-speedometer2 text-primary me-2"></i>AI Evaluation Score</h6>
-                            <span class="fs-4 fw-bold text-success" id="eval-score">--/100</span>
-                        </div>
-
-                        <!-- Speech Cadence Box -->
-                        <div id="speech-analytics-box" class="card border-0 bg-light p-3 mb-3 rounded-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="fw-bold small mb-0"><i class="bi bi-soundwave text-info me-1"></i>Delivery & Cadence</h6>
-                                <span class="badge bg-info-subtle text-info fw-semibold" id="delivery-score-badge">Score: 82/100</span>
-                            </div>
-                            <div class="row g-2 text-center fs-8">
-                                <div class="col-4">
-                                    <div class="bg-white p-2 rounded border">
-                                        <span class="text-secondary d-block fs-9">Speaking Pace</span>
-                                        <strong id="speech-wpm">135 WPM</strong>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="bg-white p-2 rounded border">
-                                        <span class="text-secondary d-block fs-9">Filler Words</span>
-                                        <strong id="speech-fillers-count">0 Detected</strong>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="bg-white p-2 rounded border">
-                                        <span class="text-secondary d-block fs-9">Tone Quality</span>
-                                        <strong class="text-primary" id="speech-pace-tip">Confident</strong>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- STAR Breakdown Grid -->
-                        <div class="row g-2 mb-3 text-center fs-8">
-                            <div class="col-3">
-                                <div class="p-2 border rounded bg-light">
-                                    <small class="text-muted d-block">Situation</small>
-                                    <strong id="eval-s-score">--</strong>
-                                </div>
-                            </div>
-                            <div class="col-3">
-                                <div class="p-2 border rounded bg-light">
-                                    <small class="text-muted d-block">Task</small>
-                                    <strong id="eval-t-score">--</strong>
-                                </div>
-                            </div>
-                            <div class="col-3">
-                                <div class="p-2 border rounded bg-light">
-                                    <small class="text-muted d-block">Action</small>
-                                    <strong id="eval-a-score">--</strong>
-                                </div>
-                            </div>
-                            <div class="col-3">
-                                <div class="p-2 border rounded bg-light">
-                                    <small class="text-muted d-block">Result</small>
-                                    <strong id="eval-r-score">--</strong>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Feedback and Exemplar -->
-                        <div class="p-3 rounded-3 bg-light border mb-2">
-                            <h6 class="fw-bold small text-dark mb-1"><i class="bi bi-chat-left-quote text-primary me-1"></i>AI Coach Feedback</h6>
-                            <p class="small text-muted mb-0" id="eval-feedback">--</p>
-                        </div>
-                    </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <button class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1" id="mic-btn">
+                        <i class="bi bi-mic-fill"></i> <span id="mic-btn-text">Voice Input</span>
+                    </button>
+                    <button class="btn btn-primary-custom" id="submit-answer-btn">
+                        <i class="bi bi-stars me-1"></i> Evaluate with STAR AI
+                    </button>
                 </div>
             </div>
 
-            <!-- Right: Performance Gauge & Recent Sessions (Image 3) -->
-            <div class="col-lg-5">
-                <!-- 1. Your Performance Card -->
-                <div class="card p-4 border rounded-4 bg-white shadow-xs mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="fw-bold text-dark mb-0">Your Performance</h6>
-                        <span class="badge bg-success-subtle text-success fs-9 fw-semibold">Ready for Screen</span>
-                    </div>
+            <!-- Dynamic Evaluation Result Card -->
+            <div id="eval-result-card" class="card p-4 custom-card border-0 bg-white shadow-sm d-none">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold text-dark mb-0"><i class="bi bi-speedometer2 text-primary me-2"></i>STAR Evaluation Result</h5>
+                    <span class="fs-4 fw-bold text-success" id="eval-score">--/100</span>
+                </div>
 
-                    <!-- 78% Donut Progress Circle -->
-                    <div class="d-flex align-items-center gap-3 mb-4">
-                        <div class="position-relative d-flex align-items-center justify-content-center" style="width: 100px; height: 100px;">
-                            <svg viewBox="0 0 36 36" style="width: 100px; height: 100px; transform: rotate(-90deg);">
-                                <path stroke="#F1F5F9" stroke-width="3.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path stroke="url(#scoreGrad)" stroke-width="3.5" stroke-dasharray="78, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <defs>
-                                    <linearGradient id="scoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stop-color="#6366F1" />
-                                        <stop offset="100%" stop-color="#8B5CF6" />
-                                    </linearGradient>
-                                </defs>
-                            </svg>
-                            <div class="position-absolute text-center">
-                                <span class="fs-4 fw-bold text-dark d-block lh-1">78%</span>
-                                <small class="text-muted fs-9">Overall</small>
-                            </div>
-                        </div>
-                        <div>
-                            <h6 class="fw-bold text-dark mb-1">Strong Match Readiness</h6>
-                            <p class="text-muted fs-8 mb-0">You scored higher than 84% of candidates practicing for this role.</p>
-                        </div>
+                <!-- Speech Delivery Analytics Banner -->
+                <div id="speech-analytics-box" class="card border-0 bg-light p-3 mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold small mb-0"><i class="bi bi-soundwave text-info me-1"></i>Spoken Delivery & Cadence Analytics</h6>
+                        <span class="badge bg-info-subtle text-info fw-semibold" id="delivery-score-badge">Score: --</span>
                     </div>
-
-                    <!-- Breakdown Progress Bars -->
-                    <div class="d-flex flex-column gap-2.5 mb-3">
-                        <div>
-                            <div class="d-flex justify-content-between fs-8 mb-1">
-                                <span class="text-muted">Technical Knowledge</span>
-                                <span class="fw-bold text-dark">85%</span>
-                            </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-primary" style="width: 85%;"></div>
+                    <div class="row g-2 text-center small">
+                        <div class="col-4">
+                            <div class="bg-white p-2 rounded border">
+                                <span class="text-secondary d-block" style="font-size: 0.72rem;">Speaking Pace</span>
+                                <strong id="speech-wpm">-- WPM</strong>
+                                <small class="d-block text-muted" id="speech-pace-rating" style="font-size: 0.68rem;">--</small>
                             </div>
                         </div>
-                        <div>
-                            <div class="d-flex justify-content-between fs-8 mb-1">
-                                <span class="text-muted">Behavioral & STAR</span>
-                                <span class="fw-bold text-dark">72%</span>
-                            </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-purple" style="width: 72%; background-color: #8B5CF6;"></div>
+                        <div class="col-4">
+                            <div class="bg-white p-2 rounded border">
+                                <span class="text-secondary d-block" style="font-size: 0.72rem;">Filler Words</span>
+                                <strong id="speech-fillers-count">0 Detected</strong>
+                                <small class="d-block text-muted" id="speech-filler-ratio" style="font-size: 0.68rem;">0% of speech</small>
                             </div>
                         </div>
-                        <div>
-                            <div class="d-flex justify-content-between fs-8 mb-1">
-                                <span class="text-muted">Communication Clarity</span>
-                                <span class="fw-bold text-dark">80%</span>
-                            </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-success" style="width: 80%;"></div>
+                        <div class="col-4">
+                            <div class="bg-white p-2 rounded border">
+                                <span class="text-secondary d-block" style="font-size: 0.72rem;">Delivery Tip</span>
+                                <span class="d-block text-truncate small fw-semibold text-primary" id="speech-pace-tip" title="Delivery Tip">Steady pacing</span>
                             </div>
                         </div>
-                        <div>
-                            <div class="d-flex justify-content-between fs-8 mb-1">
-                                <span class="text-muted">Problem Solving</span>
-                                <span class="fw-bold text-dark">75%</span>
-                            </div>
-                            <div class="progress" style="height: 6px;">
-                                <div class="progress-bar bg-amber" style="width: 75%; background-color: #F59E0B;"></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- AI Tip Box -->
-                    <div class="p-3 rounded-3 bg-purple-subtle border fs-8 text-dark" style="background: rgba(139, 92, 246, 0.08); border-color: rgba(139, 92, 246, 0.2) !important;">
-                        <i class="bi bi-lightbulb-fill text-purple me-1" style="color: #8B5CF6;"></i>
-                        <strong>AI Coach Tip:</strong> Mention measurable business outcomes in the Result phase (e.g. reduced latency by 35% or handled 10k RPS).
                     </div>
                 </div>
 
-                <!-- 2. Recent Practice Sessions -->
-                <div class="card p-4 border rounded-4 bg-white shadow-xs">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="fw-bold text-dark mb-0">Recent Practice Sessions</h6>
-                        <span class="text-muted fs-8">Last 7 days</span>
-                    </div>
-
-                    <div class="d-flex flex-column gap-2.5 mb-3">
-                        <div class="p-2.5 rounded-3 border bg-light d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="fw-bold text-dark fs-8 d-block">Full Stack Mock Interview</span>
-                                <small class="text-muted fs-9">Yesterday · 5 questions answered</small>
-                            </div>
-                            <span class="badge bg-success-subtle text-success fs-8">84 / 100</span>
-                        </div>
-
-                        <div class="p-2.5 rounded-3 border bg-light d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="fw-bold text-dark fs-8 d-block">System Design (Cache Tier)</span>
-                                <small class="text-muted fs-9">3 days ago · 3 questions answered</small>
-                            </div>
-                            <span class="badge bg-primary-subtle text-primary fs-8">76 / 100</span>
-                        </div>
-
-                        <div class="p-2.5 rounded-3 border bg-light d-flex justify-content-between align-items-center">
-                            <div>
-                                <span class="fw-bold text-dark fs-8 d-block">STAR Behavioral Round</span>
-                                <small class="text-muted fs-9">5 days ago · 4 questions answered</small>
-                            </div>
-                            <span class="badge bg-purple-subtle text-purple fs-8" style="background: rgba(139, 92, 246, 0.12); color: #8B5CF6;">88 / 100</span>
+                <div class="row g-2 mb-3 text-center">
+                    <div class="col-3">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted d-block">Situation</small>
+                            <strong id="eval-s-score">--</strong>
                         </div>
                     </div>
+                    <div class="col-3">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted d-block">Task</small>
+                            <strong id="eval-t-score">--</strong>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted d-block">Action</small>
+                            <strong id="eval-a-score">--</strong>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="p-2 border rounded bg-light">
+                            <small class="text-muted d-block">Result</small>
+                            <strong id="eval-r-score">--</strong>
+                        </div>
+                    </div>
+                </div>
 
-                    <button class="btn btn-sm btn-outline-custom w-100 fs-8" onclick="alert('Viewing historical session reports...')">
-                        View All Past Sessions →
-                    </button>
+                <div class="mb-3">
+                    <h6 class="fw-bold text-success small mb-1"><i class="bi bi-check-circle me-1"></i>Key Strengths:</h6>
+                    <ul class="small text-muted ps-3 mb-0" id="eval-strengths"></ul>
+                </div>
+
+                <div class="mb-3">
+                    <h6 class="fw-bold text-warning-emphasis small mb-1"><i class="bi bi-exclamation-triangle me-1"></i>Areas for Improvement:</h6>
+                    <ul class="small text-muted ps-3 mb-0" id="eval-improvements"></ul>
+                </div>
+
+                <div class="p-3 bg-light border rounded">
+                    <h6 class="fw-bold text-primary small mb-1"><i class="bi bi-stars me-1"></i>Polished Exemplar Answer:</h6>
+                    <p class="small text-dark mb-0 fst-italic" id="eval-exemplar"></p>
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
-// State management
-const currentJobId = {{ job.id }};
-let activeQuestionData = {
-    id: {{ questions[0].id if questions else 1 }},
-    question: {{ (questions[0].question if questions else "") | tojson }},
-    type: {{ (questions[0].type if questions else "") | tojson }},
-    criteria: {{ (questions[0].evaluation_criteria if questions else "") | tojson }}
-};
+let currentJobId = {{ job.id }};
+let activeQuestionText = "{{ questions[0].question }}";
+let speechStartTime = null;
+let speechDurationSeconds = null;
 
-// UI Select Question handlers
-document.querySelectorAll('.question-item-card').forEach(card => {
-    card.addEventListener('click', function() {
-        document.querySelectorAll('.question-item-card').forEach(c => {
-            c.classList.remove('border-primary', 'bg-white', 'shadow-xs');
-            c.classList.add('bg-light');
-        });
-        this.classList.remove('bg-light');
-        this.classList.add('border-primary', 'bg-white', 'shadow-xs');
-
-        activeQuestionData = {
-            id: this.getAttribute('data-q-id'),
-            question: this.getAttribute('data-question'),
-            type: this.getAttribute('data-type'),
-            criteria: this.getAttribute('data-criteria')
-        };
-
-        // Update hero and sandbox
-        document.getElementById('hero-active-question-text').textContent = `"${activeQuestionData.question}"`;
-        document.getElementById('active-q-type-badge').textContent = activeQuestionData.type;
-        document.getElementById('active-q-type').textContent = activeQuestionData.type;
-        document.getElementById('active-q-text').textContent = activeQuestionData.question;
-        document.getElementById('active-q-criteria').innerHTML = `<i class="bi bi-info-circle me-1"></i>${activeQuestionData.criteria}`;
-        document.getElementById('active-criteria-text').textContent = activeQuestionData.criteria;
-        document.getElementById('user-answer-box').value = '';
-        document.getElementById('eval-result-card').classList.add('d-none');
-    });
-});
-
-// Jump to answer button
-const jumpBtn = document.getElementById('jump-to-answer-btn');
-if (jumpBtn) {
-    jumpBtn.addEventListener('click', function() {
-        document.getElementById('answer-sandbox').scrollIntoView({ behavior: 'smooth' });
-        document.getElementById('user-answer-box').focus();
-    });
-}
-
-// AI Voice Speech Synthesis for Question
-const speakBtn = document.getElementById('speak-q-btn');
-if (speakBtn && 'speechSynthesis' in window) {
-    speakBtn.addEventListener('click', () => {
+// Read Aloud Question via Web Speech Synthesis
+document.getElementById('speak-q-btn').addEventListener('click', function() {
+    if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(activeQuestionData.question);
+        const utterance = new SpeechSynthesisUtterance(activeQuestionText);
         utterance.rate = 0.95;
         utterance.pitch = 1.0;
         window.speechSynthesis.speak(utterance);
-    });
-}
+    } else {
+        alert('Text-to-speech is not supported on this browser.');
+    }
+});
 
-// Voice Recognition (Speech-to-Text)
-const micBtn = document.getElementById('mic-btn');
-const heroMicToggle = document.getElementById('hero-mic-toggle');
-const answerBox = document.getElementById('user-answer-box');
-const speechIndicator = document.getElementById('speech-indicator');
+// Speech to Text via Web Speech Recognition
 let recognition = null;
 let isRecording = false;
 
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRec();
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
 
-    recognition.onresult = (event) => {
+    recognition.onresult = function(event) {
         let transcript = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
             transcript += event.results[i][0].transcript;
         }
-        if (transcript) {
-            answerBox.value = transcript;
-        }
+        const box = document.getElementById('user-answer-box');
+        box.value = (box.value + ' ' + transcript).trim();
     };
 
-    recognition.onerror = () => stopRecording();
-    recognition.onend = () => stopRecording();
+    recognition.onerror = function(event) {
+        console.error('Speech recognition error:', event.error);
+        stopRecording();
+    };
+
+    recognition.onend = function() {
+        if (isRecording) {
+            stopRecording();
+        }
+    };
 }
 
 function startRecording() {
     if (!recognition) {
-        alert('Voice recognition is not supported in this browser. Please type your answer.');
+        alert('Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.');
         return;
     }
-    try {
-        recognition.start();
-        isRecording = true;
-        micBtn.classList.replace('btn-outline-danger', 'btn-danger');
-        document.getElementById('mic-btn-text').textContent = 'Stop Recording';
-        speechIndicator.classList.remove('d-none');
-        if (heroMicToggle) heroMicToggle.classList.add('btn-danger');
-    } catch(e) {
-        console.error(e);
-    }
+    isRecording = true;
+    speechStartTime = Date.now();
+    recognition.start();
+    document.getElementById('mic-btn-text').textContent = 'Stop Recording';
+    document.getElementById('mic-btn').classList.replace('btn-outline-danger', 'btn-danger');
+    document.getElementById('speech-indicator').classList.remove('d-none');
 }
 
 function stopRecording() {
-    if (recognition && isRecording) {
-        try { recognition.stop(); } catch(e){}
-    }
     isRecording = false;
-    micBtn.classList.replace('btn-danger', 'btn-outline-danger');
+    if (speechStartTime) {
+        speechDurationSeconds = Math.max(1, (Date.now() - speechStartTime) / 1000);
+    }
+    if (recognition) {
+        try { recognition.stop(); } catch(e) {}
+    }
     document.getElementById('mic-btn-text').textContent = 'Voice Input';
-    speechIndicator.classList.add('d-none');
-    if (heroMicToggle) heroMicToggle.classList.remove('btn-danger');
+    document.getElementById('mic-btn').classList.replace('btn-danger', 'btn-outline-danger');
+    document.getElementById('speech-indicator').classList.add('d-none');
 }
 
-if (micBtn) {
-    micBtn.addEventListener('click', () => {
-        if (isRecording) stopRecording();
-        else startRecording();
-    });
-}
-
-if (heroMicToggle) {
-    heroMicToggle.addEventListener('click', () => {
-        if (isRecording) stopRecording();
-        else startRecording();
-    });
-}
-
-// Submit answer for AI STAR evaluation
-const submitBtn = document.getElementById('submit-answer-btn');
-if (submitBtn) {
-    submitBtn.addEventListener('click', function() {
-        const answer = answerBox.value.trim();
-        if (!answer) {
-            alert('Please provide an answer to evaluate.');
-            return;
-        }
-
+document.getElementById('mic-btn').addEventListener('click', function() {
+    if (isRecording) {
         stopRecording();
-        const originalText = this.innerHTML;
-        this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Analyzing with STAR AI...';
-        this.disabled = true;
+    } else {
+        startRecording();
+    }
+});
 
-        fetch('/interview/api/evaluate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                job_id: currentJobId,
-                question: activeQuestionData.question,
-                answer: answer,
-                duration_seconds: 60
-            })
-        })
-        .then(r => r.json())
-        .then(data => {
-            this.innerHTML = originalText;
-            this.disabled = false;
-
-            if (data.success && data.evaluation) {
-                const ev = data.evaluation;
-                const resultCard = document.getElementById('eval-result-card');
-                resultCard.classList.remove('d-none');
-
-                document.getElementById('eval-score').textContent = `${ev.score || 78}/100`;
-                document.getElementById('eval-s-score').textContent = `${ev.situation_score || 8}/10`;
-                document.getElementById('eval-t-score').textContent = `${ev.task_score || 7}/10`;
-                document.getElementById('eval-a-score').textContent = `${ev.action_score || 8}/10`;
-                document.getElementById('eval-r-score').textContent = `${ev.result_score || 7}/10`;
-                document.getElementById('eval-feedback').textContent = ev.feedback || 'Great answer! Adding more numerical metrics will further strengthen your delivery.';
-
-                // Speech analytics
-                if (ev.speech_analytics) {
-                    document.getElementById('speech-wpm').textContent = `${ev.speech_analytics.words_per_minute || 135} WPM`;
-                    document.getElementById('speech-fillers-count').textContent = `${ev.speech_analytics.filler_words_detected || 0} Detected`;
-                    document.getElementById('delivery-score-badge').textContent = `Score: ${ev.speech_analytics.delivery_score || 82}/100`;
-                }
-
-                resultCard.scrollIntoView({ behavior: 'smooth' });
-            } else {
-                alert('Could not evaluate answer. Please try again.');
-            }
-        })
-        .catch(err => {
-            this.innerHTML = originalText;
-            this.disabled = false;
-            console.error(err);
-            alert('Evaluation service error.');
-        });
+document.querySelectorAll('.question-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.question-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        activeQuestionText = this.getAttribute('data-question');
+        document.getElementById('active-q-text').textContent = activeQuestionText;
+        document.getElementById('active-q-type').textContent = this.getAttribute('data-type');
+        document.getElementById('active-q-criteria').innerHTML = '<i class="bi bi-info-circle me-1"></i>' + this.getAttribute('data-criteria');
+        document.getElementById('user-answer-box').value = '';
+        document.getElementById('eval-result-card').classList.add('d-none');
+        if (isRecording) stopRecording();
+        if ('speechSynthesis' in window) window.speechSynthesis.cancel();
     });
-}
-</script>
+});
 
-<style>
-.waveform-bar {
-    width: 3px;
-    height: 10px;
-    background: rgba(255, 255, 255, 0.4);
-    border-radius: 2px;
-    display: inline-block;
-    animation: wave 1.2s infinite ease-in-out;
-}
-.waveform-bar.active {
-    height: 20px;
-    background: #6366F1;
-}
-@keyframes wave {
-    0%, 100% { height: 6px; }
-    50% { height: 22px; }
-}
-.category-hover-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08) !important;
-}
-</style>
+document.getElementById('submit-answer-btn').addEventListener('click', function() {
+    if (isRecording) stopRecording();
+    const answer = document.getElementById('user-answer-box').value.trim();
+    if (!answer) {
+        alert('Please enter or speak your answer before evaluating.');
+        return;
+    }
+    const btn = this;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Evaluating with STAR AI...';
+
+    fetch("{{ url_for('interview.evaluate_answer') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            job_id: currentJobId,
+            question: activeQuestionText,
+            answer: answer,
+            duration_seconds: speechDurationSeconds
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars me-1"></i> Evaluate with STAR AI';
+        if (data.success && data.evaluation) {
+            const ev = data.evaluation;
+            document.getElementById('eval-score').textContent = ev.overall_score + '/100';
+            const sb = ev.star_breakdown || {};
+            document.getElementById('eval-s-score').textContent = (sb.situation ? sb.situation.score : '--') + '%';
+            document.getElementById('eval-t-score').textContent = (sb.task ? sb.task.score : '--') + '%';
+            document.getElementById('eval-a-score').textContent = (sb.action ? sb.action.score : '--') + '%';
+            document.getElementById('eval-r-score').textContent = (sb.result ? sb.result.score : '--') + '%';
+
+            // Speech Analytics
+            if (ev.speech_analytics) {
+                const sp = ev.speech_analytics;
+                document.getElementById('delivery-score-badge').textContent = 'Delivery: ' + sp.delivery_score + '/100';
+                document.getElementById('speech-wpm').textContent = Math.round(sp.estimated_wpm) + ' WPM';
+                document.getElementById('speech-pace-rating').textContent = sp.pace_rating || '--';
+                document.getElementById('speech-fillers-count').textContent = sp.total_filler_words + ' Detected';
+                document.getElementById('speech-filler-ratio').textContent = sp.filler_ratio_percent + '% of words';
+                document.getElementById('speech-pace-tip').textContent = sp.pace_tip || 'Steady delivery';
+                document.getElementById('speech-pace-tip').title = sp.pace_tip || '';
+            }
+
+            const strengthsList = document.getElementById('eval-strengths');
+            strengthsList.innerHTML = (ev.strengths || []).map(s => `<li>${s}</li>`).join('');
+
+            const impList = document.getElementById('eval-improvements');
+            impList.innerHTML = (ev.areas_for_improvement || []).map(i => `<li>${i}</li>`).join('');
+
+            document.getElementById('eval-exemplar').textContent = ev.improved_exemplar_answer || '';
+            document.getElementById('eval-result-card').classList.remove('d-none');
+        } else {
+            alert('Evaluation failed: ' + (data.error || 'Server error'));
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-stars me-1"></i> Evaluate with STAR AI';
+        alert('Connection error: ' + err);
+    });
+});
+</script>
 {% endblock %}

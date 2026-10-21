@@ -3,513 +3,278 @@
 {% block title %}Dashboard — AI Job Agent{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-lg-4 py-4">
-    {% set candidate_name = current_user.candidate_profile.full_name or 'Vishnu' %}
-    
-    <!-- 1. Header Greeting & Quote Banner (Matching Image 3) -->
-    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+<div class="container py-4">
+    <!-- Top Welcome Banner -->
+    <div class="card p-4 custom-card border-0 mb-4 bg-white shadow-sm">
         <div class="row align-items-center gy-3">
             <div class="col-lg-8">
-                <h2 class="fw-bold text-dark mb-1 tracking-tight">
-                    Welcome back, {{ candidate_name }}! 👋
-                </h2>
-                <p class="text-muted small mb-0">
-                    Let's continue your career journey. Here are your latest updates and recommendations.
-                </p>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="stat-icon stat-blue fs-3"><i class="bi bi-person-badge"></i></div>
+                    <div>
+                        <h4 class="fw-bold mb-1">Welcome, {{ profile.full_name or current_user.email.split('@')[0] }}!</h4>
+                        <p class="text-muted small mb-0">
+                            {% if resume %}
+                                <i class="bi bi-file-earmark-check-fill text-success"></i> Active Resume: <strong>{{ resume.filename }}</strong> (Uploaded {{ resume.uploaded_at.strftime('%b %d, %Y') }})
+                            {% else %}
+                                <i class="bi bi-exclamation-triangle-fill text-warning"></i> No resume uploaded yet. <a href="{{ url_for('resume.upload_resume') }}">Upload your resume</a> to activate job matching.
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
             </div>
             <div class="col-lg-4 text-lg-end">
-                <div class="d-inline-flex align-items-center gap-2.5 p-2.5 rounded-3 bg-light border text-start">
-                    <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
-                        <i class="bi bi-lightbulb-fill fs-6 text-warning"></i>
-                    </div>
-                    <div>
-                        <small class="fw-semibold text-dark d-block fs-8">"New opportunities don't happen, you create them."</small>
-                        <span class="text-muted fs-9">Keep going! Your next career milestone is near.</span>
-                    </div>
-                </div>
+                <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-outline-custom me-2"><i class="bi bi-upload me-1"></i> Upload Resume</a>
+                <a href="{{ url_for('assistant.chat_view') }}" class="btn btn-primary-custom"><i class="bi bi-chat-dots-fill me-1"></i> Ask Assistant</a>
             </div>
         </div>
     </div>
 
-    <!-- 2. Top 4 Metric KPI Cards (Matching Image 3) -->
+    <!-- Quick Stat Cards -->
     <div class="row g-3 mb-4">
-        <!-- 42 Recommended Jobs -->
-        <div class="col-6 col-lg-3">
-            <div class="card p-3 rounded-4 border-0 shadow-sm bg-white h-100">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div class="avatar-sm rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
-                        <i class="bi bi-briefcase-fill fs-5"></i>
-                    </div>
-                    <span class="badge bg-success-subtle text-success small fw-semibold"><i class="bi bi-arrow-up-short"></i> 12% from last week</span>
+        <div class="col-md-3">
+            <div class="card stat-card bg-white border custom-card">
+                <div class="stat-icon stat-green"><i class="bi bi-graph-up-arrow"></i></div>
+                <div>
+                    <h5 class="fw-bold mb-0">{{ resume.ats_quality_score|round(0)|int if resume else '--' }}<span class="text-muted fs-6">/100</span></h5>
+                    <small class="text-muted">ATS Quality Score</small>
                 </div>
-                <h3 class="fw-bold text-dark mb-0">{{ top_matches|length if top_matches else 42 }}</h3>
-                <div class="fw-semibold text-dark small">Recommended Jobs</div>
-                <small class="text-muted fs-9">Matched with your active profile</small>
             </div>
         </div>
-
-        <!-- 8 Applications Sent -->
-        <div class="col-6 col-lg-3">
-            <div class="card p-3 rounded-4 border-0 shadow-sm bg-white h-100">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div class="avatar-sm rounded-3 bg-info-subtle text-info d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
-                        <i class="bi bi-file-earmark-check-fill fs-5"></i>
-                    </div>
-                    <span class="badge bg-success-subtle text-success small fw-semibold"><i class="bi bi-arrow-up-short"></i> 33% from last week</span>
+        <div class="col-md-3">
+            <div class="card stat-card bg-white border custom-card">
+                <div class="stat-icon stat-blue"><i class="bi bi-person-check"></i></div>
+                <div>
+                    <h5 class="fw-bold mb-0">{{ completeness }}%</h5>
+                    <small class="text-muted">Profile Complete</small>
                 </div>
-                <h3 class="fw-bold text-dark mb-0">{{ total_applications if total_applications else 8 }}</h3>
-                <div class="fw-semibold text-dark small">Applications Sent</div>
-                <small class="text-muted fs-9">Tracked in application pipeline</small>
             </div>
         </div>
-
-        <!-- 3 Upcoming Interviews -->
-        <div class="col-6 col-lg-3">
-            <div class="card p-3 rounded-4 border-0 shadow-sm bg-white h-100">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div class="avatar-sm rounded-3 bg-purple-subtle text-purple d-flex align-items-center justify-content-center" style="width: 42px; height: 42px; background: rgba(139, 92, 246, 0.12); color: #8B5CF6;">
-                        <i class="bi bi-calendar-event-fill fs-5"></i>
-                    </div>
-                    <span class="badge bg-success-subtle text-success small fw-semibold"><i class="bi bi-arrow-up-short"></i> 50% from last week</span>
+        <div class="col-md-3">
+            <div class="card stat-card bg-white border custom-card">
+                <div class="stat-icon stat-amber"><i class="bi bi-bookmark-star-fill"></i></div>
+                <div>
+                    <h5 class="fw-bold mb-0">{{ saved_jobs|length }}</h5>
+                    <small class="text-muted">Saved Bookmarks</small>
                 </div>
-                <h3 class="fw-bold text-dark mb-0">{{ app_counts.interviewing if app_counts else 3 }}</h3>
-                <div class="fw-semibold text-dark small">Upcoming Interviews</div>
-                <small class="text-muted fs-9">Prep ready with STAR simulator</small>
             </div>
         </div>
-
-        <!-- 1 Offers Received -->
-        <div class="col-6 col-lg-3">
-            <div class="card p-3 rounded-4 border-0 shadow-sm bg-white h-100">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div class="avatar-sm rounded-3 bg-warning-subtle text-warning d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
-                        <i class="bi bi-star-fill fs-5"></i>
-                    </div>
-                    <span class="badge bg-success-subtle text-success small fw-semibold"><i class="bi bi-arrow-up-short"></i> 100% from last week</span>
+        <div class="col-md-3">
+            <div class="card stat-card bg-white border custom-card">
+                <div class="stat-icon stat-purple"><i class="bi bi-send-check-fill"></i></div>
+                <div>
+                    <h5 class="fw-bold mb-0">{{ total_applications }}</h5>
+                    <small class="text-muted">Active Applications</small>
                 </div>
-                <h3 class="fw-bold text-dark mb-0">{{ app_counts.offer if app_counts else 1 }}</h3>
-                <div class="fw-semibold text-dark small">Offers Received</div>
-                <small class="text-muted fs-9">Analyze counter with Salary tool</small>
             </div>
         </div>
     </div>
 
-    <!-- 3. Main Dashboard Grid (Left 8 cols, Right 4 cols - Image 3) -->
+    <!-- Career Conversion Funnel & Pipeline Health -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                    <div>
+                        <h5 class="fw-bold mb-0"><i class="bi bi-funnel-fill text-primary me-2"></i>Career Application Funnel & Health</h5>
+                        <small class="text-muted">Live conversion rates and pipeline diagnostics across application stages</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle py-1 px-2">
+                            Interview Rate: {{ funnel_metrics.applied_to_interview_rate }}%
+                        </span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle py-1 px-2">
+                            Offer Rate: {{ funnel_metrics.interview_to_offer_rate }}%
+                        </span>
+                    </div>
+                </div>
+
+                <div class="row g-3 text-center mb-2">
+                    {% for stage in funnel_metrics.stages %}
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 border rounded-3 bg-light">
+                                <div class="text-secondary small mb-1"><i class="bi {{ stage.icon }} me-1"></i>{{ stage.name }}</div>
+                                <h4 class="fw-bold mb-0 text-dark">{{ stage.count }}</h4>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if funnel_metrics.diagnostics %}
+                    <div class="d-flex flex-column gap-2 mt-2">
+                        {% for diag in funnel_metrics.diagnostics %}
+                            <div class="alert alert-{{ diag.type }} py-2 px-3 mb-0 small d-flex align-items-center gap-2">
+                                <i class="bi {% if diag.type == 'warning' %}bi-exclamation-triangle-fill text-warning{% else %}bi-check-circle-fill text-success{% endif %}"></i>
+                                <span><strong>{{ diag.stage }}:</strong> {{ diag.message }}</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
     <div class="row g-4">
-        <!-- LEFT 8 COLS: Recommended Jobs + Application Status & Market Insights -->
+        <!-- Left Column: Top Recommended Jobs -->
         <div class="col-lg-8">
-            <!-- Recommended Jobs for You -->
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+            <div class="card p-4 custom-card border-0 mb-4 bg-white shadow-sm">
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold text-dark mb-0">Recommended Jobs for You</h5>
-                    <a href="{{ url_for('jobs.list_jobs') }}" class="text-primary fs-8 fw-semibold text-decoration-none">View all →</a>
+                    <h5 class="fw-bold mb-0"><i class="bi bi-bullseye text-primary me-2"></i>Top Recommended Opportunities</h5>
+                    <a href="{{ url_for('jobs.list_jobs') }}" class="small fw-semibold text-primary">View all verified jobs &rarr;</a>
                 </div>
 
-                <div class="d-flex flex-column gap-3">
-                    <!-- Job Card 1: Google -->
-                    <div class="card border rounded-3 p-3 bg-white shadow-xs hover-card">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div class="d-flex align-items-center gap-2.5">
-                                <span class="rounded-2 d-flex align-items-center justify-content-center text-white fw-bold shadow-xs" style="width: 36px; height: 36px; background: #EA4335; font-size: 1rem;">G</span>
-                                <div>
-                                    <h6 class="fw-bold text-dark mb-0 fs-8">
-                                        <a href="{{ url_for('jobs.list_jobs') }}" class="text-dark text-decoration-none hover-primary">Software Engineer</a>
-                                    </h6>
-                                    <small class="text-muted fs-9">Google · Bengaluru, India · Full-time</small>
+                {% if top_matches %}
+                    <div class="d-flex flex-column gap-3">
+                        {% for match in top_matches %}
+                            {% set job = match.job %}
+                            <div class="card p-3 border rounded-3 job-card hover-shadow">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="fw-bold mb-1">
+                                            <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="text-dark text-decoration-none">{{ job.title }}</a>
+                                        </h6>
+                                        <div class="text-muted small">
+                                            <strong>{{ job.company }}</strong> · 
+                                            <span><i class="bi bi-geo-alt"></i> {{ job.location }}</span> · 
+                                            <span class="badge bg-light text-dark border">{{ job.work_mode|title }}</span> ·
+                                            <span class="badge bg-secondary-subtle text-secondary">{{ job.source_platform|title }}</span> ·
+                                            <span class="badge bg-light text-muted border"><i class="bi bi-clock me-1"></i>{{ job.posted_relative_time }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="match-badge {% if match.match_score >= 80 %}match-high{% elif match.match_score >= 60 %}match-mid{% else %}match-low{% endif %}">
+                                            <i class="bi bi-shield-check"></i> {{ match.match_score|round(1) }}% Match
+                                        </span>
+                                    </div>
+                                </div>
+                                <p class="text-muted small mb-2 text-truncate-2">{{ match.match_explanation }}</p>
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                    <div class="small">
+                                        {% if match.skill_match_details.get('matched_required') %}
+                                            <span class="text-success fw-semibold"><i class="bi bi-check-circle"></i> Skills:</span>
+                                            {% for sk in match.skill_match_details['matched_required'][:3] %}
+                                                <span class="skill-pill matched">{{ sk }}</span>
+                                            {% endfor %}
+                                        {% endif %}
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="btn btn-sm btn-outline-custom">View Details</a>
+                                        <a href="{{ url_for('jobs.safe_apply_redirect', job_id=job.id) }}" target="_blank" class="btn btn-sm btn-primary-custom">
+                                            Apply Now <i class="bi bi-box-arrow-up-right ms-1"></i>
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
-                            <span class="badge bg-success-subtle text-success border border-success-subtle fs-9 fw-semibold">95% Match</span>
-                        </div>
-                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top">
-                            <div class="d-flex flex-wrap gap-1 fs-9">
-                                <span class="badge bg-light text-muted border">Python</span>
-                                <span class="badge bg-light text-muted border">Data Structures</span>
-                                <span class="badge bg-light text-muted border">System Design</span>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <button class="btn btn-sm btn-link text-muted p-0" title="Save Job"><i class="bi bi-bookmark fs-6"></i></button>
-                                <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary-custom btn-sm px-3 py-1 fs-8">Apply Now</a>
-                            </div>
-                        </div>
+                        {% endfor %}
                     </div>
-
-                    <!-- Job Card 2: Microsoft -->
-                    <div class="card border rounded-3 p-3 bg-white shadow-xs hover-card">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div class="d-flex align-items-center gap-2.5">
-                                <span class="rounded-2 d-flex align-items-center justify-content-center text-white fw-bold shadow-xs" style="width: 36px; height: 36px; background: #00A4EF; font-size: 1rem;">M</span>
-                                <div>
-                                    <h6 class="fw-bold text-dark mb-0 fs-8">
-                                        <a href="{{ url_for('jobs.list_jobs') }}" class="text-dark text-decoration-none hover-primary">Software Engineer II</a>
-                                    </h6>
-                                    <small class="text-muted fs-9">Microsoft · Hyderabad, India · Full-time</small>
-                                </div>
-                            </div>
-                            <span class="badge bg-success-subtle text-success border border-success-subtle fs-9 fw-semibold">92% Match</span>
-                        </div>
-                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top">
-                            <div class="d-flex flex-wrap gap-1 fs-9">
-                                <span class="badge bg-light text-muted border">Python</span>
-                                <span class="badge bg-light text-muted border">Cloud</span>
-                                <span class="badge bg-light text-muted border">Distributed Systems</span>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <button class="btn btn-sm btn-link text-muted p-0" title="Save Job"><i class="bi bi-bookmark fs-6"></i></button>
-                                <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary-custom btn-sm px-3 py-1 fs-8">Apply Now</a>
-                            </div>
-                        </div>
+                {% else %}
+                    <div class="text-center py-5 bg-light rounded-3">
+                        <i class="bi bi-briefcase text-muted fs-1 mb-2"></i>
+                        <h6 class="fw-bold">No job matches calculated yet</h6>
+                        <p class="text-muted small mb-3">Upload your resume to instantly see transparent compatibility scores for real vacancies.</p>
+                        <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-primary-custom btn-sm">Upload Resume</a>
                     </div>
-
-                    <!-- Job Card 3: Amazon -->
-                    <div class="card border rounded-3 p-3 bg-white shadow-xs hover-card">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div class="d-flex align-items-center gap-2.5">
-                                <span class="rounded-2 d-flex align-items-center justify-content-center text-dark fw-bold shadow-xs" style="width: 36px; height: 36px; background: #FF9900; font-size: 1rem;">a</span>
-                                <div>
-                                    <h6 class="fw-bold text-dark mb-0 fs-8">
-                                        <a href="{{ url_for('jobs.list_jobs') }}" class="text-dark text-decoration-none hover-primary">Backend Developer</a>
-                                    </h6>
-                                    <small class="text-muted fs-9">Amazon · Remote · Full-time</small>
-                                </div>
-                            </div>
-                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-9 fw-semibold">88% Match</span>
-                        </div>
-                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top">
-                            <div class="d-flex flex-wrap gap-1 fs-9">
-                                <span class="badge bg-light text-muted border">Python</span>
-                                <span class="badge bg-light text-muted border">AWS</span>
-                                <span class="badge bg-light text-muted border">Microservices</span>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <button class="btn btn-sm btn-link text-muted p-0" title="Save Job"><i class="bi bi-bookmark fs-6"></i></button>
-                                <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary-custom btn-sm px-3 py-1 fs-8">Apply Now</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Job Card 4: NVIDIA -->
-                    <div class="card border rounded-3 p-3 bg-white shadow-xs hover-card">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div class="d-flex align-items-center gap-2.5">
-                                <span class="rounded-2 d-flex align-items-center justify-content-center text-white fw-bold shadow-xs" style="width: 36px; height: 36px; background: #76B900; font-size: 0.9rem;">NV</span>
-                                <div>
-                                    <h6 class="fw-bold text-dark mb-0 fs-8">
-                                        <a href="{{ url_for('jobs.list_jobs') }}" class="text-dark text-decoration-none hover-primary">Machine Learning Engineer</a>
-                                    </h6>
-                                    <small class="text-muted fs-9">NVIDIA · Bengaluru, India · Full-time</small>
-                                </div>
-                            </div>
-                            <span class="badge bg-info-subtle text-info border border-info-subtle fs-9 fw-semibold">86% Match</span>
-                        </div>
-                        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top">
-                            <div class="d-flex flex-wrap gap-1 fs-9">
-                                <span class="badge bg-light text-muted border">Python</span>
-                                <span class="badge bg-light text-muted border">Machine Learning</span>
-                                <span class="badge bg-light text-muted border">Deep Learning</span>
-                            </div>
-                            <div class="d-flex align-items-center gap-2">
-                                <button class="btn btn-sm btn-link text-muted p-0" title="Save Job"><i class="bi bi-bookmark fs-6"></i></button>
-                                <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary-custom btn-sm px-3 py-1 fs-8">Apply Now</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {% endif %}
             </div>
 
-            <!-- Bottom Row: Application Status Donut + Job Market Insights (Image 3) -->
-            <div class="row g-4 mb-4">
-                <!-- Application Status Card -->
-                <div class="col-md-6">
-                    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
-                        <h6 class="fw-bold text-dark mb-3">Application Status</h6>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="position-relative d-flex align-items-center justify-content-center" style="width: 110px; height: 110px;">
-                                <svg viewBox="0 0 36 36" style="width: 110px; height: 110px; transform: rotate(-90deg);">
-                                    <path stroke="#F1F5F9" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                    <!-- Applied: 62% (blue) -->
-                                    <path stroke="#2563EB" stroke-width="4" stroke-dasharray="62, 100" fill="none" />
-                                    <!-- Interviews: 25% (amber) -->
-                                    <path stroke="#F59E0B" stroke-width="4" stroke-dasharray="25, 100" stroke-dashoffset="-62" fill="none" />
-                                    <!-- Offers: 13% (emerald) -->
-                                    <path stroke="#10B981" stroke-width="4" stroke-dasharray="13, 100" stroke-dashoffset="-87" fill="none" />
-                                </svg>
-                                <div class="position-absolute text-center">
-                                    <span class="fs-4 fw-bold text-dark d-block lh-1">8</span>
-                                    <small class="text-muted fs-9">Total</small>
-                                </div>
-                            </div>
-                            <div class="d-flex flex-column gap-1 fs-9 flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="d-flex align-items-center gap-1.5"><span class="rounded-circle" style="width: 8px; height: 8px; background: #2563EB;"></span> Applied</span>
-                                    <strong class="text-dark">(5) 62%</strong>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="d-flex align-items-center gap-1.5"><span class="rounded-circle" style="width: 8px; height: 8px; background: #F59E0B;"></span> Interviews</span>
-                                    <strong class="text-dark">(2) 25%</strong>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="d-flex align-items-center gap-1.5"><span class="rounded-circle" style="width: 8px; height: 8px; background: #10B981;"></span> Offers</span>
-                                    <strong class="text-dark">(1) 13%</strong>
-                                </div>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="d-flex align-items-center gap-1.5"><span class="rounded-circle" style="width: 8px; height: 8px; background: #CBD5E1;"></span> Rejected</span>
-                                    <strong class="text-muted">(0) 0%</strong>
-                                </div>
-                            </div>
+            <!-- Application Pipeline Tracker -->
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-kanban text-info me-2"></i>Application Pipeline</h5>
+                    <a href="{{ url_for('applications.list_applications') }}" class="small fw-semibold text-primary">Manage Tracker &rarr;</a>
+                </div>
+                <div class="row g-2 text-center">
+                    <div class="col">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <h4 class="fw-bold text-secondary mb-1">{{ app_counts.saved }}</h4>
+                            <small class="text-muted fw-semibold">Saved</small>
                         </div>
                     </div>
-                </div>
-
-                <!-- Job Market Insights Card -->
-                <div class="col-md-6">
-                    <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="fw-bold text-dark mb-0">Job Market Insights</h6>
-                            <span class="badge bg-light text-muted border fs-9">Software Engineer ▼</span>
+                    <div class="col">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <h4 class="fw-bold text-info mb-1">{{ app_counts.prepared }}</h4>
+                            <small class="text-muted fw-semibold">Prepared</small>
                         </div>
-                        <div class="row g-2 text-center">
-                            <div class="col-4">
-                                <div class="p-2 border rounded-3 bg-light">
-                                    <i class="bi bi-cash-stack text-primary fs-6 d-block mb-1"></i>
-                                    <strong class="fs-8 text-dark d-block">₹ 12-25 LPA</strong>
-                                    <small class="text-success fs-9">↑ 8% this year</small>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="p-2 border rounded-3 bg-light">
-                                    <i class="bi bi-bar-chart-fill text-info fs-6 d-block mb-1"></i>
-                                    <strong class="fs-8 text-dark d-block">24,500+</strong>
-                                    <small class="text-success fs-9">↑ 12% this mo</small>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="p-2 border rounded-3 bg-light">
-                                    <i class="bi bi-graph-up-arrow text-purple fs-6 d-block mb-1" style="color: #8B5CF6;"></i>
-                                    <strong class="fs-8 text-dark d-block">85%</strong>
-                                    <small class="text-muted fs-9">High Demand</small>
-                                </div>
-                            </div>
+                    </div>
+                    <div class="col">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <h4 class="fw-bold text-primary mb-1">{{ app_counts.applied }}</h4>
+                            <small class="text-muted fw-semibold">Applied</small>
                         </div>
-                        <small class="text-muted fs-9 d-block mt-3 text-center">Market data indexed from 14 verified recruitment pipelines.</small>
+                    </div>
+                    <div class="col">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <h4 class="fw-bold text-warning mb-1">{{ app_counts.interviewing }}</h4>
+                            <small class="text-muted fw-semibold">Interviewing</small>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <h4 class="fw-bold text-success mb-1">{{ app_counts.offer }}</h4>
+                            <small class="text-muted fw-semibold">Offers</small>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- RIGHT 4 COLS: Schedule + Resume Analysis + Quick Actions + AI Assistant (Image 3) -->
+        <!-- Right Column: ATS Breakdown & Quick Tools -->
         <div class="col-lg-4">
-            <!-- 1. Upcoming Schedule Timeline -->
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="fw-bold text-dark mb-0">Upcoming Schedule</h6>
-                    <a href="{{ url_for('alerts.alerts_home') }}" class="text-primary fs-8 fw-semibold text-decoration-none">View all →</a>
-                </div>
-
-                <div class="d-flex flex-column gap-3">
-                    <div class="p-2.5 rounded-3 bg-light border d-flex align-items-center gap-2.5">
-                        <div class="rounded-2 bg-primary-subtle text-primary p-2 text-center" style="min-width: 50px;">
-                            <span class="fs-9 text-uppercase d-block fw-bold">Oct 18</span>
-                            <span class="fs-9 text-muted d-block lh-1">Today</span>
+            <!-- ATS Readiness Card -->
+            <div class="card p-4 custom-card border-0 mb-4 bg-white shadow-sm">
+                <h6 class="fw-bold mb-3"><i class="bi bi-shield-check text-success me-2"></i>Resume Quality Audit</h6>
+                {% if resume %}
+                    <div class="text-center mb-3">
+                        <div class="score-circle mx-auto mb-2" style="--percent: {{ resume.ats_quality_score or 75 }};">
+                            <div class="score-circle-inner">
+                                <span class="fs-4">{{ resume.ats_quality_score|round(0)|int }}</span>
+                                <small class="text-muted fs-8">/ 100</small>
+                            </div>
                         </div>
-                        <div>
-                            <span class="fw-bold text-dark fs-8 d-block">Microsoft · Technical Interview</span>
-                            <small class="text-muted fs-9"><i class="bi bi-clock me-1"></i>10:00 AM - 11:00 AM</small>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1">
+                            {{ resume.ats_feedback.get('tier', 'Good') }} Tier
+                        </span>
+                    </div>
+                    <div class="small">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Readability:</span>
+                            <span class="fw-bold">{{ resume.readability_score|round(0)|int }}%</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Completeness:</span>
+                            <span class="fw-bold">{{ resume.completeness_score|round(0)|int }}%</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span class="text-muted">Extracted Skills:</span>
+                            <span class="fw-bold">{{ resume.parsed_data.get('skills', [])|length }} skills</span>
                         </div>
                     </div>
-
-                    <div class="p-2.5 rounded-3 bg-light border d-flex align-items-center gap-2.5">
-                        <div class="rounded-2 bg-warning-subtle text-warning p-2 text-center" style="min-width: 50px;">
-                            <span class="fs-9 text-uppercase d-block fw-bold">Oct 20</span>
-                            <span class="fs-9 text-muted d-block lh-1">Mon</span>
-                        </div>
-                        <div>
-                            <span class="fw-bold text-dark fs-8 d-block">Amazon · Follow Up Email</span>
-                            <small class="text-muted fs-9"><i class="bi bi-envelope me-1"></i>Send polite check-in note</small>
-                        </div>
-                    </div>
-
-                    <div class="p-2.5 rounded-3 bg-light border d-flex align-items-center gap-2.5">
-                        <div class="rounded-2 bg-info-subtle text-info p-2 text-center" style="min-width: 50px;">
-                            <span class="fs-9 text-uppercase d-block fw-bold">Oct 22</span>
-                            <span class="fs-9 text-muted d-block lh-1">Wed</span>
-                        </div>
-                        <div>
-                            <span class="fw-bold text-dark fs-8 d-block">Google · Online Assessment</span>
-                            <small class="text-muted fs-9"><i class="bi bi-clock me-1"></i>2:00 PM - 3:00 PM</small>
-                        </div>
-                    </div>
-
-                    <div class="p-2.5 rounded-3 bg-light border d-flex align-items-center gap-2.5">
-                        <div class="rounded-2 bg-secondary-subtle text-secondary p-2 text-center" style="min-width: 50px;">
-                            <span class="fs-9 text-uppercase d-block fw-bold">Oct 25</span>
-                            <span class="fs-9 text-muted d-block lh-1">Sat</span>
-                        </div>
-                        <div>
-                            <span class="fw-bold text-dark fs-8 d-block">NVIDIA · Application Deadline</span>
-                            <small class="text-muted fs-9"><i class="bi bi-file-earmark-arrow-up me-1"></i>Submit customized resume</small>
-                        </div>
-                    </div>
-                </div>
+                    <a href="{{ url_for('ats.ats_report') }}" class="btn btn-outline-custom w-100 btn-sm">View Full ATS Diagnostic</a>
+                {% else %}
+                    <p class="text-muted small">Upload your resume to generate a full ATS audit, keyword suggestions, and section diagnostic.</p>
+                    <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-primary-custom w-100 btn-sm">Upload Resume</a>
+                {% endif %}
             </div>
 
-            <!-- 2. Resume Analysis Card -->
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h6 class="fw-bold text-dark mb-0">Resume Analysis</h6>
-                    <a href="{{ url_for('resume.resume_analysis') }}" class="text-primary fs-8 fw-semibold text-decoration-none">View Details →</a>
-                </div>
-
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div class="position-relative d-flex align-items-center justify-content-center" style="width: 70px; height: 70px;">
-                        <svg viewBox="0 0 36 36" style="width: 70px; height: 70px; transform: rotate(-90deg);">
-                            <path stroke="#F1F5F9" stroke-width="4" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            <path stroke="#10B981" stroke-width="4" stroke-dasharray="85, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        </svg>
-                        <span class="position-absolute fs-7 fw-bold text-dark">85%</span>
-                    </div>
-                    <div>
-                        <h6 class="fw-bold text-dark mb-0 fs-8">Great Progress!</h6>
-                        <small class="text-muted fs-9">Your resume is well-optimized for ATS matching.</small>
-                    </div>
-                </div>
-
-                <div class="d-flex flex-column gap-1.5 fs-9 text-muted mb-3">
-                    <div class="d-flex justify-content-between">
-                        <span><i class="bi bi-check-circle-fill text-success me-1"></i> ATS Friendly Format</span>
-                        <strong class="text-success">Good</strong>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <span><i class="bi bi-check-circle-fill text-success me-1"></i> Relevant Skills</span>
-                        <strong class="text-success">Good</strong>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <span><i class="bi bi-check-circle-fill text-success me-1"></i> Keyword Optimization</span>
-                        <strong class="text-success">Good</strong>
-                    </div>
-                    <div class="d-flex justify-content-between">
-                        <span><i class="bi bi-check-circle-fill text-success me-1"></i> Work Experience</span>
-                        <strong class="text-success">Good</strong>
-                    </div>
-                </div>
-
-                <a href="{{ url_for('resume.resume_analysis') }}" class="btn btn-outline-primary btn-sm w-100 fs-8">Improve Resume with AI →</a>
-            </div>
-
-            <!-- 3. Quick Actions -->
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                <h6 class="fw-bold text-dark mb-3">Quick Actions</h6>
+            <!-- Conversational Assistant Quick Prompt -->
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm">
+                <h6 class="fw-bold mb-2"><i class="bi bi-chat-quote-fill text-info me-2"></i>Career Assistant Commands</h6>
+                <p class="text-muted small mb-3">Try asking the agent directly:</p>
                 <div class="d-flex flex-column gap-2">
-                    <a href="{{ url_for('assistant.chat_view') }}" class="p-2.5 rounded-3 bg-light border text-decoration-none d-flex justify-content-between align-items-center text-dark hover-card">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-chat-dots-fill text-primary"></i>
-                            <div>
-                                <span class="fw-bold fs-8 d-block">Chat with AI Assistant</span>
-                                <small class="text-muted fs-9">Get career guidance and answers</small>
-                            </div>
-                        </div>
-                        <i class="bi bi-chevron-right text-muted fs-9"></i>
+                    <a href="{{ url_for('assistant.chat_view') }}" class="btn btn-light text-start border btn-sm py-2">
+                        <i class="bi bi-search text-primary me-2"></i> "Find Python jobs matching my resume"
                     </a>
-
-                    <a href="{{ url_for('applications.list_applications') }}" class="p-2.5 rounded-3 bg-light border text-decoration-none d-flex justify-content-between align-items-center text-dark hover-card">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-envelope-paper-fill text-info"></i>
-                            <div>
-                                <span class="fw-bold fs-8 d-block">Generate Cover Letter</span>
-                                <small class="text-muted fs-9">Create personalized cover letters</small>
-                            </div>
-                        </div>
-                        <i class="bi bi-chevron-right text-muted fs-9"></i>
+                    <a href="{{ url_for('assistant.chat_view') }}" class="btn btn-light text-start border btn-sm py-2">
+                        <i class="bi bi-percent text-success me-2"></i> "Show jobs with an 80% or higher match"
                     </a>
-
-                    <a href="{{ url_for('jobs.list_jobs') }}" class="p-2.5 rounded-3 bg-light border text-decoration-none d-flex justify-content-between align-items-center text-dark hover-card">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-search text-warning"></i>
-                            <div>
-                                <span class="fw-bold fs-8 d-block">Find Matching Jobs</span>
-                                <small class="text-muted fs-9">Search jobs based on your profile</small>
-                            </div>
-                        </div>
-                        <i class="bi bi-chevron-right text-muted fs-9"></i>
+                    <a href="{{ url_for('assistant.chat_view') }}" class="btn btn-light text-start border btn-sm py-2">
+                        <i class="bi bi-globe text-info me-2"></i> "Find remote developer jobs worldwide"
                     </a>
-
-                    <a href="{{ url_for('interview.interview_hub') }}" class="p-2.5 rounded-3 bg-light border text-decoration-none d-flex justify-content-between align-items-center text-dark hover-card">
-                        <div class="d-flex align-items-center gap-2">
-                            <i class="bi bi-mic-fill text-danger"></i>
-                            <div>
-                                <span class="fw-bold fs-8 d-block">Prepare for Interviews</span>
-                                <small class="text-muted fs-9">Practice with AI mock interviews</small>
-                            </div>
-                        </div>
-                        <i class="bi bi-chevron-right text-muted fs-9"></i>
+                    <a href="{{ url_for('assistant.chat_view') }}" class="btn btn-light text-start border btn-sm py-2">
+                        <i class="bi bi-file-earmark-text text-warning me-2"></i> "Prepare a cover letter for this job"
                     </a>
                 </div>
-            </div>
-
-            <!-- 4. AI Career Assistant Chat Widget (Image 3) -->
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="d-flex align-items-center gap-2">
-                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
-                            <i class="bi bi-robot fs-6"></i>
-                        </div>
-                        <div>
-                            <h6 class="fw-bold text-dark mb-0 fs-8">AI Career Assistant</h6>
-                            <small class="text-muted fs-9">Online 24/7</small>
-                        </div>
-                    </div>
-                    <a href="{{ url_for('assistant.chat_view') }}" class="text-primary fs-9 text-decoration-none fw-semibold">New Chat →</a>
-                </div>
-
-                <div class="p-2.5 rounded-3 bg-light border mb-3 fs-8 text-muted">
-                    👋 <strong>Hi {{ candidate_name }}!</strong> How can I help you accelerate your job search today?
-                </div>
-
-                <!-- 5 Clickable Prompts from Image 3 -->
-                <div class="d-flex flex-column gap-1.5 mb-3">
-                    <a href="{{ url_for('assistant.chat_view', initial_query='Find jobs for my profile') }}" class="p-2 rounded-2 bg-white border text-decoration-none text-dark fs-8 d-flex justify-content-between align-items-center hover-card">
-                        <span><i class="bi bi-search text-primary me-1.5"></i> Find jobs for my profile</span>
-                        <i class="bi bi-chevron-right text-muted fs-9"></i>
-                    </a>
-                    <a href="{{ url_for('assistant.chat_view', initial_query='Improve my resume') }}" class="p-2 rounded-2 bg-white border text-decoration-none text-dark fs-8 d-flex justify-content-between align-items-center hover-card">
-                        <span><i class="bi bi-file-earmark-check text-success me-1.5"></i> Improve my resume</span>
-                        <i class="bi bi-chevron-right text-muted fs-9"></i>
-                    </a>
-                    <a href="{{ url_for('assistant.chat_view', initial_query='Prepare for interview questions') }}" class="p-2 rounded-2 bg-white border text-decoration-none text-dark fs-8 d-flex justify-content-between align-items-center hover-card">
-                        <span><i class="bi bi-mic text-warning me-1.5"></i> Prepare for interview questions</span>
-                        <i class="bi bi-chevron-right text-muted fs-9"></i>
-                    </a>
-                    <a href="{{ url_for('assistant.chat_view', initial_query='Suggest a learning roadmap') }}" class="p-2 rounded-2 bg-white border text-decoration-none text-dark fs-8 d-flex justify-content-between align-items-center hover-card">
-                        <span><i class="bi bi-signpost-split text-info me-1.5"></i> Suggest a learning roadmap</span>
-                        <i class="bi bi-chevron-right text-muted fs-9"></i>
-                    </a>
-                    <a href="{{ url_for('assistant.chat_view', initial_query='Analyze this job description') }}" class="p-2 rounded-2 bg-white border text-decoration-none text-dark fs-8 d-flex justify-content-between align-items-center hover-card">
-                        <span><i class="bi bi-shield-check text-purple me-1.5" style="color: #8B5CF6;"></i> Analyze this job description</span>
-                        <i class="bi bi-chevron-right text-muted fs-9"></i>
-                    </a>
-                </div>
-
-                <!-- Chat Input Form -->
-                <form action="{{ url_for('assistant.chat_view') }}" method="GET">
-                    <div class="input-group">
-                        <input type="text" name="initial_query" class="form-control fs-8 bg-light border" placeholder="Ask anything about your career...">
-                        <button type="submit" class="btn btn-primary-custom px-3">
-                            <i class="bi bi-send-fill fs-8"></i>
-                        </button>
-                    </div>
-                </form>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-.hover-card {
-    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-}
-.hover-card:hover {
-    transform: translateY(-2px);
-    border-color: #2563EB !important;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08) !important;
-}
-</style>
 {% endblock %}

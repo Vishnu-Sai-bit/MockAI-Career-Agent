@@ -22,8 +22,13 @@ def _background_job_worker(app, interval_seconds: int):
         try:
             logger.info("Background job scheduler: Starting automated job sync cycle...")
             with app.app_context():
+                from tasks.refresh_jobs import prune_dead_jobs
                 stats = run_job_refresh(limit_per_source=25)
                 logger.info(f"Background job sync finished: {stats}")
+                
+                # Also prune dead or expired job listings
+                prune_stats = prune_dead_jobs(batch_size=50)
+                logger.info(f"Background job pruner finished: {prune_stats}")
         except Exception as e:
             logger.error(f"Error during background automated job refresh: {e}")
 

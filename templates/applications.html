@@ -4,589 +4,124 @@
 
 {% block content %}
 <div class="container-fluid px-lg-4 py-4">
-    <!-- 1. Header Section -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-primary-subtle text-primary px-2.5 py-1 rounded-pill small fw-semibold">
-                    <i class="bi bi-kanban-fill me-1"></i> Career Pipeline
-                </span>
-                <span class="text-muted small">Updated just now</span>
-            </div>
-            <h2 class="fw-bold text-dark mb-1 tracking-tight">Application Tracker</h2>
-            <p class="text-muted small mb-0">Track and manage your job applications across all stages, interviews, and offers.</p>
+            <h3 class="fw-bold mb-1"><i class="bi bi-kanban-fill text-primary me-2"></i>Application Tracker</h3>
+            <p class="text-muted small mb-0">Track your interview stages, notes, and deadlines across all applied positions.</p>
         </div>
-        <div class="d-flex flex-wrap gap-2">
-            <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-custom btn-sm">
-                <i class="bi bi-search me-1"></i> Browse Jobs
-            </a>
-            <button class="btn btn-outline-custom btn-sm" onclick="window.print()">
-                <i class="bi bi-download me-1"></i> Export
-            </button>
-            <button class="btn btn-primary-custom btn-sm" data-bs-toggle="modal" data-bs-target="#addAppModal">
-                <i class="bi bi-plus-lg me-1"></i> Add Application
-            </button>
-        </div>
+        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary-custom btn-sm">Find More Jobs to Apply</a>
     </div>
 
-    {% set saved_apps = grouped.get('saved', []) %}
-    {% set applied_apps = grouped.get('applied', []) + grouped.get('prepared', []) %}
-    {% set interview_apps = grouped.get('interviewing', []) %}
-    {% set offer_apps = grouped.get('offer', []) %}
-    {% set rejected_apps = grouped.get('rejected', []) %}
-    {% set total_count = (all_applications|length) if all_applications else (saved_apps|length + applied_apps|length + interview_apps|length + offer_apps|length + rejected_apps|length) %}
+    <!-- Kanban Stages Pipeline -->
+    <div class="kanban-board">
+        {% set stages = [
+            ('saved', 'Saved', 'secondary'),
+            ('prepared', 'Prepared', 'info'),
+            ('applied', 'Applied', 'primary'),
+            ('interviewing', 'Interviewing', 'warning'),
+            ('offer', 'Offer Received', 'success'),
+            ('rejected', 'Rejected', 'dark')
+        ] %}
 
-    <!-- 2. KPI / Stat Overview Cards (5 across) -->
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md-4 col-xl">
-            <div class="card p-3 h-100 border-0 shadow-sm rounded-4 bg-white">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div class="avatar-sm rounded-3 bg-purple-subtle text-purple d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: rgba(139, 92, 246, 0.12); color: #8B5CF6;">
-                        <i class="bi bi-bookmark-fill fs-5"></i>
-                    </div>
-                    <span class="badge bg-success-subtle text-success small fw-semibold"><i class="bi bi-arrow-up-right me-0.5"></i>+20%</span>
+        {% for key, label, badge_color in stages %}
+            {% set column_apps = grouped.get(key, []) %}
+            <div class="kanban-column" data-stage="{{ key }}">
+                <div class="kanban-header">
+                    <span>{{ label }}</span>
+                    <span class="badge bg-{{ badge_color }} rounded-pill column-count-badge">{{ column_apps|length }}</span>
                 </div>
-                <div class="text-muted small fw-medium mb-1">Saved</div>
-                <div class="d-flex align-items-baseline gap-2">
-                    <h3 class="fw-bold text-dark mb-0" id="kpi-saved-count">{{ saved_apps|length }}</h3>
-                    <small class="text-muted fs-8">from last month</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-4 col-xl">
-            <div class="card p-3 h-100 border-0 shadow-sm rounded-4 bg-white">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div class="avatar-sm rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: rgba(99, 102, 241, 0.12); color: #6366F1;">
-                        <i class="bi bi-send-fill fs-5"></i>
-                    </div>
-                    <span class="badge bg-success-subtle text-success small fw-semibold"><i class="bi bi-arrow-up-right me-0.5"></i>+33%</span>
-                </div>
-                <div class="text-muted small fw-medium mb-1">Applied</div>
-                <div class="d-flex align-items-baseline gap-2">
-                    <h3 class="fw-bold text-dark mb-0" id="kpi-applied-count">{{ applied_apps|length }}</h3>
-                    <small class="text-muted fs-8">from last month</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-4 col-xl">
-            <div class="card p-3 h-100 border-0 shadow-sm rounded-4 bg-white">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div class="avatar-sm rounded-3 bg-amber-subtle text-amber d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: rgba(245, 158, 11, 0.12); color: #F59E0B;">
-                        <i class="bi bi-calendar-event-fill fs-5"></i>
-                    </div>
-                    <span class="badge bg-success-subtle text-success small fw-semibold"><i class="bi bi-arrow-up-right me-0.5"></i>+50%</span>
-                </div>
-                <div class="text-muted small fw-medium mb-1">Interviews</div>
-                <div class="d-flex align-items-baseline gap-2">
-                    <h3 class="fw-bold text-dark mb-0" id="kpi-interview-count">{{ interview_apps|length }}</h3>
-                    <small class="text-muted fs-8">from last month</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-4 col-xl">
-            <div class="card p-3 h-100 border-0 shadow-sm rounded-4 bg-white">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div class="avatar-sm rounded-3 bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: rgba(16, 185, 129, 0.12); color: #10B981;">
-                        <i class="bi bi-trophy-fill fs-5"></i>
-                    </div>
-                    <span class="badge bg-light text-muted small fw-semibold"><i class="bi bi-dash me-0.5"></i>0%</span>
-                </div>
-                <div class="text-muted small fw-medium mb-1">Offers</div>
-                <div class="d-flex align-items-baseline gap-2">
-                    <h3 class="fw-bold text-dark mb-0" id="kpi-offer-count">{{ offer_apps|length }}</h3>
-                    <small class="text-muted fs-8">active offers</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-4 col-xl">
-            <div class="card p-3 h-100 border-0 shadow-sm rounded-4 bg-white">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div class="avatar-sm rounded-3 bg-danger-subtle text-danger d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: rgba(239, 68, 68, 0.12); color: #EF4444;">
-                        <i class="bi bi-x-circle-fill fs-5"></i>
-                    </div>
-                    <span class="badge bg-light text-muted small fw-semibold"><i class="bi bi-arrow-down-right me-0.5"></i>-10%</span>
-                </div>
-                <div class="text-muted small fw-medium mb-1">Rejected</div>
-                <div class="d-flex align-items-baseline gap-2">
-                    <h3 class="fw-bold text-dark mb-0" id="kpi-rejected-count">{{ rejected_apps|length }}</h3>
-                    <small class="text-muted fs-8">closed stages</small>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- 3. Kanban Pipeline Board -->
-    <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-lg-4 mb-4">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <h5 class="fw-bold text-dark mb-0">Pipeline Board</h5>
-                <small class="text-muted">Drag and drop cards between columns or update status directly</small>
-            </div>
-            <div class="text-muted small">
-                <i class="bi bi-info-circle me-1"></i> Drag cards to update stage
-            </div>
-        </div>
-
-        <div class="kanban-board">
-            {% set columns = [
-                ('saved', 'Saved', saved_apps, 'purple', 'bookmark-fill', 'rgba(139, 92, 246, 0.1)'),
-                ('applied', 'Applied', applied_apps, 'primary', 'send-fill', 'rgba(99, 102, 241, 0.1)'),
-                ('interviewing', 'Interviews', interview_apps, 'warning', 'calendar-event-fill', 'rgba(245, 158, 11, 0.1)'),
-                ('offer', 'Offers', offer_apps, 'success', 'trophy-fill', 'rgba(16, 185, 129, 0.1)'),
-                ('rejected', 'Rejected', rejected_apps, 'secondary', 'archive-fill', 'rgba(100, 116, 139, 0.1)')
-            ] %}
-
-            {% for key, label, apps_list, color_variant, icon_name, bg_header in columns %}
-                <div class="kanban-column" data-stage="{{ key }}" style="min-width: 290px; background: #F8FAFC; border-radius: 14px; border: 1px solid #E2E8F0; padding: 1rem; display: flex; flex-direction: column;">
-                    <!-- Column Header -->
-                    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                        <div class="d-flex align-items-center gap-2">
-                            <span class="badge rounded-pill" style="background: {{ bg_header }}; color: inherit;">
-                                <i class="bi bi-{{ icon_name }} me-1"></i> {{ label }}
-                            </span>
-                            <span class="badge bg-white text-dark shadow-xs border column-count-badge rounded-pill px-2">{{ apps_list|length }}</span>
-                        </div>
-                        <button class="btn btn-sm btn-link text-muted p-0 text-decoration-none" data-bs-toggle="modal" data-bs-target="#addAppModal" title="Add Card">
-                            <i class="bi bi-plus-circle fs-6"></i>
-                        </button>
-                    </div>
-
-                    <!-- Drop Zone -->
-                    <div class="d-flex flex-column gap-2 kanban-drop-zone flex-grow-1" style="min-height: 260px;">
-                        {% for app in apps_list %}
-                            {% set job = app.job %}
-                            <div class="kanban-card card border p-3 rounded-3 shadow-xs bg-white" draggable="true" data-app-id="{{ app.id }}" style="cursor: grab; transition: all 0.2s ease;">
-                                <!-- Top: Company Initial Avatar + Title + Menu -->
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="company-initial-badge rounded-2 d-flex align-items-center justify-content-center text-white fw-bold shadow-xs" style="width: 34px; height: 34px; font-size: 0.85rem; background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);">
-                                            {{ (job.company or 'C')[0]|upper }}
-                                        </div>
-                                        <div>
-                                            <h6 class="fw-bold mb-0 small text-truncate" style="max-width: 170px;">
-                                                <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="text-decoration-none text-dark hover-primary">{{ job.title }}</a>
-                                            </h6>
-                                            <small class="text-muted fs-8 d-block text-truncate" style="max-width: 170px;">{{ job.company }}</small>
-                                        </div>
-                                    </div>
-                                    <span class="badge bg-light text-secondary border fs-9">{{ job.work_mode or 'Remote' }}</span>
-                                </div>
-
-                                <!-- Middle: Details & Badges -->
-                                <div class="d-flex flex-wrap gap-1 mb-2">
-                                    {% if app.status == 'interviewing' %}
-                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fs-9">
-                                            <i class="bi bi-clock-history me-1"></i> Interview
-                                        </span>
-                                    {% elif app.status == 'offer' %}
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle fs-9">
-                                            <i class="bi bi-check2-all me-1"></i> Offer
-                                        </span>
-                                    {% elif app.status == 'saved' %}
-                                        <span class="badge bg-purple-subtle text-purple border fs-9" style="background: rgba(139, 92, 246, 0.1); color: #8B5CF6;">
-                                            Saved
-                                        </span>
-                                    {% else %}
-                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-9">
-                                            Applied
-                                        </span>
-                                    {% endif %}
-                                    <span class="badge bg-light text-muted border fs-9"><i class="bi bi-geo-alt me-1"></i>{{ job.location or 'Global' }}</span>
-                                </div>
-
-                                <!-- Stage Changer Dropdown -->
-                                <div class="mb-2">
-                                    <select class="form-select form-select-sm select-app-status py-1 fs-8 bg-light border-0" data-app-id="{{ app.id }}">
-                                        <option value="saved" {% if app.status == 'saved' %}selected{% endif %}>Saved</option>
-                                        <option value="applied" {% if app.status in ['applied', 'prepared'] %}selected{% endif %}>Applied</option>
-                                        <option value="interviewing" {% if app.status == 'interviewing' %}selected{% endif %}>Interviewing</option>
-                                        <option value="offer" {% if app.status == 'offer' %}selected{% endif %}>Offer</option>
-                                        <option value="rejected" {% if app.status == 'rejected' %}selected{% endif %}>Rejected</option>
-                                    </select>
-                                </div>
-
-                                <!-- Card Footer Actions -->
-                                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                                    <small class="text-muted fs-8"><i class="bi bi-calendar2 me-1"></i>{{ app.updated_at.strftime('%b %d') if app.updated_at else 'Recent' }}</small>
-                                    <div class="d-flex gap-1">
-                                        <button class="btn btn-sm btn-outline-info py-0 px-2 fs-8 btn-outreach" data-app-id="{{ app.id }}" title="Recruiter Outreach Suite">
-                                            <i class="bi bi-person-lines-fill"></i> Outreach
-                                        </button>
-                                        <button class="btn btn-sm btn-outline-secondary py-0 px-2 fs-8 btn-cal" data-app-id="{{ app.id }}" title="Calendar Sync">
-                                            <i class="bi bi-calendar-plus"></i>
-                                        </button>
-                                        <a href="{{ url_for('jobs.safe_apply_redirect', job_id=job.id) }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2 fs-8" title="Official Application Portal">
-                                            Apply <i class="bi bi-box-arrow-up-right"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-
-                        {% if not apps_list %}
-                            <div class="text-center py-4 text-muted fs-8 border border-dashed rounded-3 bg-white my-auto">
-                                <i class="bi bi-inbox fs-4 d-block mb-1 opacity-50"></i>
-                                No applications here
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <!-- Column Footer Add Button -->
-                    <button class="btn btn-sm btn-outline-secondary w-100 mt-2 border-dashed py-1.5 fs-8 text-muted d-flex align-items-center justify-content-center gap-1" data-bs-toggle="modal" data-bs-target="#addAppModal">
-                        <i class="bi bi-plus"></i> Add Card
-                    </button>
-                </div>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- 4. Filterable Table List View -->
-    <div class="card border-0 shadow-sm rounded-4 bg-white p-3 p-lg-4 mb-4">
-        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
-            <!-- Tabs Filter -->
-            <ul class="nav nav-pills gap-1" id="appFilterTabs">
-                <li class="nav-item">
-                    <button class="nav-link active py-1.5 px-3 fs-8 fw-semibold rounded-pill tab-filter-btn" data-status-filter="all">
-                        All Applications <span class="badge bg-white text-dark ms-1 border">{{ total_count }}</span>
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link py-1.5 px-3 fs-8 fw-semibold rounded-pill tab-filter-btn" data-status-filter="saved">
-                        Saved <span class="badge bg-purple-subtle text-purple ms-1">{{ saved_apps|length }}</span>
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link py-1.5 px-3 fs-8 fw-semibold rounded-pill tab-filter-btn" data-status-filter="applied">
-                        Applied <span class="badge bg-primary-subtle text-primary ms-1">{{ applied_apps|length }}</span>
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link py-1.5 px-3 fs-8 fw-semibold rounded-pill tab-filter-btn" data-status-filter="interviewing">
-                        Interviews <span class="badge bg-warning-subtle text-warning-emphasis ms-1">{{ interview_apps|length }}</span>
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link py-1.5 px-3 fs-8 fw-semibold rounded-pill tab-filter-btn" data-status-filter="offer">
-                        Offers <span class="badge bg-success-subtle text-success ms-1">{{ offer_apps|length }}</span>
-                    </button>
-                </li>
-                <li class="nav-item">
-                    <button class="nav-link py-1.5 px-3 fs-8 fw-semibold rounded-pill tab-filter-btn" data-status-filter="rejected">
-                        Rejected <span class="badge bg-light text-muted ms-1">{{ rejected_apps|length }}</span>
-                    </button>
-                </li>
-            </ul>
-
-            <!-- Search and Sort inputs -->
-            <div class="d-flex align-items-center gap-2">
-                <div class="input-group input-group-sm" style="max-width: 260px;">
-                    <span class="input-group-text bg-light border-0"><i class="bi bi-search text-muted"></i></span>
-                    <input type="text" id="appTableSearch" class="form-control bg-light border-0" placeholder="Search company or role...">
-                </div>
-                <select id="appSortSelect" class="form-select form-select-sm bg-light border-0" style="width: 140px;">
-                    <option value="recent">Sort: Recent</option>
-                    <option value="company">Company (A-Z)</option>
-                    <option value="role">Role (A-Z)</option>
-                </select>
-            </div>
-        </div>
-
-        <!-- Applications Table -->
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" id="applicationsDataTable">
-                <thead class="table-light fs-8 text-muted text-uppercase">
-                    <tr>
-                        <th class="ps-3 py-3 border-0">Company</th>
-                        <th class="py-3 border-0">Job Title</th>
-                        <th class="py-3 border-0">Status</th>
-                        <th class="py-3 border-0">Date Applied</th>
-                        <th class="py-3 border-0">Next Step / Follow-up</th>
-                        <th class="pe-3 py-3 border-0 text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="fs-8">
-                    {% for app in all_applications %}
+                <div class="d-flex flex-column gap-2 kanban-drop-zone" style="min-height: 120px;">
+                    {% for app in column_apps %}
                         {% set job = app.job %}
-                        <tr class="app-table-row" data-status="{{ 'applied' if app.status == 'prepared' else app.status }}" data-company="{{ job.company|lower }}" data-role="{{ job.title|lower }}">
-                            <td class="ps-3 py-3">
-                                <div class="d-flex align-items-center gap-2.5">
-                                    <div class="rounded-2 d-flex align-items-center justify-content-center text-white fw-bold shadow-xs" style="width: 36px; height: 36px; background: linear-gradient(135deg, #6366F1, #8B5CF6); font-size: 0.9rem;">
-                                        {{ (job.company or 'C')[0]|upper }}
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold text-dark">{{ job.company }}</div>
-                                        <small class="text-muted d-block">{{ job.location or 'Remote' }}</small>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="py-3">
-                                <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="fw-semibold text-dark text-decoration-none hover-primary">
-                                    {{ job.title }}
-                                </a>
-                                <div class="text-muted fs-8">{{ job.employment_type or 'Full-time' }} · {{ job.experience_level or 'Mid-Senior' }}</div>
-                            </td>
-                            <td class="py-3">
-                                {% if app.status == 'interviewing' %}
-                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2.5 py-1 rounded-pill">
-                                        <i class="bi bi-clock-history me-1"></i> Interview Scheduled
-                                    </span>
-                                {% elif app.status == 'offer' %}
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1 rounded-pill">
-                                        <i class="bi bi-trophy-fill me-1"></i> Offer Received
-                                    </span>
-                                {% elif app.status == 'saved' %}
-                                    <span class="badge px-2.5 py-1 rounded-pill" style="background: rgba(139, 92, 246, 0.12); color: #8B5CF6; border: 1px solid rgba(139, 92, 246, 0.25);">
-                                        <i class="bi bi-bookmark-fill me-1"></i> Saved
-                                    </span>
-                                {% elif app.status == 'rejected' %}
-                                    <span class="badge bg-light text-muted border px-2.5 py-1 rounded-pill">
-                                        <i class="bi bi-x-circle me-1"></i> Rejected
-                                    </span>
+                        <div class="kanban-card" draggable="true" data-app-id="{{ app.id }}" style="cursor: grab;">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <h6 class="fw-bold mb-0 text-dark small">
+                                    <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="text-decoration-none text-dark">{{ job.title }}</a>
+                                </h6>
+                            </div>
+                            <div class="text-muted fs-8 mb-2">
+                                <strong>{{ job.company }}</strong> · {{ job.location }}
+                            </div>
+
+                            <!-- Integration vs Manual Indicator -->
+                            <div class="mb-2">
+                                {% if app.is_integration_verified %}
+                                    <span class="badge bg-success-subtle text-success fs-9 border"><i class="bi bi-check-circle"></i> API Confirmed</span>
                                 {% else %}
-                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2.5 py-1 rounded-pill">
-                                        <i class="bi bi-send-check me-1"></i> Applied
-                                    </span>
+                                    <span class="badge bg-light text-muted fs-9 border">Manually Recorded</span>
                                 {% endif %}
-                            </td>
-                            <td class="py-3 text-muted">
-                                {{ app.created_at.strftime('%b %d, %Y') if app.created_at else 'Oct 18, 2026' }}
-                            </td>
-                            <td class="py-3">
-                                {% if app.next_action_desc %}
-                                    <span class="text-dark fw-medium d-block">{{ app.next_action_desc }}</span>
-                                    <small class="text-muted">{{ app.next_action_at.strftime('%b %d, %I:%M %p') if app.next_action_at else '' }}</small>
-                                {% elif app.status == 'interviewing' %}
-                                    <span class="text-amber fw-medium d-block" style="color: #D97706;"><i class="bi bi-lightning-charge me-1"></i>Technical Screen Round 2</span>
-                                    <small class="text-muted">Prepare with AI Simulator</small>
-                                {% elif app.status in ['applied', 'prepared'] %}
-                                    <span class="text-muted d-block"><i class="bi bi-envelope-paper me-1"></i>Follow-up after 7 days</span>
-                                    <small class="text-muted">Send recruiter outreach note</small>
-                                {% elif app.status == 'offer' %}
-                                    <span class="text-success fw-medium d-block"><i class="bi bi-file-earmark-check me-1"></i>Review Compensation Package</span>
-                                    <small class="text-muted">Analyze with Salary Tool</small>
-                                {% else %}
-                                    <span class="text-muted">—</span>
-                                {% endif %}
-                            </td>
-                            <td class="pe-3 py-3 text-end">
-                                <div class="d-inline-flex gap-1">
-                                    <button class="btn btn-sm btn-outline-info px-2 py-1 fs-8 btn-outreach" data-app-id="{{ app.id }}" title="Recruiter Outreach">
-                                        <i class="bi bi-person-lines-fill"></i>
+                            </div>
+
+                            <!-- Stage Changer -->
+                            <div class="mb-2">
+                                <label class="fs-8 text-muted d-block mb-1">Stage:</label>
+                                <select class="form-select form-select-sm select-app-status" data-app-id="{{ app.id }}">
+                                    {% for s_key, s_label, _ in stages %}
+                                        <option value="{{ s_key }}" {% if app.status == s_key %}selected{% endif %}>{{ s_label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                <small class="text-muted fs-8">{{ app.updated_at.strftime('%b %d') }}</small>
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-sm btn-outline-info py-0 px-2 fs-8 btn-outreach" data-app-id="{{ app.id }}" title="Recruiter Discovery & Follow-up Emails">
+                                        <i class="bi bi-person-lines-fill"></i> Outreach
                                     </button>
-                                    <button class="btn btn-sm btn-outline-secondary px-2 py-1 fs-8 btn-cal" data-app-id="{{ app.id }}" title="Add to Calendar">
-                                        <i class="bi bi-calendar-event"></i>
+                                    <button class="btn btn-sm btn-outline-secondary py-0 px-2 fs-8 btn-cal" data-app-id="{{ app.id }}" title="Add to Calendar (.ics / Google)">
+                                        <i class="bi bi-calendar-plus"></i>
                                     </button>
-                                    <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="btn btn-sm btn-outline-primary px-2 py-1 fs-8" title="View Job Details">
-                                        <i class="bi bi-arrow-right"></i>
+                                    <a href="{{ url_for('jobs.safe_apply_redirect', job_id=job.id) }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2 fs-8">
+                                        Apply <i class="bi bi-box-arrow-up-right"></i>
                                     </a>
                                 </div>
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
-                                <i class="bi bi-clipboard2-x fs-1 d-block mb-2 opacity-50"></i>
-                                <h6 class="fw-bold mb-1">No Applications Yet</h6>
-                                <p class="small text-muted mb-3">Browse recommended jobs and submit your first application to track it here.</p>
-                                <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary-custom btn-sm">Find Jobs</a>
-                            </td>
-                        </tr>
+                            </div>
+                        </div>
                     {% endfor %}
-                </tbody>
-            </table>
-        </div>
+
+                    {% if not column_apps %}
+                        <div class="text-center py-4 text-muted fs-8">
+                            No applications in this stage
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
     </div>
 
-    <!-- 5. Bottom Analytics Row (Donut Chart + Timeline Bar + Upcoming Follow-ups) -->
-    <div class="row g-4 mb-4">
-        <!-- Card 1: Donut Chart -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
-                <h6 class="fw-bold text-dark mb-1">Application Status Overview</h6>
-                <p class="text-muted fs-8 mb-3">Distribution across all stages</p>
-
-                <div class="d-flex justify-content-center align-items-center my-3 position-relative">
-                    <svg viewBox="0 0 36 36" style="width: 160px; height: 160px; transform: rotate(-90deg);">
-                        <!-- Background Circle -->
-                        <path stroke="#F1F5F9" stroke-width="3.8" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        <!-- Saved Segment (Purple) -->
-                        <path stroke="#8B5CF6" stroke-width="3.8" stroke-dasharray="35, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        <!-- Applied Segment (Indigo) -->
-                        <path stroke="#6366F1" stroke-width="3.8" stroke-dasharray="30, 100" stroke-dashoffset="-35" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        <!-- Interview Segment (Amber) -->
-                        <path stroke="#F59E0B" stroke-width="3.8" stroke-dasharray="15, 100" stroke-dashoffset="-65" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        <!-- Offer Segment (Emerald) -->
-                        <path stroke="#10B981" stroke-width="3.8" stroke-dasharray="10, 100" stroke-dashoffset="-80" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    </svg>
-                    <div class="position-absolute text-center" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
-                        <span class="fs-3 fw-bold text-dark d-block lh-1">{{ total_count }}</span>
-                        <small class="text-muted fs-8">Total Apps</small>
-                    </div>
-                </div>
-
-                <!-- Legend -->
-                <div class="row g-2 pt-2 border-top fs-8">
-                    <div class="col-6 d-flex align-items-center gap-1.5">
-                        <span class="rounded-circle" style="width: 10px; height: 10px; background: #8B5CF6;"></span>
-                        <span class="text-muted">Saved ({{ saved_apps|length }})</span>
-                    </div>
-                    <div class="col-6 d-flex align-items-center gap-1.5">
-                        <span class="rounded-circle" style="width: 10px; height: 10px; background: #6366F1;"></span>
-                        <span class="text-muted">Applied ({{ applied_apps|length }})</span>
-                    </div>
-                    <div class="col-6 d-flex align-items-center gap-1.5">
-                        <span class="rounded-circle" style="width: 10px; height: 10px; background: #F59E0B;"></span>
-                        <span class="text-muted">Interviews ({{ interview_apps|length }})</span>
-                    </div>
-                    <div class="col-6 d-flex align-items-center gap-1.5">
-                        <span class="rounded-circle" style="width: 10px; height: 10px; background: #10B981;"></span>
-                        <span class="text-muted">Offers ({{ offer_apps|length }})</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card 2: Application Timeline -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <h6 class="fw-bold text-dark mb-0">Application Timeline</h6>
-                    <span class="badge bg-light text-muted border fs-9">Last 6 Months</span>
-                </div>
-                <p class="text-muted fs-8 mb-4">Volume of submissions by calendar month</p>
-
-                <!-- Bar chart representation -->
-                <div class="d-flex align-items-end justify-content-between gap-2 h-100 pb-2" style="min-height: 140px;">
-                    <div class="text-center flex-grow-1">
-                        <div class="w-100 rounded-3 bg-light position-relative" style="height: 120px; display: flex; align-items: flex-end;">
-                            <div class="w-100 rounded-bottom-3" style="height: 35%; background: rgba(99, 102, 241, 0.25);"></div>
-                        </div>
-                        <small class="text-muted fs-8 d-block mt-2">May</small>
-                    </div>
-                    <div class="text-center flex-grow-1">
-                        <div class="w-100 rounded-3 bg-light position-relative" style="height: 120px; display: flex; align-items: flex-end;">
-                            <div class="w-100 rounded-bottom-3" style="height: 50%; background: rgba(99, 102, 241, 0.4);"></div>
-                        </div>
-                        <small class="text-muted fs-8 d-block mt-2">Jun</small>
-                    </div>
-                    <div class="text-center flex-grow-1">
-                        <div class="w-100 rounded-3 bg-light position-relative" style="height: 120px; display: flex; align-items: flex-end;">
-                            <div class="w-100 rounded-bottom-3" style="height: 40%; background: rgba(99, 102, 241, 0.35);"></div>
-                        </div>
-                        <small class="text-muted fs-8 d-block mt-2">Jul</small>
-                    </div>
-                    <div class="text-center flex-grow-1">
-                        <div class="w-100 rounded-3 bg-light position-relative" style="height: 120px; display: flex; align-items: flex-end;">
-                            <div class="w-100 rounded-bottom-3" style="height: 70%; background: rgba(99, 102, 241, 0.65);"></div>
-                        </div>
-                        <small class="text-muted fs-8 d-block mt-2">Aug</small>
-                    </div>
-                    <div class="text-center flex-grow-1">
-                        <div class="w-100 rounded-3 bg-light position-relative" style="height: 120px; display: flex; align-items: flex-end;">
-                            <div class="w-100 rounded-bottom-3" style="height: 90%; background: linear-gradient(180deg, #6366F1, #8B5CF6);"></div>
-                        </div>
-                        <small class="text-muted fs-8 d-block mt-2 fw-bold text-primary">Sep</small>
-                    </div>
-                    <div class="text-center flex-grow-1">
-                        <div class="w-100 rounded-3 bg-light position-relative" style="height: 120px; display: flex; align-items: flex-end;">
-                            <div class="w-100 rounded-bottom-3" style="height: 60%; background: rgba(99, 102, 241, 0.5);"></div>
-                        </div>
-                        <small class="text-muted fs-8 d-block mt-2">Oct</small>
-                    </div>
-                </div>
-
-                <div class="p-2.5 rounded-3 bg-light mt-3 fs-8 text-muted d-flex align-items-center gap-2">
-                    <i class="bi bi-graph-up-arrow text-primary"></i>
-                    <span>Peak activity in <strong>September</strong> with 9 applications submitted.</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Card 3: Upcoming Follow-ups & Reminders -->
-        <div class="col-lg-4">
-            <div class="card border-0 shadow-sm rounded-4 bg-white p-4 h-100">
-                <div class="d-flex justify-content-between align-items-center mb-1">
-                    <h6 class="fw-bold text-dark mb-0">Upcoming Follow-ups</h6>
-                    <span class="badge bg-danger-subtle text-danger fs-9 fw-semibold">3 Pending</span>
-                </div>
-                <p class="text-muted fs-8 mb-3">Action items to keep your candidacy active</p>
-
-                <div class="d-flex flex-column gap-2.5">
-                    <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-2.5">
-                            <div class="rounded-circle bg-amber-subtle text-amber d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: rgba(245, 158, 11, 0.15); color: #F59E0B;">
-                                <i class="bi bi-camera-video-fill fs-7"></i>
-                            </div>
-                            <div>
-                                <span class="fw-bold text-dark fs-8 d-block">Google — Technical Screen</span>
-                                <small class="text-muted fs-9"><i class="bi bi-clock me-1"></i>Tomorrow at 2:30 PM</small>
-                            </div>
-                        </div>
-                        <a href="{{ url_for('interview.interview_hub') }}" class="btn btn-sm btn-outline-warning py-1 px-2 fs-9">Prep</a>
-                    </div>
-
-                    <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-2.5">
-                            <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: rgba(99, 102, 241, 0.15); color: #6366F1;">
-                                <i class="bi bi-envelope-fill fs-7"></i>
-                            </div>
-                            <div>
-                                <span class="fw-bold text-dark fs-8 d-block">Microsoft — Follow-up Email</span>
-                                <small class="text-muted fs-9"><i class="bi bi-calendar2 me-1"></i>In 2 days</small>
-                            </div>
-                        </div>
-                        <button class="btn btn-sm btn-outline-primary py-1 px-2 fs-9" onclick="alert('Follow-up template opened in outreach suite')">Send</button>
-                    </div>
-
-                    <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center gap-2.5">
-                            <div class="rounded-circle bg-purple-subtle text-purple d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: rgba(139, 92, 246, 0.15); color: #8B5CF6;">
-                                <i class="bi bi-journal-code fs-7"></i>
-                            </div>
-                            <div>
-                                <span class="fw-bold text-dark fs-8 d-block">Stripe — System Design Challenge</span>
-                                <small class="text-muted fs-9"><i class="bi bi-calendar2 me-1"></i>In 4 days</small>
-                            </div>
-                        </div>
-                        <a href="{{ url_for('interview.interview_hub') }}" class="btn btn-sm btn-outline-info py-1 px-2 fs-9">Review</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 6. Recruiter Outreach & Follow-up Modal -->
+    <!-- Outreach & Follow-up Modal -->
     <div class="modal fade" id="outreachModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0 shadow">
-                <div class="modal-header border-bottom pb-3">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
                     <div>
-                        <h5 class="modal-title fw-bold text-dark" id="outreachModalTitle">Recruiter Outreach Suite</h5>
-                        <small class="text-muted" id="outreachModalSubtitle">Automated recruiter search & communication templates</small>
+                        <h5 class="modal-title fw-bold" id="outreachModalTitle">Recruiter Outreach & Follow-up Suite</h5>
+                        <small class="text-muted" id="outreachModalSubtitle">Automated personas & templates</small>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body p-4">
                     <!-- Nav tabs -->
-                    <ul class="nav nav-pills mb-3 gap-1" id="outreachTabs" role="tablist">
+                    <ul class="nav nav-pills mb-3" id="outreachTabs" role="tablist">
                         <li class="nav-item">
-                            <button class="nav-link active py-1.5 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-personas">🎯 Recruiter Discovery</button>
+                            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-personas">🎯 Recruiter Discovery</button>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link py-1.5 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-linkedin">💼 LinkedIn Pitch</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-linkedin">💼 LinkedIn Pitch</button>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link py-1.5 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-followup">✉️ Follow-up Emails</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-followup">✉️ Follow-up Emails</button>
                         </li>
                         <li class="nav-item">
-                            <button class="nav-link py-1.5 px-3 fs-8 fw-semibold rounded-pill" data-bs-toggle="pill" data-bs-target="#tab-cal">📅 Calendar Sync</button>
+                            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-cal">📅 Calendar Sync</button>
                         </li>
                     </ul>
 
-                    <div class="tab-content pt-2">
+                    <div class="tab-content">
                         <!-- Tab 1: Personas -->
                         <div class="tab-pane fade show active" id="tab-personas">
-                            <p class="small text-muted mb-3">Click any link below to search hiring managers and technical recruiters for this position on LinkedIn:</p>
+                            <p class="small text-muted mb-3">Click any link below to open live LinkedIn search results for recruiters and hiring managers at this employer:</p>
                             <div class="list-group" id="personas-list"></div>
                         </div>
 
@@ -594,13 +129,13 @@
                         <div class="tab-pane fade" id="tab-linkedin">
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Personalized Connection Request (Max 300 Chars):</label>
-                                <textarea id="linkedin-note-box" class="form-control mb-2 fs-8" rows="3" readonly></textarea>
+                                <textarea id="linkedin-note-box" class="form-control mb-2" rows="3" readonly></textarea>
                                 <button class="btn btn-sm btn-outline-primary copy-btn" data-target="linkedin-note-box"><i class="bi bi-clipboard me-1"></i> Copy Note</button>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label small fw-semibold">Direct InMail Pitch Template:</label>
-                                <input type="text" id="inmail-subject-box" class="form-control mb-2 fw-semibold fs-8" readonly>
-                                <textarea id="inmail-body-box" class="form-control mb-2 fs-8" rows="5" readonly></textarea>
+                                <input type="text" id="inmail-subject-box" class="form-control mb-2 fw-semibold" readonly>
+                                <textarea id="inmail-body-box" class="form-control mb-2" rows="5" readonly></textarea>
                                 <button class="btn btn-sm btn-outline-primary copy-btn" data-target="inmail-body-box"><i class="bi bi-clipboard me-1"></i> Copy InMail</button>
                             </div>
                         </div>
@@ -608,44 +143,44 @@
                         <!-- Tab 3: Followup -->
                         <div class="tab-pane fade" id="tab-followup">
                             <div class="accordion" id="followupAccordion">
-                                <div class="accordion-item border rounded-3 mb-2">
+                                <div class="accordion-item">
                                     <h2 class="accordion-header">
-                                        <button class="accordion-button fs-8 fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#fu7d">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#fu7d">
                                             7-Day Polite Inquiry Email
                                         </button>
                                     </h2>
                                     <div id="fu7d" class="accordion-collapse collapse show">
                                         <div class="accordion-body">
-                                            <input type="text" id="fu7d-subj" class="form-control mb-2 fw-semibold fs-8" readonly>
-                                            <textarea id="fu7d-body" class="form-control mb-2 fs-8" rows="5" readonly></textarea>
+                                            <input type="text" id="fu7d-subj" class="form-control mb-2 fw-semibold" readonly>
+                                            <textarea id="fu7d-body" class="form-control mb-2" rows="5" readonly></textarea>
                                             <button class="btn btn-sm btn-outline-primary copy-btn" data-target="fu7d-body"><i class="bi bi-clipboard me-1"></i> Copy Email</button>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="accordion-item border rounded-3 mb-2">
+                                <div class="accordion-item">
                                     <h2 class="accordion-header">
-                                        <button class="accordion-button collapsed fs-8 fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#fu14d">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#fu14d">
                                             14-Day Anti-Ghosting Check-in Email
                                         </button>
                                     </h2>
                                     <div id="fu14d" class="accordion-collapse collapse">
                                         <div class="accordion-body">
-                                            <input type="text" id="fu14d-subj" class="form-control mb-2 fw-semibold fs-8" readonly>
-                                            <textarea id="fu14d-body" class="form-control mb-2 fs-8" rows="5" readonly></textarea>
+                                            <input type="text" id="fu14d-subj" class="form-control mb-2 fw-semibold" readonly>
+                                            <textarea id="fu14d-body" class="form-control mb-2" rows="5" readonly></textarea>
                                             <button class="btn btn-sm btn-outline-primary copy-btn" data-target="fu14d-body"><i class="bi bi-clipboard me-1"></i> Copy Email</button>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="accordion-item border rounded-3">
+                                <div class="accordion-item">
                                     <h2 class="accordion-header">
-                                        <button class="accordion-button collapsed fs-8 fw-semibold" type="button" data-bs-toggle="collapse" data-bs-target="#fupost">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#fupost">
                                             Post-Interview Thank You Note (Within 24 Hours)
                                         </button>
                                     </h2>
                                     <div id="fupost" class="accordion-collapse collapse">
                                         <div class="accordion-body">
-                                            <input type="text" id="fupost-subj" class="form-control mb-2 fw-semibold fs-8" readonly>
-                                            <textarea id="fupost-body" class="form-control mb-2 fs-8" rows="5" readonly></textarea>
+                                            <input type="text" id="fupost-subj" class="form-control mb-2 fw-semibold" readonly>
+                                            <textarea id="fupost-body" class="form-control mb-2" rows="5" readonly></textarea>
                                             <button class="btn btn-sm btn-outline-primary copy-btn" data-target="fupost-body"><i class="bi bi-clipboard me-1"></i> Copy Email</button>
                                         </div>
                                     </div>
@@ -655,76 +190,21 @@
 
                         <!-- Tab 4: Calendar -->
                         <div class="tab-pane fade" id="tab-cal">
-                            <div class="text-center py-4">
-                                <div class="avatar-lg rounded-circle bg-primary-subtle text-primary d-inline-flex align-items-center justify-content-center mb-3" style="width: 56px; height: 56px;">
-                                    <i class="bi bi-calendar-check fs-2"></i>
-                                </div>
+                            <div class="text-center py-3">
+                                <i class="bi bi-calendar-check text-primary fs-1 mb-2 d-block"></i>
                                 <h6 class="fw-bold mb-1" id="cal-event-title">Interview Event</h6>
-                                <p class="text-muted small mb-4" id="cal-event-time">--</p>
+                                <p class="text-muted small mb-3" id="cal-event-time">--</p>
                                 <div class="d-flex justify-content-center gap-2">
                                     <a id="btn-google-cal" href="#" target="_blank" class="btn btn-primary-custom btn-sm">
                                         <i class="bi bi-google me-1"></i> Add to Google Calendar
                                     </a>
-                                    <a id="btn-download-ics" href="#" class="btn btn-outline-custom btn-sm">
-                                        <i class="bi bi-download me-1"></i> Download .ics
+                                    <a id="btn-download-ics" href="#" class="btn btn-outline-secondary btn-sm">
+                                        <i class="bi bi-download me-1"></i> Download .ics File
                                     </a>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 7. Quick Add Application Modal -->
-    <div class="modal fade" id="addAppModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0 shadow">
-                <div class="modal-header border-bottom">
-                    <h5 class="modal-title fw-bold text-dark"><i class="bi bi-plus-circle text-primary me-2"></i>Record New Application</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <p class="small text-muted mb-3">Add a position you applied to externally or through employer portals to track its status.</p>
-                    <form id="addApplicationForm">
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold">Company Name *</label>
-                            <input type="text" id="newAppCompany" class="form-control" placeholder="e.g. Google, Microsoft, Stripe" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold">Job Title *</label>
-                            <input type="text" id="newAppTitle" class="form-control" placeholder="e.g. Senior Frontend Developer" required>
-                        </div>
-                        <div class="row g-2 mb-3">
-                            <div class="col-6">
-                                <label class="form-label small fw-semibold">Initial Stage</label>
-                                <select id="newAppStage" class="form-select">
-                                    <option value="saved">Saved</option>
-                                    <option value="applied" selected>Applied</option>
-                                    <option value="interviewing">Interview Scheduled</option>
-                                    <option value="offer">Offer Received</option>
-                                    <option value="rejected">Rejected</option>
-                                </select>
-                            </div>
-                            <div class="col-6">
-                                <label class="form-label small fw-semibold">Location / Mode</label>
-                                <input type="text" id="newAppLocation" class="form-control" placeholder="e.g. Remote, San Francisco">
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold">Application URL (Optional)</label>
-                            <input type="url" id="newAppUrl" class="form-control" placeholder="https://careers...">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold">Next Step / Follow-up Note</label>
-                            <input type="text" id="newAppNextStep" class="form-control" placeholder="e.g. Follow-up after 1 week">
-                        </div>
-                        <div class="text-end">
-                            <button type="button" class="btn btn-outline-custom me-2" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary-custom" id="saveNewAppBtn">Save Application</button>
-                        </div>
-                    </form>
                 </div>
             </div>
         </div>
@@ -735,7 +215,6 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script>
-// Copy to clipboard helper
 document.querySelectorAll('.copy-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         const targetId = this.getAttribute('data-target');
@@ -755,7 +234,6 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
     });
 });
 
-// Outreach modal controller
 const outreachModalEl = document.getElementById('outreachModal');
 const outreachModal = new bootstrap.Modal(outreachModalEl);
 
@@ -852,17 +330,14 @@ document.querySelectorAll('.kanban-card').forEach(card => {
 document.querySelectorAll('.kanban-column').forEach(column => {
     column.addEventListener('dragover', function(e) {
         e.preventDefault();
-        this.style.borderColor = '#6366F1';
-        this.style.backgroundColor = 'rgba(99, 102, 241, 0.05)';
+        this.classList.add('border-primary');
     });
     column.addEventListener('dragleave', function() {
-        this.style.borderColor = '#E2E8F0';
-        this.style.backgroundColor = '#F8FAFC';
+        this.classList.remove('border-primary');
     });
     column.addEventListener('drop', function(e) {
         e.preventDefault();
-        this.style.borderColor = '#E2E8F0';
-        this.style.backgroundColor = '#F8FAFC';
+        this.classList.remove('border-primary');
         const appId = e.dataTransfer.getData('text/plain');
         const targetStage = this.getAttribute('data-stage');
 
@@ -876,103 +351,26 @@ document.querySelectorAll('.kanban-column').forEach(column => {
             }
 
             // Sync with backend API
-            updateAppStatus(appId, targetStage);
+            fetch('/applications/api/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    application_id: appId,
+                    status: targetStage
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                // Update column badge counts
+                document.querySelectorAll('.kanban-column').forEach(col => {
+                    const badge = col.querySelector('.column-count-badge');
+                    const cards = col.querySelectorAll('.kanban-card');
+                    if (badge) badge.textContent = cards.length;
+                });
+            })
+            .catch(err => console.error('Kanban drag error:', err));
         }
     });
 });
-
-// Dropdown Status Change Handler
-document.querySelectorAll('.select-app-status').forEach(select => {
-    select.addEventListener('change', function() {
-        const appId = this.getAttribute('data-app-id');
-        const newStatus = this.value;
-        const card = this.closest('.kanban-card');
-        const targetCol = document.querySelector(`.kanban-column[data-stage="${newStatus}"]`);
-
-        if (targetCol && card) {
-            const dropZone = targetCol.querySelector('.kanban-drop-zone');
-            if (dropZone) dropZone.appendChild(card);
-        }
-        updateAppStatus(appId, newStatus);
-    });
-});
-
-function updateAppStatus(appId, status) {
-    fetch('/applications/api/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            application_id: appId,
-            status: status
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        // Update column badge counts
-        document.querySelectorAll('.kanban-column').forEach(col => {
-            const badge = col.querySelector('.column-count-badge');
-            const cards = col.querySelectorAll('.kanban-card');
-            if (badge) badge.textContent = cards.length;
-        });
-    })
-    .catch(err => console.error('Kanban drag error:', err));
-}
-
-// Table filtering by status tabs
-const filterTabs = document.querySelectorAll('.tab-filter-btn');
-const tableRows = document.querySelectorAll('.app-table-row');
-
-filterTabs.forEach(tab => {
-    tab.addEventListener('click', function() {
-        filterTabs.forEach(t => t.classList.remove('active'));
-        this.classList.add('active');
-        const filter = this.getAttribute('data-status-filter');
-
-        tableRows.forEach(row => {
-            const rowStatus = row.getAttribute('data-status');
-            if (filter === 'all' || rowStatus === filter) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    });
-});
-
-// Table search input
-const searchInput = document.getElementById('appTableSearch');
-if (searchInput) {
-    searchInput.addEventListener('input', function() {
-        const query = this.value.toLowerCase().trim();
-        tableRows.forEach(row => {
-            const company = row.getAttribute('data-company') || '';
-            const role = row.getAttribute('data-role') || '';
-            if (!query || company.includes(query) || role.includes(query)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-    });
-}
-
-// Quick Add Application Form
-const addForm = document.getElementById('addApplicationForm');
-if (addForm) {
-    addForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const company = document.getElementById('newAppCompany').value;
-        const title = document.getElementById('newAppTitle').value;
-        const stage = document.getElementById('newAppStage').value;
-        const nextStep = document.getElementById('newAppNextStep').value;
-
-        // In demo / live, we can alert or POST to an endpoint
-        alert(`Application for "${title}" at "${company}" recorded as "${stage}". Refreshing...`);
-        const addModalEl = document.getElementById('addAppModal');
-        const modal = bootstrap.Modal.getInstance(addModalEl);
-        if (modal) modal.hide();
-        window.location.reload();
-    });
-}
 </script>
 {% endblock %}

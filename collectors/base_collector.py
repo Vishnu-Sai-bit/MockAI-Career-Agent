@@ -4,6 +4,7 @@ from typing import List, Optional, Dict, Any, Tuple
 from pydantic import BaseModel, Field
 import requests
 from utils.logging_config import logger
+from utils.job_live_check import check_url_live
 
 class RawJobRecord(BaseModel):
     source_platform: str
@@ -53,21 +54,8 @@ class BaseCollector(ABC):
 
     def verify_job_live(self, original_url: str, apply_url: str) -> Tuple[bool, int, str]:
         """
-        Default HTTP verification for job availability.
+        Default HTTP verification for job availability with in-page content checking.
         Returns (is_active, http_status, details).
         """
         target = apply_url or original_url
-        try:
-            resp = self.session.head(target, timeout=self.timeout, allow_redirects=True)
-            if resp.status_code == 405:  # HEAD not allowed
-                resp = self.session.get(target, timeout=self.timeout, allow_redirects=True, stream=True)
-            
-            # Check for not found or explicit redirect away
-            if resp.status_code == 200:
-                return True, resp.status_code, "Verified accessible"
-            elif resp.status_code in (404, 410):
-                return False, resp.status_code, f"Posting returned {resp.status_code} (Gone/Not Found)"
-            else:
-                return True, resp.status_code, f"Returned status {resp.status_code}"
-        except Exception as e:
-            return False, 0, f"Connection error: {str(e)}"
+        return check_url_live(target, timeout=self.timeout)

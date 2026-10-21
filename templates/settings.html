@@ -1,634 +1,109 @@
 {% extends "base.html" %}
 
-{% block title %}Profile & Settings — AI Job Agent{% endblock %}
+{% block title %}Settings & Career Preferences — AI Job Agent{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-lg-4 py-4">
-    <!-- 1. Header Section -->
-    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-primary-subtle text-primary px-2.5 py-1 rounded-pill small fw-semibold">
-                    <i class="bi bi-gear-fill me-1"></i> Account Preferences
-                </span>
-                <span class="text-muted small">Updated in real-time</span>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card p-4 p-md-5 custom-card border-0 bg-white shadow-sm">
+                <div class="mb-4">
+                    <h3 class="fw-bold mb-1"><i class="bi bi-gear-fill text-primary me-2"></i>Career Preferences & Settings</h3>
+                    <p class="text-muted small mb-0">Customize your preferred locations, work modes, and titles to fine-tune matching scores.</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('dashboard.settings') }}">
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Profile Information</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Full Name</label>
+                            <input type="text" name="full_name" class="form-control" value="{{ profile.full_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Contact Phone</label>
+                            <input type="text" name="phone" class="form-control" value="{{ profile.phone }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold d-flex justify-content-between">
+                                <span>Present Address (Current Residence)</span>
+                                <span class="badge bg-light text-muted border">From Resume</span>
+                            </label>
+                            <input type="text" name="location" class="form-control" value="{{ profile.location }}" placeholder="e.g. Dharmavaram, Andhra Pradesh, India">
+                            <div class="form-text fs-8 text-muted">Your current residential city/town from resume contact info.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Professional Headline</label>
+                            <input type="text" name="headline" class="form-control" value="{{ profile.headline }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Executive Summary</label>
+                            <textarea name="summary" class="form-control" rows="3">{{ profile.summary }}</textarea>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Job Matching Preferences</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Target Job Titles (Comma-separated)</label>
+                            <input type="text" name="preferred_titles" class="form-control" value="{{ profile.preferred_titles|join(', ') }}" placeholder="e.g. Python Developer, Full Stack Engineer, Backend Engineer">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Preferred Countries (Comma-separated)</label>
+                            <input type="text" name="preferred_countries" class="form-control" value="{{ profile.preferred_countries|join(', ') }}" placeholder="e.g. United States, India, Germany, United Kingdom">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Preferred Cities (Comma-separated)</label>
+                            <input type="text" name="preferred_cities" class="form-control" value="{{ profile.preferred_cities|join(', ') }}" placeholder="e.g. Bengaluru, Hyderabad, Pune, London">
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="open_to_relocation" id="setReloc" {% if profile.open_to_relocation %}checked{% endif %}>
+                                <label class="form-check-label small" for="setReloc">
+                                    <i class="bi bi-airplane-engines text-primary me-1"></i> Open to relocation / work across India & globally
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Experience Level</label>
+                            <select name="experience_level" class="form-select">
+                                <option value="entry" {% if profile.experience_level == 'entry' %}selected{% endif %}>Entry / Fresher (0-2 years)</option>
+                                <option value="mid" {% if profile.experience_level == 'mid' %}selected{% endif %}>Mid-Level (2-5 years)</option>
+                                <option value="senior" {% if profile.experience_level == 'senior' %}selected{% endif %}>Senior (5-8 years)</option>
+                                <option value="lead" {% if profile.experience_level == 'lead' %}selected{% endif %}>Lead / Principal (8+ years)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Minimum Target Salary (USD/yr)</label>
+                            <input type="number" name="min_salary" class="form-control" value="{{ profile.min_salary or '' }}" placeholder="e.g. 90000">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold d-block">Work Modes Accepted</label>
+                            {% set modes = profile.work_modes or ['remote', 'hybrid', 'on-site'] %}
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="work_modes" value="remote" id="modeRemote" {% if 'remote' in modes %}checked{% endif %}>
+                                <label class="form-check-label small" for="modeRemote">Remote</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="work_modes" value="hybrid" id="modeHybrid" {% if 'hybrid' in modes %}checked{% endif %}>
+                                <label class="form-check-label small" for="modeHybrid">Hybrid</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" name="work_modes" value="on-site" id="modeOnSite" {% if 'on-site' in modes %}checked{% endif %}>
+                                <label class="form-check-label small" for="modeOnSite">On-site</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="visa_sponsorship_required" id="visaSponsorship" {% if profile.visa_sponsorship_required %}checked{% endif %}>
+                                <label class="form-check-label small" for="visaSponsorship">Require visa sponsorship</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary-custom px-4 py-2">Save Preferences & Update Matching</button>
+                    </div>
+                </form>
             </div>
-            <h2 class="fw-bold text-dark mb-1 tracking-tight">Profile & Settings</h2>
-            <p class="text-muted small mb-0">Manage your personal information, career preferences, security, and notification settings.</p>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('dashboard.dashboard_home') }}" class="btn btn-outline-custom btn-sm">
-                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
-            </a>
-            <button type="button" class="btn btn-primary-custom btn-sm" onclick="document.getElementById('settingsMainForm').submit();">
-                <i class="bi bi-check2 me-1"></i> Save All Changes
-            </button>
         </div>
     </div>
-
-    {% set active_resume = current_user.get_active_resume() %}
-    {% set user_display_name = profile.full_name or (current_user.email.split('@')[0]|title) %}
-
-    <!-- 2. Top Multi-Tab Navigation (Image 4) -->
-    <div class="card border-0 shadow-sm rounded-4 bg-white p-2 mb-4">
-        <ul class="nav nav-pills gap-1 overflow-x-auto flex-nowrap" id="settingsTabs" role="tablist">
-            <li class="nav-item">
-                <button class="nav-link active py-2 px-3 fs-8 fw-semibold rounded-pill d-flex align-items-center gap-1.5" data-bs-toggle="pill" data-bs-target="#tab-profile">
-                    <i class="bi bi-person-circle"></i> Profile
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill d-flex align-items-center gap-1.5" data-bs-toggle="pill" data-bs-target="#tab-preferences">
-                    <i class="bi bi-sliders"></i> Preferences
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill d-flex align-items-center gap-1.5" data-bs-toggle="pill" data-bs-target="#tab-security">
-                    <i class="bi bi-shield-lock"></i> Security
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill d-flex align-items-center gap-1.5" data-bs-toggle="pill" data-bs-target="#tab-privacy">
-                    <i class="bi bi-eye"></i> Privacy
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill d-flex align-items-center gap-1.5" data-bs-toggle="pill" data-bs-target="#tab-notifications">
-                    <i class="bi bi-bell"></i> Notifications
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill d-flex align-items-center gap-1.5" data-bs-toggle="pill" data-bs-target="#tab-integrations">
-                    <i class="bi bi-grid-fill"></i> Integrations
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill d-flex align-items-center gap-1.5" data-bs-toggle="pill" data-bs-target="#tab-appearance">
-                    <i class="bi bi-palette"></i> Appearance
-                </button>
-            </li>
-        </ul>
-    </div>
-
-    <form method="POST" action="{{ url_for('dashboard.settings') }}" id="settingsMainForm">
-        <div class="row g-4">
-            <!-- Left Column: User Summary Card (Image 4) -->
-            <div class="col-lg-4 col-xl-3">
-                <div class="card border-0 shadow-sm rounded-4 bg-white p-4 text-center sticky-top" style="top: 1rem; z-index: 10;">
-                    <!-- Avatar with Edit Badge -->
-                    <div class="position-relative d-inline-block mx-auto mb-3">
-                        <div class="avatar-xl rounded-circle shadow-sm d-flex align-items-center justify-content-center text-white fw-bold" style="width: 90px; height: 90px; background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%); font-size: 2.2rem;">
-                            {{ user_display_name[0]|upper }}
-                        </div>
-                        <span class="position-absolute bottom-0 end-0 p-1.5 bg-primary text-white rounded-circle shadow-xs fs-8" title="Change Avatar" style="cursor: pointer;">
-                            <i class="bi bi-camera-fill"></i>
-                        </span>
-                    </div>
-
-                    <h5 class="fw-bold text-dark mb-1">{{ user_display_name }}</h5>
-                    <p class="text-muted fs-8 mb-2">{{ profile.headline or 'Full Stack Software Engineer' }}</p>
-
-                    <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
-                        <span class="badge bg-light text-muted border fs-9">
-                            <i class="bi bi-geo-alt me-1 text-primary"></i>{{ profile.location or 'Global' }}
-                        </span>
-                        <span class="badge bg-success-subtle text-success fs-9 border border-success-subtle">
-                            <i class="bi bi-check-circle-fill me-1"></i>Verified
-                        </span>
-                    </div>
-
-                    <!-- Profile Completion Progress -->
-                    <div class="p-3 rounded-3 bg-light text-start mb-3">
-                        <div class="d-flex justify-content-between align-items-center fs-8 mb-1.5">
-                            <span class="text-muted fw-semibold">Profile Completion</span>
-                            <span class="fw-bold text-primary">85%</span>
-                        </div>
-                        <div class="progress mb-2" style="height: 6px;">
-                            <div class="progress-bar bg-primary" style="width: 85%;"></div>
-                        </div>
-                        <small class="text-muted fs-9 d-block">Add social links and target salary to reach 100%.</small>
-                    </div>
-
-                    <!-- Social / External Links -->
-                    <div class="text-start mb-3">
-                        <label class="form-label fs-8 fw-semibold text-muted mb-2">Professional Profiles</label>
-                        <div class="d-flex flex-column gap-2">
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-light border-0"><i class="bi bi-linkedin text-primary"></i></span>
-                                <input type="text" class="form-control bg-light border-0 fs-8" placeholder="linkedin.com/in/..." value="linkedin.com/in/{{ user_display_name|lower|replace(' ', '') }}">
-                            </div>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-light border-0"><i class="bi bi-github text-dark"></i></span>
-                                <input type="text" class="form-control bg-light border-0 fs-8" placeholder="github.com/..." value="github.com/{{ user_display_name|lower|replace(' ', '') }}">
-                            </div>
-                            <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-light border-0"><i class="bi bi-globe text-secondary"></i></span>
-                                <input type="text" class="form-control bg-light border-0 fs-8" placeholder="portfolio.dev">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pt-3 border-top text-start fs-8 text-muted">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span>Account ID:</span>
-                            <strong class="text-dark">#USR-{{ current_user.id }}</strong>
-                        </div>
-                        <div class="d-flex justify-content-between">
-                            <span>Status:</span>
-                            <span class="text-success fw-semibold"><i class="bi bi-dot"></i>Active Member</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Column: Tab Panels & Forms (Image 4) -->
-            <div class="col-lg-8 col-xl-9">
-                <div class="tab-content" id="settingsTabContent">
-                    <!-- ================= TAB 1: PROFILE ================= -->
-                    <div class="tab-pane fade show active" id="tab-profile" role="tabpanel">
-                        <!-- Card 1: User Profile Information -->
-                        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div>
-                                    <h5 class="fw-bold text-dark mb-0">User Profile Information</h5>
-                                    <small class="text-muted">Primary identity and contact information for job matching</small>
-                                </div>
-                                <span class="badge bg-light text-muted border fs-9">Public Info</span>
-                            </div>
-
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold">Full Name *</label>
-                                    <input type="text" name="full_name" class="form-control" value="{{ profile.full_name }}" placeholder="e.g. Alex Johnson" required>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold d-flex justify-content-between">
-                                        <span>Email Address</span>
-                                        <span class="text-success fs-9"><i class="bi bi-patch-check-fill me-1"></i>Verified</span>
-                                    </label>
-                                    <input type="email" class="form-control bg-light text-muted" value="{{ current_user.email }}" readonly>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold">Contact Phone Number</label>
-                                    <input type="text" name="phone" class="form-control" value="{{ profile.phone }}" placeholder="e.g. +1 (555) 019-2834">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold d-flex justify-content-between">
-                                        <span>Present Address (Current Residence)</span>
-                                        <span class="badge bg-light text-muted border fs-9">From Resume</span>
-                                    </label>
-                                    <input type="text" name="location" class="form-control" value="{{ profile.location }}" placeholder="e.g. San Francisco, CA or Bengaluru, India">
-                                    <div class="form-text fs-9 text-muted">Your actual present address extracted from contact information.</div>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label small fw-semibold">Professional Headline</label>
-                                    <input type="text" name="headline" class="form-control" value="{{ profile.headline }}" placeholder="e.g. Senior Full Stack Engineer | Python, React, Cloud Architecture">
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label small fw-semibold">Executive Summary / Bio</label>
-                                    <textarea name="summary" class="form-control fs-8" rows="3" placeholder="Provide a brief summary of your core skills, notable achievements, and engineering philosophy...">{{ profile.summary }}</textarea>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card 2: Professional Information -->
-                        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div>
-                                    <h5 class="fw-bold text-dark mb-0">Professional Information</h5>
-                                    <small class="text-muted">Domain experience, key skills, and compensation expectations</small>
-                                </div>
-                            </div>
-
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold">Experience Level</label>
-                                    <select name="experience_level" class="form-select">
-                                        <option value="entry" {% if profile.experience_level == 'entry' %}selected{% endif %}>Entry Level / Fresher (0-2 years)</option>
-                                        <option value="mid" {% if profile.experience_level == 'mid' %}selected{% endif %}>Mid-Level (2-5 years)</option>
-                                        <option value="senior" {% if profile.experience_level == 'senior' %}selected{% endif %}>Senior (5-8 years)</option>
-                                        <option value="lead" {% if profile.experience_level == 'lead' %}selected{% endif %}>Lead / Principal / Director (8+ years)</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold">Primary Industry / Domain</label>
-                                    <input type="text" class="form-control" value="Software Engineering & Cloud Architecture">
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold">Minimum Expected Salary (USD/yr)</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" name="min_salary" class="form-control" value="{{ profile.min_salary or '' }}" placeholder="e.g. 120000">
-                                    </div>
-                                    <small class="form-text fs-9 text-muted">Used to filter salary intelligence and recommendations.</small>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold">Expected CTC Range (INR / LPA)</label>
-                                    <input type="text" class="form-control" placeholder="e.g. ₹18 LPA - ₹30 LPA" value="₹18 LPA - ₹30 LPA">
-                                    <small class="form-text fs-9 text-muted">For Indian tech employer alignment.</small>
-                                </div>
-                                <div class="col-12">
-                                    <label class="form-label small fw-semibold d-block">Key Technical Skills & Competencies</label>
-                                    <div class="d-flex flex-wrap gap-1.5 p-3 rounded-3 bg-light border">
-                                        {% set default_skills = ['Python', 'Flask', 'React', 'TypeScript', 'SQLAlchemy', 'PostgreSQL', 'Docker', 'AWS', 'REST APIs', 'Git'] %}
-                                        {% set active_skills = profile.skills or default_skills %}
-                                        {% for s in active_skills %}
-                                            <span class="badge bg-white text-dark border px-2.5 py-1.5 rounded-pill fs-8 d-flex align-items-center gap-1 shadow-xs">
-                                                {{ s }} <i class="bi bi-x text-muted" style="cursor: pointer;"></i>
-                                            </span>
-                                        {% endfor %}
-                                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill py-0.5 px-2.5 fs-8" onclick="alert('Type new skill name to add')">
-                                            <i class="bi bi-plus"></i> Add Skill
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Card 3: Resume & Documents -->
-                        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div>
-                                    <h5 class="fw-bold text-dark mb-0">Active Resume & Documents</h5>
-                                    <small class="text-muted">Primary parsed resume used for AI job matching and score generation</small>
-                                </div>
-                                <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-upload me-1"></i> Upload New
-                                </a>
-                            </div>
-
-                            {% if active_resume %}
-                                <div class="p-3 rounded-3 border bg-light d-flex flex-wrap justify-content-between align-items-center gap-3">
-                                    <div class="d-flex align-items-center gap-3">
-                                        <div class="avatar-md rounded-3 bg-danger-subtle text-danger d-flex align-items-center justify-content-center" style="width: 48px; height: 48px; background: rgba(239, 68, 68, 0.12); color: #EF4444;">
-                                            <i class="bi bi-file-earmark-pdf-fill fs-3"></i>
-                                        </div>
-                                        <div>
-                                            <h6 class="fw-bold text-dark mb-0">{{ active_resume.filename or 'Resume_Current.pdf' }}</h6>
-                                            <small class="text-muted fs-8">
-                                                Uploaded {{ active_resume.created_at.strftime('%b %d, %Y') if active_resume.created_at else 'Oct 18, 2026' }} · Active Primary
-                                            </small>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex gap-2">
-                                        <a href="{{ url_for('resume.analyze_resume') }}" class="btn btn-sm btn-outline-custom">
-                                            <i class="bi bi-eye me-1"></i> View Intelligence
-                                        </a>
-                                        <a href="{{ url_for('resume.ats_report') }}" class="btn btn-sm btn-primary-custom">
-                                            <i class="bi bi-file-earmark-bar-graph me-1"></i> ATS Report (92%)
-                                        </a>
-                                    </div>
-                                </div>
-                            {% else %}
-                                <div class="p-4 rounded-3 border border-dashed text-center">
-                                    <i class="bi bi-cloud-arrow-up fs-2 text-muted d-block mb-2"></i>
-                                    <h6 class="fw-bold mb-1">No Resume Uploaded Yet</h6>
-                                    <p class="small text-muted mb-3">Upload your PDF or DOCX resume to extract skills and enable AI recommendations.</p>
-                                    <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-primary-custom btn-sm">Upload Resume Now</a>
-                                </div>
-                            {% endif %}
-                        </div>
-                    </div>
-
-                    <!-- ================= TAB 2: PREFERENCES ================= -->
-                    <div class="tab-pane fade" id="tab-preferences" role="tabpanel">
-                        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div>
-                                    <h5 class="fw-bold text-dark mb-0">Job Matching Preferences</h5>
-                                    <small class="text-muted">Configure target titles, geographical filters, and work arrangements</small>
-                                </div>
-                            </div>
-
-                            <div class="row g-3">
-                                <div class="col-12">
-                                    <label class="form-label small fw-semibold">Target Job Titles (Comma-separated)</label>
-                                    <input type="text" name="preferred_titles" class="form-control" value="{{ profile.preferred_titles|join(', ') }}" placeholder="e.g. Python Developer, Full Stack Engineer, Backend Engineer, Tech Lead">
-                                    <small class="form-text fs-9 text-muted">The AI engine boosts matching scores for jobs containing these target titles.</small>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold">Preferred Countries (Comma-separated)</label>
-                                    <input type="text" name="preferred_countries" class="form-control" value="{{ profile.preferred_countries|join(', ') }}" placeholder="e.g. United States, India, Germany, United Kingdom, Canada">
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label small fw-semibold">Preferred Cities (Comma-separated)</label>
-                                    <input type="text" name="preferred_cities" class="form-control" value="{{ profile.preferred_cities|join(', ') }}" placeholder="e.g. San Francisco, New York, London, Bengaluru, Hyderabad">
-                                </div>
-
-                                <div class="col-12">
-                                    <div class="p-3 rounded-3 bg-light border d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <span class="fw-bold text-dark fs-8 d-block"><i class="bi bi-airplane-engines text-primary me-2"></i>Open to Relocation</span>
-                                            <small class="text-muted fs-9">Consider opportunities in other states, countries, or international hubs.</small>
-                                        </div>
-                                        <div class="form-check form-switch mb-0">
-                                            <input class="form-check-input" type="checkbox" name="open_to_relocation" id="setReloc" style="width: 2.4em; height: 1.25em;" {% if profile.open_to_relocation %}checked{% endif %}>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-12">
-                                    <label class="form-label small fw-semibold d-block">Work Modes Accepted</label>
-                                    {% set modes = profile.work_modes or ['remote', 'hybrid', 'on-site'] %}
-                                    <div class="d-flex flex-wrap gap-3">
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="work_modes" value="remote" id="modeRemote" {% if 'remote' in modes %}checked{% endif %}>
-                                            <label class="form-check-label fs-8" for="modeRemote"><i class="bi bi-laptop me-1"></i> Remote Only</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="work_modes" value="hybrid" id="modeHybrid" {% if 'hybrid' in modes %}checked{% endif %}>
-                                            <label class="form-check-label fs-8" for="modeHybrid"><i class="bi bi-building me-1"></i> Hybrid</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" name="work_modes" value="on-site" id="modeOnSite" {% if 'on-site' in modes %}checked{% endif %}>
-                                            <label class="form-check-label fs-8" for="modeOnSite"><i class="bi bi-geo-alt me-1"></i> On-site</label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="col-12">
-                                    <div class="p-3 rounded-3 bg-light border d-flex justify-content-between align-items-center">
-                                        <div>
-                                            <span class="fw-bold text-dark fs-8 d-block"><i class="bi bi-passport text-primary me-2"></i>Require Visa Sponsorship</span>
-                                            <small class="text-muted fs-9">Only highlight employers that sponsor H-1B, Tier 2, or Global visas.</small>
-                                        </div>
-                                        <div class="form-check form-switch mb-0">
-                                            <input class="form-check-input" type="checkbox" name="visa_sponsorship_required" id="visaSponsorship" style="width: 2.4em; height: 1.25em;" {% if profile.visa_sponsorship_required %}checked{% endif %}>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ================= TAB 3: SECURITY ================= -->
-                    <div class="tab-pane fade" id="tab-security" role="tabpanel">
-                        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div>
-                                    <h5 class="fw-bold text-dark mb-0">Security & Authentication</h5>
-                                    <small class="text-muted">Password credentials, two-factor authentication, and active sessions</small>
-                                </div>
-                            </div>
-
-                            <!-- 2FA Switch -->
-                            <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-center mb-4">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="avatar-md rounded-3 bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
-                                        <i class="bi bi-shield-check fs-4"></i>
-                                    </div>
-                                    <div>
-                                        <span class="fw-bold text-dark fs-8 d-block">Two-Factor Authentication (2FA)</span>
-                                        <small class="text-muted fs-9">Protect your candidate account using TOTP or Authenticator App.</small>
-                                    </div>
-                                </div>
-                                <div class="form-check form-switch mb-0">
-                                    <input class="form-check-input" type="checkbox" id="twoFaToggle" style="width: 2.4em; height: 1.25em;" checked>
-                                </div>
-                            </div>
-
-                            <!-- Password Update Fields -->
-                            <h6 class="fw-bold text-dark mb-3">Change Password</h6>
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-semibold">Current Password</label>
-                                    <input type="password" class="form-control" placeholder="••••••••">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-semibold">New Password</label>
-                                    <input type="password" class="form-control" placeholder="Minimum 8 characters">
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label small fw-semibold">Confirm New Password</label>
-                                    <input type="password" class="form-control" placeholder="Repeat new password">
-                                </div>
-                                <div class="col-12 text-end">
-                                    <button type="button" class="btn btn-outline-custom btn-sm" onclick="alert('Password updated.')">Update Password</button>
-                                </div>
-                            </div>
-
-                            <!-- Active Sessions -->
-                            <h6 class="fw-bold text-dark mb-2">Active Logged-in Sessions</h6>
-                            <div class="d-flex flex-column gap-2">
-                                <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-center">
-                                    <div class="d-flex align-items-center gap-2.5">
-                                        <i class="bi bi-laptop text-primary fs-4"></i>
-                                        <div>
-                                            <span class="fw-bold text-dark fs-8 d-block">Windows 11 · Google Chrome</span>
-                                            <small class="text-muted fs-9">Current Active Session · 127.0.0.1</small>
-                                        </div>
-                                    </div>
-                                    <span class="badge bg-success-subtle text-success fs-9">Active Now</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ================= TAB 4: PRIVACY ================= -->
-                    <div class="tab-pane fade" id="tab-privacy" role="tabpanel">
-                        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                            <h5 class="fw-bold text-dark mb-1">Privacy & Data Governance</h5>
-                            <p class="text-muted fs-8 mb-4">Control how your candidate profile and extracted resume data are shared.</p>
-
-                            <div class="d-flex flex-column gap-3 mb-4">
-                                <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="fw-bold text-dark fs-8 d-block">AI Job Match Discovery</span>
-                                        <small class="text-muted fs-9">Allow matching engine to compare your anonymized profile against live job feeds.</small>
-                                    </div>
-                                    <div class="form-check form-switch mb-0">
-                                        <input class="form-check-input" type="checkbox" style="width: 2.4em; height: 1.25em;" checked>
-                                    </div>
-                                </div>
-
-                                <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="fw-bold text-dark fs-8 d-block">Salary Intelligence Contribution</span>
-                                        <small class="text-muted fs-9">Help improve aggregate market compensation benchmarks (anonymized).</small>
-                                    </div>
-                                    <div class="form-check form-switch mb-0">
-                                        <input class="form-check-input" type="checkbox" style="width: 2.4em; height: 1.25em;" checked>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <h6 class="fw-bold text-dark mb-2">Export or Erase Data</h6>
-                            <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-outline-custom btn-sm" onclick="alert('Exporting profile data package (JSON)...')">
-                                    <i class="bi bi-download me-1"></i> Export Profile Data
-                                </button>
-                                <button type="button" class="btn btn-outline-danger btn-sm" onclick="if(confirm('Are you sure you want to delete your account?')) alert('Account deletion requested.');">
-                                    <i class="bi bi-trash3 me-1"></i> Delete Account
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ================= TAB 5: NOTIFICATIONS ================= -->
-                    <div class="tab-pane fade" id="tab-notifications" role="tabpanel">
-                        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                            <h5 class="fw-bold text-dark mb-1">Notification Preferences</h5>
-                            <p class="text-muted fs-8 mb-4">Choose what updates and reminders you receive via email and in-app alerts.</p>
-
-                            <div class="d-flex flex-column gap-3">
-                                <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="fw-bold text-dark fs-8 d-block">New Matching Job Alerts (90%+ Match)</span>
-                                        <small class="text-muted fs-9">Receive an alert when newly indexed jobs fit your target titles.</small>
-                                    </div>
-                                    <div class="form-check form-switch mb-0">
-                                        <input class="form-check-input" type="checkbox" style="width: 2.4em; height: 1.25em;" checked>
-                                    </div>
-                                </div>
-
-                                <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="fw-bold text-dark fs-8 d-block">Upcoming Interview & Follow-up Reminders</span>
-                                        <small class="text-muted fs-9">Get reminder notifications 24 hours before scheduled interview rounds.</small>
-                                    </div>
-                                    <div class="form-check form-switch mb-0">
-                                        <input class="form-check-input" type="checkbox" style="width: 2.4em; height: 1.25em;" checked>
-                                    </div>
-                                </div>
-
-                                <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="fw-bold text-dark fs-8 d-block">Weekly Career & Application Digest</span>
-                                        <small class="text-muted fs-9">Summary of applied roles, response rates, and salary trends.</small>
-                                    </div>
-                                    <div class="form-check form-switch mb-0">
-                                        <input class="form-check-input" type="checkbox" style="width: 2.4em; height: 1.25em;" checked>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ================= TAB 6: INTEGRATIONS ================= -->
-                    <div class="tab-pane fade" id="tab-integrations" role="tabpanel">
-                        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                            <h5 class="fw-bold text-dark mb-1">Connected Platforms & ATS Integrations</h5>
-                            <p class="text-muted fs-8 mb-4">Connect external job boards and career developer platforms.</p>
-
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-center">
-                                        <div class="d-flex align-items-center gap-2.5">
-                                            <i class="bi bi-linkedin fs-3 text-primary"></i>
-                                            <div>
-                                                <span class="fw-bold text-dark fs-8 d-block">LinkedIn Recruiter</span>
-                                                <small class="text-success fs-9"><i class="bi bi-check-circle-fill me-1"></i>Connected</small>
-                                            </div>
-                                        </div>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary fs-8">Configure</button>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-center">
-                                        <div class="d-flex align-items-center gap-2.5">
-                                            <i class="bi bi-github fs-3 text-dark"></i>
-                                            <div>
-                                                <span class="fw-bold text-dark fs-8 d-block">GitHub Repos</span>
-                                                <small class="text-success fs-9"><i class="bi bi-check-circle-fill me-1"></i>Connected</small>
-                                            </div>
-                                        </div>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary fs-8">Configure</button>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-center">
-                                        <div class="d-flex align-items-center gap-2.5">
-                                            <i class="bi bi-google fs-3 text-danger"></i>
-                                            <div>
-                                                <span class="fw-bold text-dark fs-8 d-block">Google Calendar</span>
-                                                <small class="text-success fs-9"><i class="bi bi-check-circle-fill me-1"></i>Synced</small>
-                                            </div>
-                                        </div>
-                                        <button type="button" class="btn btn-sm btn-outline-secondary fs-8">Sync Now</button>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6">
-                                    <div class="p-3 rounded-3 border bg-light d-flex justify-content-between align-items-center">
-                                        <div class="d-flex align-items-center gap-2.5">
-                                            <i class="bi bi-puzzle fs-3 text-warning"></i>
-                                            <div>
-                                                <span class="fw-bold text-dark fs-8 d-block">Chrome Autofill Extension</span>
-                                                <small class="text-muted fs-9">Active in Browser</small>
-                                            </div>
-                                        </div>
-                                        <button type="button" class="btn btn-sm btn-outline-primary fs-8">Manage</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- ================= TAB 7: APPEARANCE ================= -->
-                    <div class="tab-pane fade" id="tab-appearance" role="tabpanel">
-                        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
-                            <h5 class="fw-bold text-dark mb-1">Theme & Interface Appearance</h5>
-                            <p class="text-muted fs-8 mb-4">Customize the visual theme and layout density according to your preference.</p>
-
-                            <div class="row g-3 mb-4">
-                                <div class="col-md-4">
-                                    <div class="p-3 rounded-3 border border-primary bg-light text-center" style="cursor: pointer;">
-                                        <div class="p-3 rounded-2 bg-white mb-2 shadow-xs border">
-                                            <div class="d-flex gap-1 mb-1">
-                                                <span class="badge bg-primary" style="width: 16px; height: 8px;"></span>
-                                                <span class="badge bg-secondary" style="width: 24px; height: 8px;"></span>
-                                            </div>
-                                            <div class="bg-light rounded p-1 mb-1" style="height: 12px;"></div>
-                                        </div>
-                                        <span class="fw-bold text-dark fs-8 d-block">Modern Indigo (Default)</span>
-                                        <small class="text-primary fs-9 fw-semibold">● Active</small>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <div class="p-3 rounded-3 border bg-light text-center" style="cursor: pointer;" onclick="alert('Dark Slate theme applied.')">
-                                        <div class="p-3 rounded-2 bg-dark mb-2 shadow-xs border">
-                                            <div class="d-flex gap-1 mb-1">
-                                                <span class="badge bg-indigo" style="width: 16px; height: 8px;"></span>
-                                                <span class="badge bg-secondary" style="width: 24px; height: 8px;"></span>
-                                            </div>
-                                            <div class="bg-secondary bg-opacity-25 rounded p-1 mb-1" style="height: 12px;"></div>
-                                        </div>
-                                        <span class="fw-bold text-dark fs-8 d-block">Dark Slate</span>
-                                        <small class="text-muted fs-9">High Contrast</small>
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <div class="p-3 rounded-3 border bg-light text-center" style="cursor: pointer;" onclick="alert('System preference synchronized.')">
-                                        <div class="p-3 rounded-2 bg-white mb-2 shadow-xs border">
-                                            <i class="bi bi-circle-half fs-3 text-secondary"></i>
-                                        </div>
-                                        <span class="fw-bold text-dark fs-8 d-block">System Sync</span>
-                                        <small class="text-muted fs-9">Matches OS</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bottom Floating Actions -->
-                <div class="card border-0 shadow-sm rounded-4 bg-white p-3 d-flex flex-row justify-content-between align-items-center">
-                    <span class="text-muted fs-8">Make sure to save after updating your job preferences.</span>
-                    <div class="d-flex gap-2">
-                        <a href="{{ url_for('dashboard.dashboard_home') }}" class="btn btn-outline-custom px-4">Discard</a>
-                        <button type="submit" class="btn btn-primary-custom px-4 py-2">
-                            <i class="bi bi-check2-circle me-1"></i> Save Changes & Update Matching
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </form>
 </div>
 {% endblock %}

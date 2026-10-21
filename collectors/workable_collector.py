@@ -155,13 +155,8 @@ class WorkableCollector(BaseCollector):
         Verifies if a Workable posting is currently active.
         """
         target = apply_url or original_url
-        try:
-            resp = self.session.get(target, timeout=self.timeout, allow_redirects=True, stream=True)
-            if resp.status_code == 200:
-                return True, 200, "Workable application page verified live"
-            elif resp.status_code in (404, 410):
-                return False, resp.status_code, f"Workable page returned {resp.status_code} (Closed)"
-            else:
-                return True, resp.status_code, f"Workable status {resp.status_code}"
-        except Exception as e:
-            return False, 0, f"Workable verification error: {str(e)}"
+        if not target:
+            return False, 0, "No URL specified"
+        if "not_found=true" in target:
+            return False, 404, "Workable posting indicated closed (?not_found=true)"
+        return super().verify_job_live(original_url, apply_url)

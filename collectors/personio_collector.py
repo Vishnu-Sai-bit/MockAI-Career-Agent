@@ -81,10 +81,4 @@ class PersonioCollector(BaseCollector):
         return jobs
 
     def verify_job_live(self, original_url: str, apply_url: Optional[str] = None, **kwargs) -> Tuple[bool, int, str]:
-        target = apply_url or original_url
-        try:
-            resp = self.session.head(target, allow_redirects=True, timeout=self.timeout)
-            is_active = resp.status_code in (200, 301, 302, 303, 307, 308)
-            return is_active, resp.status_code, "Active" if is_active else f"HTTP {resp.status_code}"
-        except Exception as e:
-            return False, 0, f"Personio live verification error: {str(e)}"
+        return super().verify_job_live(original_url, apply_url or "")

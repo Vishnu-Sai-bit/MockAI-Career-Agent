@@ -164,14 +164,4 @@ class SmartRecruitersCollector(BaseCollector):
             except Exception:
                 pass
 
-        target = apply_url or original_url
-        try:
-            resp = self.session.get(target, timeout=self.timeout, allow_redirects=True, stream=True)
-            if resp.status_code == 200:
-                return True, 200, "SmartRecruiters application page verified live"
-            elif resp.status_code in (404, 410):
-                return False, resp.status_code, f"SmartRecruiters page returned {resp.status_code} (Closed)"
-            else:
-                return True, resp.status_code, f"SmartRecruiters status {resp.status_code}"
-        except Exception as e:
-            return False, 0, f"SmartRecruiters verification error: {str(e)}"
+        return super().verify_job_live(original_url, apply_url)

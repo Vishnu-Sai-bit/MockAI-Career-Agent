@@ -12,6 +12,20 @@
         </ol>
     </nav>
 
+    {% if job.status != 'active' %}
+    <div class="alert alert-warning d-flex flex-wrap align-items-center justify-content-between gap-3 p-3 mb-4 rounded-3 shadow-sm border" role="alert">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-exclamation-triangle-fill fs-5 text-warning-emphasis"></i>
+            <div>
+                <strong>Notice:</strong> This job posting has closed on the employer site and is no longer accepting applications.
+            </div>
+        </div>
+        <a href="{{ url_for('jobs.list_jobs', q=job.title) }}" class="btn btn-sm btn-outline-dark">
+            <i class="bi bi-search me-1"></i> View Live Matching Jobs
+        </a>
+    </div>
+    {% endif %}
+
     <!-- Top Job Header Card -->
     <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
         <div class="row align-items-center gy-3">
@@ -37,8 +51,8 @@
                         <span class="badge bg-danger-subtle text-danger">{{ job.status|title }}</span>
                     {% endif %}
                 </div>
-                <h3 class="fw-bold mb-1 text-white">{{ job.title }}</h3>
-                <h5 class="text-secondary fw-normal mb-2">{{ job.company }} · <i class="bi bi-geo-alt"></i> {{ job.location }}</h5>
+                <h3 class="fw-bold mb-1 text-dark">{{ job.title }}</h3>
+                <h5 class="text-muted fw-normal mb-2">{{ job.company }} · <i class="bi bi-geo-alt"></i> {{ job.location }}</h5>
                 <div class="small text-muted d-flex flex-wrap gap-2 align-items-center">
                     <span>Source Job ID: <code>{{ job.source_job_id }}</code></span> · 
                     <span><i class="bi bi-clock me-1 text-primary"></i>Posted: <strong>{{ job.posted_relative_time }}</strong> ({{ job.published_at.strftime('%b %d, %Y') if job.published_at else 'Recently' }})</span> · 
@@ -55,9 +69,15 @@
                             <i class="bi bi-file-earmark-text me-1"></i> Prepare Application
                         </a>
                     {% endif %}
-                    <a href="{{ url_for('jobs.safe_apply_redirect', job_id=job.id) }}" target="_blank" class="btn btn-primary-custom">
-                        Apply Now <i class="bi bi-box-arrow-up-right ms-1"></i>
-                    </a>
+                    {% if job.status == 'active' %}
+                        <a href="{{ url_for('jobs.safe_apply_redirect', job_id=job.id) }}" target="_blank" class="btn btn-primary-custom">
+                            Apply Now <i class="bi bi-box-arrow-up-right ms-1"></i>
+                        </a>
+                    {% else %}
+                        <button class="btn btn-secondary" disabled>
+                            <i class="bi bi-x-circle me-1"></i> Posting Closed
+                        </button>
+                    {% endif %}
                 </div>
             </div>
         </div>

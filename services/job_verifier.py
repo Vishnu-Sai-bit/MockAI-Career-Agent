@@ -4,6 +4,7 @@ import requests
 from extensions import db
 from models.job import Job, VerificationLog
 from utils.url_validation import validate_external_job_url, is_safe_host
+from utils.job_live_check import check_url_live
 from collectors import get_collector_for_platform
 from utils.logging_config import logger
 
@@ -21,10 +22,13 @@ class JobVerifier:
         Logs result in VerificationLog and updates job.status and job.last_verified_at.
         Returns (is_active, message).
         """
+        if job.status in ("closed", "expired", "unavailable"):
+            return False, "Job is closed"
+
         target_url = job.apply_url or job.original_url
         is_valid_url, err_msg, _ = validate_external_job_url(target_url, expected_platform=job.source_platform)
         if not is_valid_url:
-            self._record_log(job, "host_disallowed", 0, target_url, err_msg or "Disallowed host or unsafe scheme")
+            self._record_log(job, "host_disallowed", 0, target_url or "", err_msg or "Disallowed host or unsafe scheme")
             job.status = "unavailable"
             job.last_verified_at = utc_now()
             db.session.commit()
@@ -46,9 +50,10 @@ class JobVerifier:
             else:
                 is_active, status_code, details = self._http_verify(target_url)
         except Exception as e:
+            logger.warning(f"Collector verification failed for job {job.id}: {e}, falling back to HTTP check")
             is_active, status_code, details = self._http_verify(target_url)
 
-        result_type = "active" if is_active else ("closed" if status_code in (404, 410) else "http_error")
+        result_type = "active" if is_active else ("closed" if status_code in (404, 410, 200) else "http_error")
         job.status = "active" if is_active else "closed"
         job.last_verified_at = utc_now()
 
@@ -59,39 +64,9 @@ class JobVerifier:
     def _http_verify(self, url: str) -> Tuple[bool, int, str]:
         """
         Follows redirects safely, verifying each step against SSRF and HTTPS.
+        Also inspects page title and body for closed/expired indicators.
         """
-        current_url = url
-        session = requests.Session()
-        session.headers.update({"User-Agent": "AIJobAgent/1.0-Verifier"})
-
-        try:
-            for _ in range(self.max_redirects):
-                valid, msg, _ = validate_external_job_url(current_url)
-                if not valid:
-                    return False, 0, f"Unsafe redirect destination: {msg}"
-
-                resp = session.get(current_url, timeout=self.timeout, allow_redirects=False, stream=True)
-                if resp.status_code in (301, 302, 303, 307, 308):
-                    loc = resp.headers.get("Location")
-                    if not loc:
-                        break
-                    if loc.startswith("/"):
-                        from urllib.parse import urljoin
-                        current_url = urljoin(current_url, loc)
-                    else:
-                        current_url = loc
-                    continue
-
-                if resp.status_code == 200:
-                    return True, 200, "Destination reachable and active"
-                elif resp.status_code in (404, 410):
-                    return False, resp.status_code, "Job posting expired or not found (404/410)"
-                else:
-                    return True, resp.status_code, f"Status code {resp.status_code}"
-
-            return True, 200, "Redirect chain completed"
-        except requests.exceptions.RequestException as e:
-            return False, 0, f"HTTP request failed: {str(e)}"
+        return check_url_live(url, timeout=self.timeout, max_redirects=self.max_redirects)
 
     def _record_log(self, job: Job, result: str, http_status: int, dest_url: str, details: str):
         log = VerificationLog(

@@ -1,405 +1,202 @@
 {% extends "base.html" %}
 
-{% block title %}Career Insights — Salary, Skill Gap & Learning Roadmap{% endblock %}
+{% block title %}Salary Intelligence & Offer Negotiation — AI Job Agent{% endblock %}
 
 {% block content %}
-<div class="container-fluid px-lg-4 py-4">
+<div class="container py-4">
     <!-- Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-success-subtle text-success px-2.5 py-1 rounded-pill small fw-semibold">
-                    <i class="bi bi-graph-up-arrow me-1"></i> Career Intelligence
-                </span>
-                <span class="text-muted small">Updated with latest market percentiles</span>
-            </div>
-            <h2 class="fw-bold text-dark mb-1 tracking-tight">Career Insights & Salary Intelligence</h2>
-            <p class="text-muted small mb-0">Benchmark real-world compensation, identify high-yield skill gaps, and follow a personalized career roadmap.</p>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-custom btn-sm">
-                <i class="bi bi-briefcase me-1"></i> Browse High-Paying Jobs
-            </a>
-            <a href="{{ url_for('interview.interview_hub') }}" class="btn btn-primary-custom btn-sm">
-                <i class="bi bi-mic me-1"></i> Prepare for Offers
-            </a>
+            <h3 class="fw-bold mb-1"><i class="bi bi-cash-stack text-success me-2"></i>Salary Intelligence & Offer Negotiation</h3>
+            <p class="text-muted small mb-0">Benchmark real-world compensation percentiles and generate counter-offer negotiation strategies.</p>
         </div>
     </div>
 
-    <!-- Career Insights Navigation Tabs (Image 7 Specification) -->
-    <div class="card border-0 shadow-sm rounded-4 bg-white p-2 mb-4">
-        <ul class="nav nav-pills gap-1 flex-nowrap overflow-x-auto" id="insightsTabs" role="tablist">
-            <li class="nav-item">
-                <button class="nav-link active py-2 px-3 fs-8 fw-semibold rounded-pill d-flex align-items-center gap-1.5" data-bs-toggle="pill" data-bs-target="#tab-salary">
-                    <i class="bi bi-cash-stack"></i> Salary Insights & Negotiation
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill d-flex align-items-center gap-1.5" data-bs-toggle="pill" data-bs-target="#tab-skillgap">
-                    <i class="bi bi-pie-chart"></i> Skill-Gap Analysis
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill d-flex align-items-center gap-1.5" data-bs-toggle="pill" data-bs-target="#tab-roadmap">
-                    <i class="bi bi-signpost-split"></i> Learning Roadmap
-                </button>
-            </li>
-            <li class="nav-item">
-                <button class="nav-link py-2 px-3 fs-8 fw-semibold rounded-pill d-flex align-items-center gap-1.5" data-bs-toggle="pill" data-bs-target="#tab-ppp">
-                    <i class="bi bi-globe"></i> Global PPP Converter
-                </button>
-            </li>
-        </ul>
-    </div>
-
-    <div class="tab-content">
-        <!-- ================= TAB 1: SALARY BENCHMARK & COUNTER OFFER ================= -->
-        <div class="tab-pane fade show active" id="tab-salary" role="tabpanel">
-            <div class="row g-4">
-                <!-- Left: Salary Benchmark Estimator -->
-                <div class="col-lg-6">
-                    <div class="card p-4 border-0 rounded-4 bg-white shadow-sm mb-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold text-dark mb-0"><i class="bi bi-graph-up text-primary me-2"></i>Market Compensation Benchmark</h5>
-                            <span class="badge bg-light text-muted border fs-9">Real Verified Data</span>
-                        </div>
-                        
-                        <form id="salary-estimate-form" class="row g-3 mb-4">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Job Title</label>
-                                <input type="text" id="est-title" class="form-control fs-8" value="{{ profile.headline or 'Full Stack Software Engineer' }}">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Location</label>
-                                <input type="text" id="est-location" class="form-control fs-8" value="{{ profile.location or 'Bengaluru, India' }}">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Years of Experience</label>
-                                <input type="number" step="0.5" id="est-years" class="form-control fs-8" value="{{ profile.experience_years or 3 }}">
-                            </div>
-                            <div class="col-md-6 d-flex align-items-end">
-                                <button type="submit" class="btn btn-primary-custom w-100 fs-8">
-                                    <i class="bi bi-calculator me-1"></i> Recalculate Benchmark
-                                </button>
-                            </div>
-                        </form>
-
-                        <!-- Salary Percentiles Display -->
-                        <div class="p-4 bg-light rounded-4 border mb-3">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="text-muted small">Estimated Market Median:</span>
-                                <span class="badge bg-success-subtle text-success fw-bold px-2 py-1" id="est-demand">{{ estimate.market_demand_rating }} Demand</span>
-                            </div>
-                            <h2 class="fw-bold text-dark mb-3" id="est-median">{{ estimate.currency }} {{ "{:,.0f}".format(estimate.median) }}</h2>
-
-                            <div class="row g-2 text-center small">
-                                <div class="col-4">
-                                    <div class="p-2.5 border rounded-3 bg-white">
-                                        <span class="text-muted d-block fs-9">25th Percentile</span>
-                                        <strong id="est-p25" class="fs-8 text-dark">{{ estimate.currency }} {{ "{:,.0f}".format(estimate.percentile_25) }}</strong>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="p-2.5 border rounded-3 bg-white">
-                                        <span class="text-muted d-block fs-9">75th Percentile</span>
-                                        <strong id="est-p75" class="fs-8 text-primary">{{ estimate.currency }} {{ "{:,.0f}".format(estimate.percentile_75) }}</strong>
-                                    </div>
-                                </div>
-                                <div class="col-4">
-                                    <div class="p-2.5 border rounded-3 bg-white">
-                                        <span class="text-muted d-block fs-9">Top 10% (90th)</span>
-                                        <strong id="est-p90" class="fs-8 text-success">{{ estimate.currency }} {{ "{:,.0f}".format(estimate.percentile_90) }}</strong>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h6 class="small fw-bold text-dark mb-2">Key Compensation Drivers:</h6>
-                            <ul class="small text-muted ps-3 mb-2" id="est-drivers">
-                                {% for d in estimate.salary_drivers %}
-                                    <li>{{ d }}</li>
-                                {% endfor %}
-                            </ul>
-                            <div class="p-2.5 rounded-3 bg-light border fs-8 text-muted fst-italic" id="est-leverage">
-                                <i class="bi bi-info-circle me-1 text-primary"></i> {{ estimate.negotiation_leverage_summary }}
-                            </div>
-                        </div>
+    <div class="row g-4">
+        <!-- Left: Salary Benchmark Estimator -->
+        <div class="col-lg-6">
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-graph-up text-primary me-2"></i>Market Compensation Benchmark</h5>
+                
+                <form id="salary-estimate-form" class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Job Title</label>
+                        <input type="text" id="est-title" class="form-control" value="{{ profile.headline or 'Data Science & AI Engineer' }}">
                     </div>
-                </div>
-
-                <!-- Right: Offer Negotiation & Counter-Offer Generator -->
-                <div class="col-lg-6">
-                    <div class="card p-4 border-0 rounded-4 bg-white shadow-sm mb-4">
-                        <h5 class="fw-bold text-dark mb-1"><i class="bi bi-briefcase text-success me-2"></i>Counter-Offer Negotiation Assistant</h5>
-                        <p class="text-muted small mb-3">Received an offer? Generate an executive, polite counter-offer email backed by market value.</p>
-
-                        <form id="counter-offer-form" class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Company Name</label>
-                                <input type="text" id="co-company" class="form-control fs-8" placeholder="e.g. Google, Stripe" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Offered Role</label>
-                                <input type="text" id="co-role" class="form-control fs-8" placeholder="e.g. Senior Software Engineer" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Offered Base Salary</label>
-                                <input type="number" id="co-offered" class="form-control fs-8" placeholder="120000" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Target Counter Amount</label>
-                                <input type="number" id="co-target" class="form-control fs-8" placeholder="140000" required>
-                            </div>
-                            <div class="col-12">
-                                <label class="form-label small fw-semibold">Primary Justification / Compelling Strengths</label>
-                                <input type="text" id="co-justification" class="form-control fs-8" placeholder="e.g. 5+ yrs distributed systems experience, AWS solutions architect cert, competitive competing offers">
-                            </div>
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary-custom w-100 fs-8 py-2" id="gen-counter-btn">
-                                    <i class="bi bi-stars me-1"></i> Generate Negotiation Strategy & Email
-                                </button>
-                            </div>
-                        </form>
-
-                        <!-- Counter Offer Output -->
-                        <div id="counter-result-card" class="mt-3 p-3 bg-light rounded-3 border d-none">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <strong class="small text-dark" id="co-subject">Subject: Offer Discussion</strong>
-                                <button class="btn btn-sm btn-outline-primary py-0 px-2 fs-8" onclick="copyNegotiationEmail()">
-                                    <i class="bi bi-clipboard me-1"></i> Copy
-                                </button>
-                            </div>
-                            <div class="p-3 bg-white rounded border small font-monospace text-secondary mb-3" id="co-email-body" style="white-space: pre-wrap; max-height: 220px; overflow-y: auto;"></div>
-                            <h6 class="small fw-bold text-dark mb-1">Talking Points for Call:</h6>
-                            <ul class="small text-muted ps-3 mb-0" id="co-points"></ul>
-                        </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Location</label>
+                        <input type="text" id="est-location" class="form-control" value="{{ profile.location or 'Bengaluru, India' }}">
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ================= TAB 2: SKILL-GAP ANALYSIS (Image 7) ================= -->
-        <div class="tab-pane fade" id="tab-skillgap" role="tabpanel">
-            <div class="row g-4 mb-4">
-                <div class="col-lg-4">
-                    <div class="card p-4 border-0 rounded-4 bg-white shadow-sm text-center h-100">
-                        <h6 class="fw-bold text-dark mb-1">Market Skill Coverage</h6>
-                        <p class="text-muted fs-8 mb-3">Alignment against top-tier tech roles</p>
-
-                        <!-- Coverage Donut -->
-                        <div class="position-relative d-inline-flex justify-content-center align-items-center mx-auto mb-3" style="width: 140px; height: 140px;">
-                            <svg viewBox="0 0 36 36" style="width: 140px; height: 140px; transform: rotate(-90deg);">
-                                <path stroke="#F1F5F9" stroke-width="3.5" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                                <path stroke="#10B981" stroke-width="3.5" stroke-dasharray="82, 100" stroke-linecap="round" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                            </svg>
-                            <div class="position-absolute text-center">
-                                <span class="fs-2 fw-bold text-dark d-block lh-1">82%</span>
-                                <small class="text-muted fs-9">Skill Coverage</small>
-                            </div>
-                        </div>
-
-                        <div class="p-2.5 rounded-3 bg-success-subtle text-success fs-8 fw-semibold mb-3">
-                            <i class="bi bi-shield-check me-1"></i> Highly Competitive Profile
-                        </div>
-                        <p class="text-muted fs-8 mb-0">Adding 2-3 cloud infrastructure competencies can increase your compensation tier by <strong>+$24,000/yr</strong>.</p>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Years of Experience</label>
+                        <input type="number" step="0.5" id="est-years" class="form-control" value="{{ profile.experience_years or 3 }}">
                     </div>
-                </div>
-
-                <div class="col-lg-8">
-                    <div class="card p-4 border-0 rounded-4 bg-white shadow-sm h-100">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <div>
-                                <h5 class="fw-bold text-dark mb-0">High-Impact Skill Gaps & Salary Multipliers</h5>
-                                <small class="text-muted">Skills identified in 80%+ of top-paying job specifications you haven't listed yet</small>
-                            </div>
-                        </div>
-
-                        <div class="d-flex flex-column gap-3">
-                            <div class="p-3 rounded-3 border bg-light d-flex flex-wrap justify-content-between align-items-center gap-2">
-                                <div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <h6 class="fw-bold text-dark mb-0">Kubernetes & Container Orchestration</h6>
-                                        <span class="badge bg-danger-subtle text-danger fs-9">High Demand</span>
-                                    </div>
-                                    <small class="text-muted fs-8">Found in 78% of Senior Backend & Cloud Engineer postings</small>
-                                </div>
-                                <div class="text-end">
-                                    <span class="badge bg-success-subtle text-success fw-bold fs-8">+18% Salary Premium</span>
-                                    <a href="#tab-roadmap" class="btn btn-sm btn-outline-primary py-0.5 px-2 fs-9 d-block mt-1" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('[data-bs-target=\'#tab-roadmap\']')).show()">View Module</a>
-                                </div>
-                            </div>
-
-                            <div class="p-3 rounded-3 border bg-light d-flex flex-wrap justify-content-between align-items-center gap-2">
-                                <div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <h6 class="fw-bold text-dark mb-0">Distributed Systems & Sharding</h6>
-                                        <span class="badge bg-purple-subtle text-purple fs-9" style="background: rgba(139, 92, 246, 0.12); color: #8B5CF6;">Architect Tier</span>
-                                    </div>
-                                    <small class="text-muted fs-8">Critical for Staff & Principal level interview evaluations</small>
-                                </div>
-                                <div class="text-end">
-                                    <span class="badge bg-success-subtle text-success fw-bold fs-8">+24% Salary Premium</span>
-                                    <a href="#tab-roadmap" class="btn btn-sm btn-outline-primary py-0.5 px-2 fs-9 d-block mt-1" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('[data-bs-target=\'#tab-roadmap\']')).show()">View Module</a>
-                                </div>
-                            </div>
-
-                            <div class="p-3 rounded-3 border bg-light d-flex flex-wrap justify-content-between align-items-center gap-2">
-                                <div>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <h6 class="fw-bold text-dark mb-0">AWS Solutions Architecture & Terraform</h6>
-                                        <span class="badge bg-info-subtle text-info fs-9">Cloud Native</span>
-                                    </div>
-                                    <small class="text-muted fs-8">Accelerates automated deployment and infrastructure-as-code mastery</small>
-                                </div>
-                                <div class="text-end">
-                                    <span class="badge bg-success-subtle text-success fw-bold fs-8">+15% Salary Premium</span>
-                                    <a href="#tab-roadmap" class="btn btn-sm btn-outline-primary py-0.5 px-2 fs-9 d-block mt-1" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('[data-bs-target=\'#tab-roadmap\']')).show()">View Module</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ================= TAB 3: PERSONALIZED LEARNING ROADMAP (Image 7) ================= -->
-        <div class="tab-pane fade" id="tab-roadmap" role="tabpanel">
-            <div class="card p-4 border-0 rounded-4 bg-white shadow-sm mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h5 class="fw-bold text-dark mb-0">Personalized 9-Week Career Accelerator Roadmap</h5>
-                        <small class="text-muted">Structured curriculum designed to bridge your high-value skill gaps</small>
-                    </div>
-                    <span class="badge bg-primary-subtle text-primary fs-8">Customized for You</span>
-                </div>
-
-                <div class="row g-3">
-                    <!-- Phase 1 -->
-                    <div class="col-md-4">
-                        <div class="card p-3.5 border rounded-4 h-100 bg-light">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="badge bg-primary text-white fs-9">Weeks 1 – 3</span>
-                                <small class="text-muted fs-9">Foundations</small>
-                            </div>
-                            <h6 class="fw-bold text-dark mb-1">Advanced Concurrency & Async Python</h6>
-                            <p class="text-muted fs-8 mb-3">Master async/await, multiprocessing, thread safety, and event loops for high-throughput backends.</p>
-                            <ul class="fs-8 text-muted ps-3 mb-3">
-                                <li>AsyncIO & ThreadPoolExecutors</li>
-                                <li>FastAPI / Flask async handling</li>
-                                <li>Real-world load testing with Locust</li>
-                            </ul>
-                            <div class="form-check mt-auto">
-                                <input class="form-check-input" type="checkbox" id="phase1Done">
-                                <label class="form-check-label fs-8 text-muted" for="phase1Done">Mark Phase 1 Complete</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Phase 2 -->
-                    <div class="col-md-4">
-                        <div class="card p-3.5 border rounded-4 h-100 bg-light">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="badge bg-purple text-white fs-9" style="background-color: #8B5CF6;">Weeks 4 – 6</span>
-                                <small class="text-muted fs-9">Scaling Tier</small>
-                            </div>
-                            <h6 class="fw-bold text-dark mb-1">Distributed Caching & Message Queues</h6>
-                            <p class="text-muted fs-8 mb-3">Implement Redis multi-tier caching, cache-invalidation strategies, and Kafka / RabbitMQ pipelines.</p>
-                            <ul class="fs-8 text-muted ps-3 mb-3">
-                                <li>Redis caching & write-behind patterns</li>
-                                <li>Kafka event streaming & consumer lag</li>
-                                <li>Idempotency & message replay</li>
-                            </ul>
-                            <div class="form-check mt-auto">
-                                <input class="form-check-input" type="checkbox" id="phase2Done">
-                                <label class="form-check-label fs-8 text-muted" for="phase2Done">Mark Phase 2 Complete</label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Phase 3 -->
-                    <div class="col-md-4">
-                        <div class="card p-3.5 border rounded-4 h-100 bg-light">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <span class="badge bg-success text-white fs-9">Weeks 7 – 9</span>
-                                <small class="text-muted fs-9">Cloud Native</small>
-                            </div>
-                            <h6 class="fw-bold text-dark mb-1">Kubernetes & Production Cloud Ops</h6>
-                            <p class="text-muted fs-8 mb-3">Package microservices with Docker, deploy to Kubernetes clusters, configure autoscaling and CI/CD.</p>
-                            <ul class="fs-8 text-muted ps-3 mb-3">
-                                <li>K8s Deployments, Pods & Ingress</li>
-                                <li>Prometheus metrics & Grafana alerts</li>
-                                <li>Zero-downtime rolling updates</li>
-                            </ul>
-                            <div class="form-check mt-auto">
-                                <input class="form-check-input" type="checkbox" id="phase3Done">
-                                <label class="form-check-label fs-8 text-muted" for="phase3Done">Mark Phase 3 Complete</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- ================= TAB 4: PPP CONVERTER ================= -->
-        <div class="tab-pane fade" id="tab-ppp" role="tabpanel">
-            <div class="card p-4 border-0 rounded-4 bg-white shadow-sm mb-4">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-globe text-primary me-2"></i>Global Purchasing Power Parity (PPP) Converter</h5>
-                        <small class="text-muted">Convert remote offers from USD/EUR to local purchasing power to evaluate true take-home value.</small>
-                    </div>
-                </div>
-
-                <form id="ppp-converter-form" class="row g-3 mb-4">
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Offer Amount (Annual)</label>
-                        <input type="number" id="ppp-amount" class="form-control fs-8" value="120000" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Offer Currency</label>
-                        <select id="ppp-from-curr" class="form-select fs-8">
-                            <option value="USD" selected>USD — United States Dollar</option>
-                            <option value="EUR">EUR — Euro</option>
-                            <option value="GBP">GBP — British Pound</option>
-                            <option value="CAD">CAD — Canadian Dollar</option>
-                        </select>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label small fw-semibold">Your Home Residence Currency</label>
-                        <select id="ppp-home-curr" class="form-select fs-8">
-                            <option value="INR" selected>INR — Indian Rupee (₹)</option>
-                            <option value="GBP">GBP — British Pound (£)</option>
-                            <option value="EUR">EUR — Euro (€)</option>
-                            <option value="CAD">CAD — Canadian Dollar</option>
-                            <option value="AUD">AUD — Australian Dollar</option>
-                        </select>
-                    </div>
-                    <div class="col-12 text-end">
-                        <button type="submit" class="btn btn-primary-custom fs-8 px-4" id="btn-convert-ppp">
-                            <i class="bi bi-arrow-left-right me-1"></i> Calculate PPP Purchasing Power
+                    <div class="col-md-6 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary-custom w-100">
+                            <i class="bi bi-calculator me-1"></i> Recalculate
                         </button>
                     </div>
                 </form>
 
-                <div id="ppp-result-box" class="p-4 bg-light rounded-4 border d-none">
-                    <div class="row g-3 text-center mb-3">
+                <!-- Salary Percentiles Display -->
+                <div class="p-3 bg-light rounded-3 border mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted small">Estimated Market Median:</span>
+                        <span class="badge bg-success-subtle text-success fw-bold" id="est-demand">{{ estimate.market_demand_rating }} Demand</span>
+                    </div>
+                    <h2 class="fw-bold text-dark mb-3" id="est-median">{{ estimate.currency }} {{ "{:,.0f}".format(estimate.median) }}</h2>
+
+                    <div class="row g-2 text-center small">
+                        <div class="col-4">
+                            <div class="p-2 border rounded bg-white">
+                                <span class="text-muted d-block">25th Percentile</span>
+                                <strong id="est-p25">{{ estimate.currency }} {{ "{:,.0f}".format(estimate.percentile_25) }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 border rounded bg-white">
+                                <span class="text-muted d-block">75th Percentile</span>
+                                <strong id="est-p75">{{ estimate.currency }} {{ "{:,.0f}".format(estimate.percentile_75) }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 border rounded bg-white">
+                                <span class="text-muted d-block">Top 10% (90th)</span>
+                                <strong id="est-p90">{{ estimate.currency }} {{ "{:,.0f}".format(estimate.percentile_90) }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <h6 class="small fw-bold text-dark mb-1">Key Compensation Drivers:</h6>
+                    <ul class="small text-muted ps-3 mb-2" id="est-drivers">
+                        {% for d in estimate.salary_drivers %}
+                            <li>{{ d }}</li>
+                        {% endfor %}
+                    </ul>
+                    <p class="small text-muted mb-0 fst-italic" id="est-leverage">{{ estimate.negotiation_leverage_summary }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Offer Negotiation & Counter-Offer Generator -->
+        <div class="col-lg-6">
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-briefcase text-success me-2"></i>Counter-Offer Negotiation Assistant</h5>
+                <p class="text-muted small mb-3">Received an offer? Generate an executive, polite counter-offer email backed by market value.</p>
+
+                <form id="counter-offer-form" class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Company Name</label>
+                        <input type="text" id="co-company" class="form-control" placeholder="e.g. Stripe, NVIDIA" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Offered Role</label>
+                        <input type="text" id="co-role" class="form-control" placeholder="e.g. Senior Data Engineer" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Offered Base Salary</label>
+                        <input type="number" id="co-offered" class="form-control" placeholder="100000" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">Target Requested Base</label>
+                        <input type="number" id="co-target" class="form-control" placeholder="125000" required>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-semibold">Value Justification / Specialized Skills</label>
+                        <input type="text" id="co-justification" class="form-control" placeholder="e.g. 4 years specialized experience with Python & Distributed Pipelines" value="Specialized technical experience in high-throughput systems and strong ATS qualifications.">
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary-custom w-100" id="gen-counter-btn">
+                            <i class="bi bi-stars me-1"></i> Generate Negotiation Strategy & Email
+                        </button>
+                    </div>
+                </form>
+
+                <div id="counter-result-card" class="d-none pt-3 border-top">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="fw-bold small text-dark" id="co-subject">Offer Discussion</span>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="copyNegotiationEmail()"><i class="bi bi-clipboard me-1"></i>Copy</button>
+                    </div>
+                    <div class="p-3 bg-light border rounded small mb-3" id="co-email-body" style="white-space: pre-line; max-height: 250px; overflow-y: auto;"></div>
+                    <div>
+                        <h6 class="small fw-bold text-primary mb-1">Key Talking Points:</h6>
+                        <ul class="small text-muted ps-3 mb-0" id="co-points"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Currency & Purchasing Power Parity (PPP) Converter -->
+    <div class="row g-4 mt-2">
+        <div class="col-12">
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm border-start border-4 border-success">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-globe2 text-success me-2"></i>Global Remote Salary & Purchasing Power Parity (PPP) Normalizer</h5>
+                        <small class="text-muted">Compare nominal foreign exchange value vs true local purchasing power and cost-of-living multiplier.</small>
+                    </div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1">Global Remote Intelligence</span>
+                </div>
+
+                <form id="ppp-converter-form" class="row g-3 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">Offered Amount</label>
+                        <input type="number" id="ppp-amount" class="form-control" value="100000" required>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Offered Currency</label>
+                        <select id="ppp-from-curr" class="form-select">
+                            <option value="USD" selected>USD ($ - US Dollar)</option>
+                            <option value="EUR">EUR (€ - Euro)</option>
+                            <option value="GBP">GBP (£ - British Pound)</option>
+                            <option value="CAD">CAD ($ - Canadian Dollar)</option>
+                            <option value="AUD">AUD ($ - Australian Dollar)</option>
+                            <option value="SGD">SGD ($ - Singapore Dollar)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">Living / Home Location</label>
+                        <select id="ppp-home-curr" class="form-select">
+                            <option value="INR" selected>INR (₹ - India)</option>
+                            <option value="EUR">EUR (€ - Europe)</option>
+                            <option value="GBP">GBP (£ - United Kingdom)</option>
+                            <option value="CAD">CAD ($ - Canada)</option>
+                            <option value="AUD">AUD ($ - Australia)</option>
+                            <option value="USD">USD ($ - United States)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success w-100 fw-semibold" id="btn-convert-ppp">
+                            <i class="bi bi-arrow-left-right me-1"></i> Calculate PPP
+                        </button>
+                    </div>
+                </form>
+
+                <!-- PPP Result Box -->
+                <div id="ppp-result-box" class="p-3 bg-light rounded-3 border d-none">
+                    <div class="row g-3 text-center mb-2">
                         <div class="col-md-4">
-                            <div class="p-3 bg-white rounded-3 border">
-                                <span class="text-muted fs-8 d-block mb-1">Nominal Bank Exchange:</span>
+                            <div class="bg-white p-3 rounded border">
+                                <span class="text-secondary small d-block mb-1">Nominal Forex Value</span>
                                 <h4 class="fw-bold text-dark mb-0" id="ppp-nominal-val">--</h4>
+                                <small class="text-muted" style="font-size: 0.72rem;">Direct currency conversion</small>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="p-3 bg-white rounded-3 border border-success">
-                                <span class="text-success fs-8 d-block mb-1">True PPP Local Buying Power:</span>
+                            <div class="bg-white p-3 rounded border border-success">
+                                <span class="text-success small fw-bold d-block mb-1">Local PPP Buying Power</span>
                                 <h4 class="fw-bold text-success mb-0" id="ppp-buying-power">--</h4>
+                                <small class="text-muted" style="font-size: 0.72rem;">Lifestyle equivalence in local economy</small>
                             </div>
                         </div>
                         <div class="col-md-4">
-                            <div class="p-3 bg-white rounded-3 border">
-                                <span class="text-muted fs-8 d-block mb-1">PPP Multiplier Index:</span>
+                            <div class="bg-white p-3 rounded border">
+                                <span class="text-secondary small d-block mb-1">Arbitrage Advantage</span>
                                 <h4 class="fw-bold text-primary mb-0" id="ppp-multiplier">--</h4>
+                                <small class="text-muted" style="font-size: 0.72rem;">Purchasing power multiplier</small>
                             </div>
                         </div>
                     </div>
@@ -409,11 +206,8 @@
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
 <script>
-// Salary Recalculation API
 document.getElementById('salary-estimate-form').addEventListener('submit', function(e) {
     e.preventDefault();
     fetch("{{ url_for('salary.estimate_api') }}", {
@@ -436,12 +230,11 @@ document.getElementById('salary-estimate-form').addEventListener('submit', funct
             document.getElementById('est-p90').textContent = est.currency + ' ' + Number(est.percentile_90).toLocaleString();
             document.getElementById('est-demand').textContent = est.market_demand_rating + ' Demand';
             document.getElementById('est-drivers').innerHTML = (est.salary_drivers || []).map(d => `<li>${d}</li>`).join('');
-            document.getElementById('est-leverage').innerHTML = `<i class="bi bi-info-circle me-1 text-primary"></i> ${est.negotiation_leverage_summary || ''}`;
+            document.getElementById('est-leverage').textContent = est.negotiation_leverage_summary || '';
         }
     });
 });
 
-// Counter Offer Strategy Generator API
 document.getElementById('counter-offer-form').addEventListener('submit', function(e) {
     e.preventDefault();
     const btn = document.getElementById('gen-counter-btn');
@@ -482,7 +275,6 @@ function copyNegotiationEmail() {
     navigator.clipboard.writeText(text).then(() => alert('Negotiation email copied to clipboard!'));
 }
 
-// Global PPP Converter API
 document.getElementById('ppp-converter-form').addEventListener('submit', function(e) {
     e.preventDefault();
     const btn = document.getElementById('btn-convert-ppp');
@@ -501,7 +293,7 @@ document.getElementById('ppp-converter-form').addEventListener('submit', functio
     .then(r => r.json())
     .then(data => {
         btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-arrow-left-right me-1"></i> Calculate PPP Purchasing Power';
+        btn.innerHTML = '<i class="bi bi-arrow-left-right me-1"></i> Calculate PPP';
         if (data.success && data.data) {
             const d = data.data;
             document.getElementById('ppp-nominal-val').textContent = d.home_currency + ' ' + Number(d.nominal_exchange_value).toLocaleString();
@@ -513,7 +305,7 @@ document.getElementById('ppp-converter-form').addEventListener('submit', functio
     })
     .catch(() => {
         btn.disabled = false;
-        btn.innerHTML = '<i class="bi bi-arrow-left-right me-1"></i> Calculate PPP Purchasing Power';
+        btn.innerHTML = '<i class="bi bi-arrow-left-right me-1"></i> Calculate PPP';
     });
 });
 </script>

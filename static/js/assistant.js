@@ -10,14 +10,14 @@ document.addEventListener("DOMContentLoaded", function () {
         msgDiv.className = `d-flex mb-3 ${sender === "user" ? "justify-content-end" : "justify-content-start"}`;
 
         const bubble = document.createElement("div");
-        bubble.className = `p-3 rounded-3 ${sender === "user" ? "user-bubble" : "assistant-bubble"}`;
+        bubble.className = `p-3 rounded-3 ${sender === "user" ? "bg-primary text-white" : "bg-white border text-dark"}`;
         bubble.style.maxWidth = "80%";
 
         // Convert basic markdown formatting
         let formatted = text
             .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
             .replace(/\*(.*?)\*/g, "<em>$1</em>")
-            .replace(/```text\n([\s\S]*?)```/g, "<pre class='bg-dark text-light p-2 rounded border border-secondary'><code>$1</code></pre>")
+            .replace(/```text\n([\s\S]*?)```/g, "<pre class='bg-light text-dark p-2 rounded border'><code>$1</code></pre>")
             .replace(/\n/g, "<br>");
 
         bubble.innerHTML = formatted;
@@ -28,19 +28,19 @@ document.addEventListener("DOMContentLoaded", function () {
             cardDeck.className = "mt-3 d-flex flex-column gap-2";
             cards.forEach(card => {
                 const cardEl = document.createElement("div");
-                cardEl.className = "card p-3 border-start border-4 border-primary custom-card shadow-sm";
+                cardEl.className = "card p-2 border-start border-4 border-primary shadow-sm";
                 cardEl.innerHTML = `
                     <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h6 class="mb-1 fw-bold text-white">${card.title}</h6>
-                            <small class="text-secondary">${card.company} · ${card.location || 'Remote'}</small>
+                            <h6 class="mb-0 fw-bold">${card.title}</h6>
+                            <small class="text-muted">${card.company} · ${card.location || 'Remote'}</small>
                         </div>
-                        ${card.match_score ? `<span class="badge bg-success-subtle text-success">${Math.round(card.match_score)}% Match</span>` : ''}
+                        ${card.match_score ? `<span class="badge bg-success">${Math.round(card.match_score)}% Match</span>` : ''}
                     </div>
-                    ${card.explanation ? `<small class="text-secondary mt-1 d-block">${card.explanation}</small>` : ''}
+                    ${card.explanation ? `<small class="text-muted mt-1 d-block">${card.explanation}</small>` : ''}
                     <div class="mt-2 d-flex gap-2">
                         <a href="/jobs/${card.id}" class="btn btn-sm btn-outline-secondary">Details</a>
-                        <a href="${card.apply_url}" target="_blank" class="btn btn-sm btn-primary-custom">Apply Now <i class="bi bi-box-arrow-up-right"></i></a>
+                        <a href="${card.apply_url}" target="_blank" class="btn btn-sm btn-primary">Apply Now <i class="bi bi-box-arrow-up-right"></i></a>
                     </div>
                 `;
                 cardDeck.appendChild(cardEl);
@@ -66,7 +66,7 @@ document.addEventListener("DOMContentLoaded", function () {
         typingDiv.id = typingId;
         typingDiv.className = "d-flex mb-3 justify-content-start";
         typingDiv.innerHTML = `
-            <div class="p-3 assistant-bubble rounded-3 text-secondary">
+            <div class="p-3 bg-white border rounded-3 text-muted">
                 <span class="spinner-grow spinner-grow-sm me-2" role="status"></span> Thinking...
             </div>
         `;

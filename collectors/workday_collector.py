@@ -151,17 +151,4 @@ class WorkdayCollector(BaseCollector):
         """
         Verify availability of Workday posting.
         """
-        target = apply_url or original_url
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        }
-        try:
-            resp = self.session.get(target, headers=headers, timeout=self.timeout, allow_redirects=True, stream=True)
-            if resp.status_code == 200:
-                return True, 200, "Workday job posting verified live"
-            elif resp.status_code in (404, 410):
-                return False, resp.status_code, f"Workday posting returned {resp.status_code} (Closed or Removed)"
-            else:
-                return True, resp.status_code, f"Workday returned status {resp.status_code}"
-        except Exception as e:
-            return False, 0, f"Workday verification error: {str(e)}"
+        return super().verify_job_live(original_url, apply_url)

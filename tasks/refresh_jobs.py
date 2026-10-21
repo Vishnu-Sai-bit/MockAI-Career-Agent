@@ -7,6 +7,7 @@ from collectors import get_collector_for_platform
 from services.job_normalizer import JobNormalizer
 from services.job_deduplicator import JobDeduplicator
 from utils.url_validation import validate_external_job_url
+from utils.job_live_check import check_url_live
 from utils.logging_config import logger
 
 def utc_now():
@@ -50,7 +51,8 @@ def ensure_default_sources():
 def run_job_refresh(limit_per_source: int = 25) -> Dict[str, Any]:
     """
     Executes end-to-end job collection pipeline:
-    Source Fetch -> Normalize -> Deduplicate -> Validate URL -> Persist.
+    Source Fetch -> Normalize -> Deduplicate -> Live Verify -> Persist.
+    Also reconciles closed vacancies from official employer ATS feeds.
     """
     ensure_default_sources()
     active_sources = JobSource.query.filter_by(is_active=True).all()
@@ -61,6 +63,7 @@ def run_job_refresh(limit_per_source: int = 25) -> Dict[str, Any]:
     total_added = 0
     total_duplicates = 0
     total_invalid_urls = 0
+    total_closed_reconciled = 0
 
     for source in active_sources:
         try:
@@ -71,6 +74,24 @@ def run_job_refresh(limit_per_source: int = 25) -> Dict[str, Any]:
             collector = get_collector_for_platform(source.platform)
             raw_records = collector.fetch_jobs(source.company_key, limit=limit_per_source)
             total_fetched += len(raw_records)
+
+            # Reconcile ATS feeds: if company-specific ATS source returned open vacancies,
+            # any previously stored active jobs for this company not in the list are closed!
+            if source.platform in ("greenhouse", "lever", "ashby", "workable", "recruitee", "smartrecruiters") and raw_records:
+                fetched_ids = {str(r.source_job_id) for r in raw_records if r.source_job_id}
+                if fetched_ids:
+                    stale_active_jobs = Job.query.filter(
+                        Job.source_platform == source.platform,
+                        Job.source_company_key == source.company_key,
+                        Job.status == "active",
+                        ~Job.source_job_id.in_(fetched_ids)
+                    ).all()
+                    for stale in stale_active_jobs:
+                        stale.status = "closed"
+                        stale.last_verified_at = utc_now()
+                        total_closed_reconciled += 1
+                    if stale_active_jobs:
+                        db.session.commit()
 
             existing_jobs = Job.query.filter_by(status="active").all()
 
@@ -139,5 +160,31 @@ def run_job_refresh(limit_per_source: int = 25) -> Dict[str, Any]:
         "total_fetched": total_fetched,
         "total_added": total_added,
         "total_duplicates": total_duplicates,
-        "total_invalid_urls": total_invalid_urls
+        "total_invalid_urls": total_invalid_urls,
+        "total_closed_reconciled": total_closed_reconciled
+    }
+
+def prune_dead_jobs(batch_size: int = 50) -> Dict[str, Any]:
+    """
+    Scans a batch of active jobs with oldest last_verified_at,
+    checks if they are still reachable and open, and flags closed ones.
+    """
+    from services.job_verifier import JobVerifier
+    verifier = JobVerifier(timeout=5)
+    
+    jobs_to_check = Job.query.filter_by(status="active").order_by(Job.last_verified_at.asc()).limit(batch_size).all()
+    closed_count = 0
+    active_count = 0
+
+    for job in jobs_to_check:
+        is_live, _ = verifier.verify_job(job)
+        if is_live:
+            active_count += 1
+        else:
+            closed_count += 1
+
+    return {
+        "checked": len(jobs_to_check),
+        "still_active": active_count,
+        "marked_closed": closed_count
     }
