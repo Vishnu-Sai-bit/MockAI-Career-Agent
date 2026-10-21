@@ -147,32 +147,68 @@ class JobMatcher:
         exp_lvl = (job.experience_level or "mid").lower()
         title_lower = job.title.lower()
 
-        # Parse target years if explicitly stated in description e.g. "5+ years"
+        # Parse target years if explicitly stated in description e.g. "5+ years", "2-4 years"
         years_match = re.search(r"(\d+)\+?\s*years?(?:\s+of)?\s+experience", job.description, re.IGNORECASE)
         target_years = int(years_match.group(1)) if years_match else None
 
         if target_years is None:
-            if "entry" in exp_lvl or "fresher" in title_lower or "intern" in title_lower:
-                target_years = 1
+            if "entry" in exp_lvl or any(w in title_lower for w in ["entry", "fresher", "intern", "junior", "graduate"]):
+                target_years = 0
             elif "senior" in exp_lvl or "sr." in title_lower:
                 target_years = 5
-            elif "lead" in exp_lvl or "principal" in title_lower or "architect" in title_lower:
+            elif "lead" in exp_lvl or any(w in title_lower for w in ["lead", "principal", "architect", "staff"]):
                 target_years = 8
             else:
-                target_years = 3
+                target_years = 2
 
         # Experience Alignment (E - 20%):
-        # 1.0 (100%) if candidate >= job requirement; scaled if under
-        if cand_years >= target_years:
-            score = 100.0
-            if cand_years > target_years + 4:
-                detail = f"Extensive experience ({cand_years:.1f} yrs vs {target_years} yrs targeted - 100% alignment, senior standing)."
+        # Case 1: Entry / Fresher Role (0-2 years)
+        if "entry" in exp_lvl or target_years <= 1 or any(w in title_lower for w in ["entry", "fresher", "intern", "junior", "graduate"]):
+            if cand_years <= 2.0:
+                score = 100.0
+                detail = f"Perfect fit for Entry-level / Fresher position ({cand_years:.1f} yrs experience - 100% alignment)."
+            elif cand_years <= 4.0:
+                score = 85.0
+                detail = f"Has {cand_years:.1f} yrs experience; eligible for junior/entry role (85% alignment)."
             else:
-                detail = f"Fits target experience range ({cand_years:.1f} yrs vs {target_years} yrs targeted - 100% alignment)."
+                score = 70.0
+                detail = f"Candidate has {cand_years:.1f} yrs experience; standing above entry-level bracket (70% alignment)."
+
+        # Case 2: Mid-Level Role (2-5 years)
+        elif "mid" in exp_lvl or (2 <= target_years < 5):
+            if 1.5 <= cand_years <= 5.0:
+                score = 100.0
+                detail = f"Fits target mid-level experience range ({cand_years:.1f} yrs vs {target_years} yrs targeted - 100% alignment)."
+            elif cand_years < 1.5:
+                ratio = max(0.25, cand_years / max(target_years, 2))
+                score = max(35.0, round(ratio * 70.0, 1))
+                detail = f"Position targets {target_years}+ yrs mid-level experience; candidate has {cand_years:.1f} yrs ({score:.0f}% alignment)."
+            else:
+                score = 90.0
+                detail = f"Experienced candidate ({cand_years:.1f} yrs) eligible for mid-level position (90% alignment)."
+
+        # Case 3: Senior Role (5-8 years)
+        elif "senior" in exp_lvl or (5 <= target_years < 8):
+            if 5.0 <= cand_years <= 9.0:
+                score = 100.0
+                detail = f"Fits senior experience range ({cand_years:.1f} yrs vs {target_years} yrs targeted - 100% alignment)."
+            elif cand_years > 9.0:
+                score = 95.0
+                detail = f"Extensive senior experience ({cand_years:.1f} yrs - 95% alignment)."
+            else:
+                ratio = cand_years / max(target_years, 5)
+                score = max(25.0, round(ratio * 100.0, 1))
+                detail = f"Position requires {target_years}+ yrs senior experience; candidate has {cand_years:.1f} yrs ({score:.0f}% alignment)."
+
+        # Case 4: Lead / Staff / Principal (8+ years)
         else:
-            ratio = cand_years / max(target_years, 1)
-            score = max(35.0, round(ratio * 100.0, 1))
-            detail = f"Has {cand_years:.1f} years experience; position targets around {target_years} years ({score:.0f}% alignment)."
+            if cand_years >= 8.0:
+                score = 100.0
+                detail = f"Fits leadership tenure requirement ({cand_years:.1f} yrs - 100% alignment)."
+            else:
+                ratio = cand_years / max(target_years, 8)
+                score = max(20.0, round(ratio * 100.0, 1))
+                detail = f"Position requires {target_years}+ yrs lead experience; candidate has {cand_years:.1f} yrs ({score:.0f}% alignment)."
 
         return score, detail
 

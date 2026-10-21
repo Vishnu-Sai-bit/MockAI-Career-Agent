@@ -1,5 +1,5 @@
 from typing import Optional, List, Dict, Any
-from sqlalchemy import or_, and_, desc
+from sqlalchemy import or_, and_, desc, case
 from extensions import db
 from models.job import Job
 from models.job_match import JobMatch
@@ -100,9 +100,53 @@ class JobSearchService:
             if min_match_score is not None:
                 query = query.filter(JobMatch.match_score >= float(min_match_score))
 
-            from sqlalchemy import case
+            # Determine candidate's experience years from resume or candidate profile
+            cand_years = float(
+                (active_resume.parsed_data or {}).get("experience_years") 
+                or (user.candidate_profile.experience_years if user and user.candidate_profile else 0.0) 
+                or 0.0
+            )
 
-            # Prioritize jobs matching candidate resume requirements (>= 60%) first, followed by remaining jobs next
+            # Experience-tier priority:
+            # - Fresher (0 to 1.5 yrs): Fresher / Entry-Level (0-2 Yrs) jobs appear FIRST!
+            # - 2 Years Experience (1.5 to 5.0 yrs): 2-5 Yrs (Mid-Level) jobs appear FIRST!
+            # - Senior (5.0 to 8.0 yrs): 5-8 Yrs (Senior) jobs appear FIRST!
+            # - Lead (8.0+ yrs): 8+ Yrs (Lead) jobs appear FIRST!
+            # All remaining jobs outside candidate's tier appear NEXT.
+            if cand_years <= 1.5:
+                # Fresher preference: entry-level jobs and titles with fresher/intern/junior/entry/graduate
+                exp_fit = case(
+                    (or_(
+                        Job.experience_level == "entry",
+                        Job.title.ilike("%fresher%"),
+                        Job.title.ilike("%intern%"),
+                        Job.title.ilike("%entry%"),
+                        Job.title.ilike("%junior%"),
+                        Job.title.ilike("%graduate%")
+                    ), 1),
+                    else_=0
+                )
+            elif cand_years < 5.0:
+                # 2 years or 2+ years mid-level preference (2-5 yrs)
+                exp_fit = case(
+                    (Job.experience_level == "mid", 1),
+                    (or_(Job.experience_level == "entry", Job.experience_level == "senior"), 0),
+                    else_=0
+                )
+            elif cand_years < 8.0:
+                # Senior preference (5-8 yrs)
+                exp_fit = case(
+                    (Job.experience_level == "senior", 1),
+                    else_=0
+                )
+            else:
+                # Lead preference (8+ yrs)
+                exp_fit = case(
+                    (Job.experience_level == "lead", 1),
+                    else_=0
+                )
+
+            # Relevance match indicator (match score >= 60%)
             is_matched = case(
                 (and_(JobMatch.match_score.isnot(None), JobMatch.match_score >= 60.0), 1),
                 else_=0
@@ -110,6 +154,7 @@ class JobSearchService:
 
             if sort_by == "match":
                 query = query.order_by(
+                    desc(exp_fit),
                     desc(is_matched),
                     desc(JobMatch.match_score),
                     desc(Job.published_at),
@@ -117,6 +162,7 @@ class JobSearchService:
                 )
             elif sort_by == "salary":
                 query = query.order_by(
+                    desc(exp_fit),
                     desc(is_matched),
                     desc(Job.salary_max),
                     desc(Job.published_at),
@@ -125,8 +171,10 @@ class JobSearchService:
             elif sort_by == "all_fresh":
                 query = query.order_by(desc(Job.published_at), desc(Job.id))
             else:
-                # Default: Resume matched jobs first (highest match & freshest), followed by remaining jobs
+                # Default: Candidate's experience-matching jobs first (fresher for fresher, 2+ yrs for 2 yrs),
+                # ordered by highest relevance and freshness, followed by remaining jobs next
                 query = query.order_by(
+                    desc(exp_fit),
                     desc(is_matched),
                     desc(JobMatch.match_score),
                     desc(Job.published_at),
@@ -148,6 +196,14 @@ class JobSearchService:
             from services.dream_company_service import DreamCompanyService
             user_dream_companies = DreamCompanyService().get_dream_company_names(user.id)
 
+        cand_years = 0.0
+        if active_resume:
+            cand_years = float(
+                (active_resume.parsed_data or {}).get("experience_years") 
+                or (user.candidate_profile.experience_years if user and user.candidate_profile else 0.0) 
+                or 0.0
+            )
+
         for job in paginated.items:
             match_obj = None
             if active_resume:
@@ -159,10 +215,28 @@ class JobSearchService:
 
             is_job_matched = bool(match_obj and match_obj.match_score and match_obj.match_score >= 60.0)
             is_dream = bool(job.company and job.company.lower().strip() in user_dream_companies)
+
+            # Check if this job specifically fits the candidate's experience tier
+            is_job_exp_fit = False
+            if active_resume:
+                title_lower = (job.title or "").lower()
+                if cand_years <= 1.5:
+                    is_job_exp_fit = bool(
+                        job.experience_level == "entry" or 
+                        any(w in title_lower for w in ["fresher", "intern", "entry", "junior", "graduate"])
+                    )
+                elif cand_years < 5.0:
+                    is_job_exp_fit = bool(job.experience_level == "mid")
+                elif cand_years < 8.0:
+                    is_job_exp_fit = bool(job.experience_level == "senior")
+                else:
+                    is_job_exp_fit = bool(job.experience_level == "lead")
+
             results.append({
                 "job": job,
                 "match": match_obj,
                 "is_matched": is_job_matched,
+                "is_exp_fit": is_job_exp_fit,
                 "is_dream_company": is_dream,
                 "is_saved": job.id in user_saved_ids,
                 "is_applied": job.id in user_applied_ids

@@ -149,8 +149,20 @@ def upload_resume():
         new_skills = set(parsed_data.get("skills", []))
         profile.skills = sorted(list(existing_skills.union(new_skills)))
 
-        if parsed_data.get("experience_years"):
-            profile.experience_years = parsed_data["experience_years"]
+        if "experience_years" in parsed_data and parsed_data["experience_years"] is not None:
+            profile.experience_years = float(parsed_data["experience_years"])
+        else:
+            profile.experience_years = 0.0
+
+        # Sync experience tier (entry for freshers, mid for 2-5 yrs, etc.)
+        if profile.experience_years <= 1.5:
+            profile.experience_level = "entry"
+        elif profile.experience_years < 5.0:
+            profile.experience_level = "mid"
+        elif profile.experience_years < 8.0:
+            profile.experience_level = "senior"
+        else:
+            profile.experience_level = "lead"
         if parsed_data.get("education"):
             profile.education = parsed_data["education"]
         if parsed_data.get("projects"):
@@ -289,8 +301,20 @@ def analyze_with_gemini():
             profile.summary = parsed_data["summary"]
         if parsed_data.get("skills"):
             profile.skills = parsed_data["skills"]
-        if parsed_data.get("experience_years"):
-            profile.experience_years = parsed_data["experience_years"]
+        if "experience_years" in parsed_data and parsed_data["experience_years"] is not None:
+            profile.experience_years = float(parsed_data["experience_years"])
+        else:
+            profile.experience_years = 0.0
+
+        # Sync experience tier (entry for freshers, mid for 2-5 yrs, etc.)
+        if profile.experience_years <= 1.5:
+            profile.experience_level = "entry"
+        elif profile.experience_years < 5.0:
+            profile.experience_level = "mid"
+        elif profile.experience_years < 8.0:
+            profile.experience_level = "senior"
+        else:
+            profile.experience_level = "lead"
         if parsed_data.get("projects"):
             profile.projects = parsed_data["projects"]
         if parsed_data.get("education"):

@@ -192,7 +192,18 @@
                 </span>
                 {% if current_user.candidate_profile and current_user.candidate_profile.experience_years is not none %}
                     <span class="badge bg-light text-dark border ms-2">
-                        <i class="bi bi-person-workspace text-primary me-1"></i>Your Experience: <strong>{{ current_user.candidate_profile.experience_years }} Yrs</strong>
+                        <i class="bi bi-person-workspace text-primary me-1"></i>Your Level: 
+                        <strong>
+                            {% if current_user.candidate_profile.experience_years <= 1.5 %}
+                                Fresher (0–2 Yrs)
+                            {% elif current_user.candidate_profile.experience_years < 5.0 %}
+                                Mid-Level ({{ current_user.candidate_profile.experience_years }} Yrs)
+                            {% elif current_user.candidate_profile.experience_years < 8.0 %}
+                                Senior ({{ current_user.candidate_profile.experience_years }} Yrs)
+                            {% else %}
+                                Lead ({{ current_user.candidate_profile.experience_years }} Yrs)
+                            {% endif %}
+                        </strong>
                     </span>
                 {% endif %}
                 {% if current_user.candidate_profile and current_user.candidate_profile.preferred_cities %}
@@ -251,19 +262,19 @@
                                 {% endif %}
                                 {% if job.experience_level == 'entry' %}
                                     <span class="badge bg-success-subtle text-success border border-success-subtle">
-                                        <i class="bi bi-briefcase me-1"></i>0–2 Yrs (Entry)
+                                        <i class="bi bi-briefcase me-1"></i>0–2 Yrs (Entry){% if item.is_exp_fit %} <i class="bi bi-check-circle-fill text-success ms-1" title="Direct match for your experience level"></i>{% endif %}
                                     </span>
                                 {% elif job.experience_level == 'mid' %}
                                     <span class="badge bg-info-subtle text-info border border-info-subtle">
-                                        <i class="bi bi-briefcase me-1"></i>2–5 Yrs (Mid)
+                                        <i class="bi bi-briefcase me-1"></i>2–5 Yrs (Mid){% if item.is_exp_fit %} <i class="bi bi-check-circle-fill text-info ms-1" title="Direct match for your experience level"></i>{% endif %}
                                     </span>
                                 {% elif job.experience_level == 'senior' %}
                                     <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
-                                        <i class="bi bi-briefcase me-1"></i>5–8 Yrs (Senior)
+                                        <i class="bi bi-briefcase me-1"></i>5–8 Yrs (Senior){% if item.is_exp_fit %} <i class="bi bi-check-circle-fill text-warning ms-1" title="Direct match for your experience level"></i>{% endif %}
                                     </span>
                                 {% elif job.experience_level == 'lead' %}
                                     <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
-                                        <i class="bi bi-briefcase me-1"></i>8+ Yrs (Lead)
+                                        <i class="bi bi-briefcase me-1"></i>8+ Yrs (Lead){% if item.is_exp_fit %} <i class="bi bi-check-circle-fill text-danger ms-1" title="Direct match for your experience level"></i>{% endif %}
                                     </span>
                                 {% else %}
                                     <span class="badge bg-light text-dark border">

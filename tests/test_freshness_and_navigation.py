@@ -204,3 +204,138 @@ def test_jobs_list_auto_computes_matches_for_active_resume(app_with_db, test_use
     assert "Relevant" in html
 
 
+def test_fresher_candidate_gets_fresher_jobs_first_remaining_next(app_with_db, test_user, test_source):
+    """
+    Verifies that when a candidate is a fresher (0 years experience),
+    fresher / entry-level jobs appear FIRST, and remaining jobs appear NEXT.
+    """
+    now = datetime.now(timezone.utc)
+    resume = Resume(
+        user_id=test_user.id,
+        filename="fresher_resume.pdf",
+        file_path="uploads/fresher_resume.pdf",
+        file_type="pdf",
+        raw_text="Fresher Computer Science Graduate skilled in Python and SQL",
+        parsed_data={"skills": ["Python", "SQL"], "experience_years": 0.0},
+        is_active=True
+    )
+    test_user.candidate_profile.experience_years = 0.0
+    test_user.candidate_profile.experience_level = "entry"
+    db.session.add(resume)
+    db.session.commit()
+
+    # Create Senior Job (published 1 hour ago)
+    job_senior = Job(
+        source_id=test_source.id,
+        source_company_key="testco",
+        title="Senior Tech Lead",
+        company="Senior Co",
+        location="Remote",
+        experience_level="senior",
+        source_platform="greenhouse",
+        source_job_id="sr-100",
+        original_url="https://example.com/sr-100",
+        apply_url="https://example.com/sr-100",
+        published_at=now - timedelta(hours=1),
+        status="active"
+    )
+    # Create Fresher Job (published 2 days ago)
+    job_fresher = Job(
+        source_id=test_source.id,
+        source_company_key="testco",
+        title="Junior Python Associate (Fresher)",
+        company="Starter Co",
+        location="Remote",
+        experience_level="entry",
+        source_platform="lever",
+        source_job_id="jr-200",
+        original_url="https://example.com/jr-200",
+        apply_url="https://example.com/jr-200",
+        published_at=now - timedelta(days=2),
+        status="active"
+    )
+    db.session.add_all([job_senior, job_fresher])
+    db.session.commit()
+
+    service = JobSearchService()
+    results = service.search_jobs(user=test_user, sort_by="fresh")
+    items = results["jobs"]
+
+    assert len(items) == 2
+    # Fresher job must appear FIRST even though Senior job was published more recently
+    assert items[0]["job"].title == "Junior Python Associate (Fresher)"
+    assert items[0]["is_exp_fit"] is True
+
+    # Remaining senior job must appear NEXT
+    assert items[1]["job"].title == "Senior Tech Lead"
+    assert items[1]["is_exp_fit"] is False
+
+
+def test_two_years_experience_candidate_gets_mid_jobs_first_remaining_next(app_with_db, test_user, test_source):
+    """
+    Verifies that when a candidate has 2 years experience,
+    2 years / mid-level jobs appear FIRST, and remaining jobs appear NEXT.
+    """
+    now = datetime.now(timezone.utc)
+    resume = Resume(
+        user_id=test_user.id,
+        filename="mid_resume.pdf",
+        file_path="uploads/mid_resume.pdf",
+        file_type="pdf",
+        raw_text="Software Engineer with 2 years experience in Python and APIs",
+        parsed_data={"skills": ["Python", "APIs"], "experience_years": 2.0},
+        is_active=True
+    )
+    test_user.candidate_profile.experience_years = 2.0
+    test_user.candidate_profile.experience_level = "mid"
+    db.session.add(resume)
+    db.session.commit()
+
+    # Create Lead Job (published 10 mins ago)
+    job_lead = Job(
+        source_id=test_source.id,
+        source_company_key="testco",
+        title="Staff Architect (8+ Yrs)",
+        company="Big Co",
+        location="Remote",
+        experience_level="lead",
+        source_platform="greenhouse",
+        source_job_id="lead-300",
+        original_url="https://example.com/lead-300",
+        apply_url="https://example.com/lead-300",
+        published_at=now - timedelta(minutes=10),
+        status="active"
+    )
+    # Create 2 Years / Mid-level Job (published yesterday)
+    job_mid = Job(
+        source_id=test_source.id,
+        source_company_key="testco",
+        title="Python Backend Developer (2–5 Yrs)",
+        company="Scale Co",
+        location="Remote",
+        experience_level="mid",
+        source_platform="lever",
+        source_job_id="mid-400",
+        original_url="https://example.com/mid-400",
+        apply_url="https://example.com/mid-400",
+        published_at=now - timedelta(days=1),
+        status="active"
+    )
+    db.session.add_all([job_lead, job_mid])
+    db.session.commit()
+
+    service = JobSearchService()
+    results = service.search_jobs(user=test_user, sort_by="fresh")
+    items = results["jobs"]
+
+    assert len(items) == 2
+    # Mid-level (2 years) job must appear FIRST
+    assert items[0]["job"].title == "Python Backend Developer (2–5 Yrs)"
+    assert items[0]["is_exp_fit"] is True
+
+    # Remaining lead job must appear NEXT
+    assert items[1]["job"].title == "Staff Architect (8+ Yrs)"
+    assert items[1]["is_exp_fit"] is False
+
+
+
