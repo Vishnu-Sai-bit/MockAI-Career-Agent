@@ -21,7 +21,7 @@ class RawJobRecord(BaseModel):
     experience_level: str = "any"  # entry, mid, senior, lead
     salary_min: Optional[float] = None
     salary_max: Optional[float] = None
-    currency: str = "USD"
+    currency: str = "INR"
     description: str = ""
     raw_description: str = ""
     required_skills: List[str] = Field(default_factory=list)

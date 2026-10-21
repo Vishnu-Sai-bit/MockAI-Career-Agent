@@ -37,11 +37,12 @@ def counter_offer_api():
     data = request.get_json() or {}
     company = data.get("company", "Company")
     role = data.get("role", "Software Engineer")
-    current_base = float(data.get("current_base", 100000))
-    target_base = float(data.get("target_base", 120000))
+    current_base = float(data.get("current_base", 1500000))
+    target_base = float(data.get("target_base", 1800000))
+    currency = data.get("currency", "INR")
     justification = data.get("justification", "Strong competitive background and market percentile")
 
-    result = salary_service.generate_counter_offer(company, role, current_base, target_base, justification)
+    result = salary_service.generate_counter_offer(company, role, current_base, target_base, justification, currency=currency)
     return jsonify({"success": True, "counter_offer": result})
 
 

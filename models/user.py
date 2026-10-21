@@ -70,12 +70,17 @@ class CandidateProfile(db.Model):
     work_modes = db.Column(db.JSON, default=lambda: ["remote", "hybrid", "on-site"])
     min_salary = db.Column(db.Float, nullable=True)
     max_salary = db.Column(db.Float, nullable=True)
-    currency = db.Column(db.String(10), default="USD")
+    currency = db.Column(db.String(10), default="INR")
     experience_level = db.Column(db.String(50), default="mid")
     employment_types = db.Column(db.JSON, default=lambda: ["full-time"])
     visa_sponsorship_required = db.Column(db.Boolean, default=False)
     
     updated_at = db.Column(db.DateTime, default=utc_now, onupdate=utc_now)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if "currency" not in kwargs:
+            self.currency = "INR"
 
     def __repr__(self):
         return f"<CandidateProfile user_id={self.user_id} name='{self.full_name}'>"

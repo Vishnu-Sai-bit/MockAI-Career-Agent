@@ -10,23 +10,30 @@ class SalaryIntelligenceService:
     def estimate_market_salary(self, title: str, location: str, experience_years: float, skills: list) -> Dict[str, Any]:
         """
         Estimates market compensation percentiles for a role based on skills, geography, and tenure.
+        Defaults to Indian Rupee (INR / ₹) standards.
         """
+        loc_str = location or "Bengaluru, India"
+        loc_lower = loc_str.lower()
+        is_us = any(term in loc_lower for term in ["usa", "san francisco", "new york", "united states", "seattle", "austin"])
+
         prompt = f"""You are a principal compensation consultant and compensation benchmark analyst.
 Estimate the competitive market salary percentiles for this role.
+If the location is in the US (e.g. San Francisco, USA), output USD.
+Otherwise, provide all compensation figures in Indian Rupees (INR / ₹) adhering to modern tech industry standards (e.g. 10 LPA - 50 LPA depending on role & tenure).
 
 ROLE DETAILS:
 Title: {title}
-Location: {location}
+Location: {loc_str}
 Experience: {experience_years} years
-Key Skills: {', '.join(skills[:8])}
+Key Skills: {', '.join(skills[:8]) if skills else 'Software Engineering'}
 
 Format output as a valid JSON object:
 {{
-  "currency": "USD / INR / EUR",
-  "percentile_25": 95000,
-  "median": 125000,
-  "percentile_75": 150000,
-  "percentile_90": 175000,
+  "currency": "{'USD' if is_us else 'INR'}",
+  "percentile_25": {95000 if is_us else 1200000},
+  "median": {125000 if is_us else 1600000},
+  "percentile_75": {150000 if is_us else 2200000},
+  "percentile_90": {175000 if is_us else 2800000},
   "market_demand_rating": "Very High / High / Moderate",
   "salary_drivers": [
     "Key factor or skill driving compensation premium (e.g. distributed systems, AI)",
@@ -37,40 +44,56 @@ Format output as a valid JSON object:
 """
         parsed = self.gemini.generate_json(prompt, timeout=8)
         if isinstance(parsed, dict) and "median" in parsed:
+            # If not US and output has USD, normalize to INR
+            if not is_us and parsed.get("currency") == "USD":
+                rate = 83.33
+                parsed["currency"] = "INR"
+                for k in ["percentile_25", "median", "percentile_75", "percentile_90"]:
+                    if k in parsed and isinstance(parsed[k], (int, float)) and parsed[k] < 500000:
+                        parsed[k] = round(parsed[k] * rate, -4)
             return parsed
 
         # Deterministic benchmark calculation
-        base_usd = 85000.0 + min(experience_years * 12000.0, 100000.0)
-        is_india = "india" in location.lower() or "bengaluru" in location.lower() or "hyderabad" in location.lower()
-        if is_india:
-            curr = "INR"
-            base = (base_usd * 0.25) * 85.0  # approximate purchasing power parity
+        if is_us:
+            base_usd = 85000.0 + min(experience_years * 12000.0, 100000.0)
             return {
-                "currency": "INR",
-                "percentile_25": round(base * 0.85, -4),
-                "median": round(base, -4),
-                "percentile_75": round(base * 1.25, -4),
-                "percentile_90": round(base * 1.50, -4),
+                "currency": "USD",
+                "percentile_25": round(base_usd * 0.85, -3),
+                "median": round(base_usd, -3),
+                "percentile_75": round(base_usd * 1.20, -3),
+                "percentile_90": round(base_usd * 1.40, -3),
                 "market_demand_rating": "High",
-                "salary_drivers": [f"Specialized experience in {', '.join(skills[:3]) if skills else 'Tech'}", "Fast-growing Indian tech hub premium"],
-                "negotiation_leverage_summary": "High demand for proven hands-on technical contributors with clean problem-solving fundamentals."
+                "salary_drivers": [f"Deep proficiency in {', '.join(skills[:3]) if skills else 'core competencies'}", "Competitive US tech market"],
+                "negotiation_leverage_summary": "Strong leverage for candidates demonstrating measurable business impact and clean architecture."
             }
 
+        # Default: Indian Rupee (INR / ₹)
+        base_inr = 800000.0 + min(experience_years * 250000.0, 2700000.0)
         return {
-            "currency": "USD",
-            "percentile_25": round(base_usd * 0.85, -3),
-            "median": round(base_usd, -3),
-            "percentile_75": round(base_usd * 1.20, -3),
-            "percentile_90": round(base_usd * 1.40, -3),
+            "currency": "INR",
+            "percentile_25": round(base_inr * 0.80, -4),
+            "median": round(base_inr, -4),
+            "percentile_75": round(base_inr * 1.30, -4),
+            "percentile_90": round(base_inr * 1.65, -4),
             "market_demand_rating": "High",
-            "salary_drivers": [f"Deep proficiency in {', '.join(skills[:3]) if skills else 'core competencies'}", "Competitive global tech market"],
-            "negotiation_leverage_summary": "Strong leverage for candidates demonstrating measurable business impact and clean architecture."
+            "salary_drivers": [
+                f"Specialized experience in {', '.join(skills[:3]) if skills else 'Tech & AI'}",
+                "Fast-growing Indian tech hub premium & remote competitiveness"
+            ],
+            "negotiation_leverage_summary": "High market demand for proven contributors with strong problem-solving fundamentals."
         }
 
-    def generate_counter_offer(self, company: str, role: str, current_offer_base: float, target_base: float, justification: str) -> Dict[str, Any]:
+    def generate_counter_offer(self, company: str, role: str, current_offer_base: float, target_base: float, justification: str, currency: str = "INR") -> Dict[str, Any]:
         """
         Drafts a professional, gracious counter-offer negotiation email.
         """
+        curr_sym = "₹" if currency.upper() in ["INR", "RUPEE"] else currency
+        target_val = float(target_base)
+        if target_val >= 100000 and curr_sym == "₹":
+            target_str = f"₹{target_val:,.0f} ({target_val / 100000:.1f} LPA)"
+        else:
+            target_str = f"{curr_sym}{target_val:,.0f}"
+
         prompt = f"""You are a master executive negotiation coach.
 Draft a tactful, highly professional counter-offer email for a candidate negotiating a job offer.
 
@@ -78,7 +101,7 @@ DETAILS:
 Company: {company}
 Role: {role}
 Current Offered Base: {current_offer_base}
-Target Requested Base: {target_base}
+Target Requested Base: {target_str}
 Candidate Justification / Value: {justification}
 
 Output MUST be a single valid JSON object:
@@ -100,7 +123,7 @@ Output MUST be a single valid JSON object:
 
 Thank you very much for offering me the role of {role}. I am genuinely excited about the team's mission and confident that my technical background will allow me to deliver immediate impact to {company}.
 
-After carefully evaluating the compensation package and considering the market value for this role, I would like to discuss the base salary. Given my specialized experience and the value I look forward to contributing, I was hoping we could meet closer to ${target_base:,.0f}.
+After carefully evaluating the compensation package and considering the market value for this role, I would like to discuss the base salary. Given my specialized experience and the value I look forward to contributing, I was hoping we could meet closer to {target_str}.
 
 I am very enthusiastic about joining the team and am confident we can find an agreement that works for both sides. Thank you again for your time and support throughout this process.
 

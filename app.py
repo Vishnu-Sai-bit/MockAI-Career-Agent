@@ -20,6 +20,7 @@ from tasks.refresh_jobs import ensure_default_sources, run_job_refresh
 from tasks.scheduler import init_job_scheduler
 from tasks.schema_migration import ensure_schema_upgrades
 from utils.date_helpers import format_relative_time
+from utils.currency_formatter import format_job_salary, format_inr
 
 def create_app(config_name=None):
     if config_name is None:
@@ -41,6 +42,16 @@ def create_app(config_name=None):
     @app.template_filter("relative_time")
     def jinja_relative_time(dt):
         return format_relative_time(dt)
+
+    @app.template_filter("format_job_salary")
+    @app.template_filter("format_salary")
+    def jinja_format_salary(job):
+        return format_job_salary(job)
+
+    @app.template_filter("format_inr")
+    @app.template_filter("rupee")
+    def jinja_format_inr(amount):
+        return format_inr(amount)
 
     # Context Processor for Topbar Notifications
     @app.context_processor

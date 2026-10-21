@@ -114,6 +114,7 @@ def settings():
 
         min_sal = request.form.get("min_salary")
         profile.min_salary = float(min_sal) if min_sal and min_sal.strip() else None
+        profile.currency = request.form.get("currency", "INR")
 
         db.session.commit()
 

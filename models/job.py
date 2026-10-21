@@ -29,7 +29,7 @@ class Job(db.Model):
     # Compensation
     salary_min = db.Column(db.Float, nullable=True)
     salary_max = db.Column(db.Float, nullable=True)
-    currency = db.Column(db.String(10), default="USD")
+    currency = db.Column(db.String(10), default="INR")
     
     # Job Description & Requirements
     description = db.Column(db.Text, default="")
@@ -64,6 +64,11 @@ class Job(db.Model):
     def posted_relative_time(self) -> str:
         from utils.date_helpers import format_relative_time
         return format_relative_time(self.published_at or self.created_at)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if "currency" not in kwargs:
+            self.currency = "INR"
 
     def __repr__(self):
         return f"<Job id={self.id} title='{self.title}' company='{self.company}' source={self.source_platform}>"

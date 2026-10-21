@@ -272,6 +272,11 @@
                                 {% endif %}
                                 <span class="badge bg-light text-dark border">{{ job.work_mode|title }}</span>
                                 <span class="badge bg-light text-dark border">{{ job.employment_type|title }}</span>
+                                {% if job.salary_min or job.salary_max %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle fw-semibold">
+                                        <i class="bi bi-cash-stack me-1"></i>{{ job|format_job_salary }}
+                                    </span>
+                                {% endif %}
                                 <span class="badge bg-secondary-subtle text-secondary">{{ job.source_platform|title }}</span>
                                 <span class="badge bg-light text-muted border"><i class="bi bi-clock me-1"></i>{{ job.posted_relative_time }}</span>
                             </div>

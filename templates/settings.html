@@ -71,8 +71,13 @@
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-semibold">Minimum Target Salary (USD/yr)</label>
-                            <input type="number" name="min_salary" class="form-control" value="{{ profile.min_salary or '' }}" placeholder="e.g. 90000">
+                            <label class="form-label small fw-semibold">Minimum Target Salary (₹ INR / Year)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light fw-bold text-success">₹</span>
+                                <input type="number" name="min_salary" class="form-control" value="{{ profile.min_salary|int if profile.min_salary else '' }}" placeholder="e.g. 1200000 (12 LPA)">
+                            </div>
+                            <small class="text-muted" style="font-size: 0.72rem;">Indian Rupee (INR) annual baseline expectation</small>
+                            <input type="hidden" name="currency" value="INR">
                         </div>
                         <div class="col-12">
                             <label class="form-label small fw-semibold d-block">Work Modes Accepted</label>

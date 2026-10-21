@@ -44,25 +44,46 @@
                         <span class="text-muted small">Estimated Market Median:</span>
                         <span class="badge bg-success-subtle text-success fw-bold" id="est-demand">{{ estimate.market_demand_rating }} Demand</span>
                     </div>
-                    <h2 class="fw-bold text-dark mb-3" id="est-median">{{ estimate.currency }} {{ "{:,.0f}".format(estimate.median) }}</h2>
+                    <h2 class="fw-bold text-dark mb-3" id="est-median">
+                        {% if estimate.currency == 'INR' %}
+                            ₹ {{ "{:,.0f}".format(estimate.median) }} <span class="badge bg-success-subtle text-success fs-6 fw-semibold align-middle ms-2">{{ "{:.1f}".format(estimate.median / 100000) }} LPA</span>
+                        {% else %}
+                            {{ estimate.currency }} {{ "{:,.0f}".format(estimate.median) }}
+                        {% endif %}
+                    </h2>
 
                     <div class="row g-2 text-center small">
                         <div class="col-4">
                             <div class="p-2 border rounded bg-white">
                                 <span class="text-muted d-block">25th Percentile</span>
-                                <strong id="est-p25">{{ estimate.currency }} {{ "{:,.0f}".format(estimate.percentile_25) }}</strong>
+                                <strong id="est-p25">
+                                    {% if estimate.currency == 'INR' %}₹ {{ "{:,.0f}".format(estimate.percentile_25) }}{% else %}{{ estimate.currency }} {{ "{:,.0f}".format(estimate.percentile_25) }}{% endif %}
+                                </strong>
+                                {% if estimate.currency == 'INR' %}
+                                    <small class="text-muted d-block" style="font-size: 0.72rem;">{{ "{:.1f}".format(estimate.percentile_25 / 100000) }} LPA</small>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="col-4">
                             <div class="p-2 border rounded bg-white">
                                 <span class="text-muted d-block">75th Percentile</span>
-                                <strong id="est-p75">{{ estimate.currency }} {{ "{:,.0f}".format(estimate.percentile_75) }}</strong>
+                                <strong id="est-p75">
+                                    {% if estimate.currency == 'INR' %}₹ {{ "{:,.0f}".format(estimate.percentile_75) }}{% else %}{{ estimate.currency }} {{ "{:,.0f}".format(estimate.percentile_75) }}{% endif %}
+                                </strong>
+                                {% if estimate.currency == 'INR' %}
+                                    <small class="text-muted d-block" style="font-size: 0.72rem;">{{ "{:.1f}".format(estimate.percentile_75 / 100000) }} LPA</small>
+                                {% endif %}
                             </div>
                         </div>
                         <div class="col-4">
                             <div class="p-2 border rounded bg-white">
                                 <span class="text-muted d-block">Top 10% (90th)</span>
-                                <strong id="est-p90">{{ estimate.currency }} {{ "{:,.0f}".format(estimate.percentile_90) }}</strong>
+                                <strong id="est-p90">
+                                    {% if estimate.currency == 'INR' %}₹ {{ "{:,.0f}".format(estimate.percentile_90) }}{% else %}{{ estimate.currency }} {{ "{:,.0f}".format(estimate.percentile_90) }}{% endif %}
+                                </strong>
+                                {% if estimate.currency == 'INR' %}
+                                    <small class="text-muted d-block" style="font-size: 0.72rem;">{{ "{:.1f}".format(estimate.percentile_90 / 100000) }} LPA</small>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -96,12 +117,18 @@
                         <input type="text" id="co-role" class="form-control" placeholder="e.g. Senior Data Engineer" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Offered Base Salary</label>
-                        <input type="number" id="co-offered" class="form-control" placeholder="100000" required>
+                        <label class="form-label small fw-semibold">Offered Base Salary (₹ INR)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-success fw-bold">₹</span>
+                            <input type="number" id="co-offered" class="form-control" placeholder="e.g. 1500000 (15 LPA)" required>
+                        </div>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-semibold">Target Requested Base</label>
-                        <input type="number" id="co-target" class="form-control" placeholder="125000" required>
+                        <label class="form-label small fw-semibold">Target Requested Base (₹ INR)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light text-success fw-bold">₹</span>
+                            <input type="number" id="co-target" class="form-control" placeholder="e.g. 1800000 (18 LPA)" required>
+                        </div>
                     </div>
                     <div class="col-12">
                         <label class="form-label small fw-semibold">Value Justification / Specialized Skills</label>
@@ -224,10 +251,20 @@ document.getElementById('salary-estimate-form').addEventListener('submit', funct
     .then(data => {
         if (data.success && data.estimate) {
             const est = data.estimate;
-            document.getElementById('est-median').textContent = est.currency + ' ' + Number(est.median).toLocaleString();
-            document.getElementById('est-p25').textContent = est.currency + ' ' + Number(est.percentile_25).toLocaleString();
-            document.getElementById('est-p75').textContent = est.currency + ' ' + Number(est.percentile_75).toLocaleString();
-            document.getElementById('est-p90').textContent = est.currency + ' ' + Number(est.percentile_90).toLocaleString();
+            const isINR = est.currency === 'INR';
+            const sym = isINR ? '₹' : est.currency;
+            const loc = isINR ? 'en-IN' : 'en-US';
+
+            const medianLpa = isINR ? ` <span class="badge bg-success-subtle text-success fs-6 fw-semibold align-middle ms-2">${(est.median / 100000).toFixed(1)} LPA</span>` : '';
+            document.getElementById('est-median').innerHTML = `${sym} ${Number(est.median).toLocaleString(loc)}${medianLpa}`;
+
+            const p25Lpa = isINR ? `<small class="text-muted d-block" style="font-size: 0.72rem;">${(est.percentile_25 / 100000).toFixed(1)} LPA</small>` : '';
+            const p75Lpa = isINR ? `<small class="text-muted d-block" style="font-size: 0.72rem;">${(est.percentile_75 / 100000).toFixed(1)} LPA</small>` : '';
+            const p90Lpa = isINR ? `<small class="text-muted d-block" style="font-size: 0.72rem;">${(est.percentile_90 / 100000).toFixed(1)} LPA</small>` : '';
+
+            document.getElementById('est-p25').innerHTML = `${sym} ${Number(est.percentile_25).toLocaleString(loc)}${p25Lpa}`;
+            document.getElementById('est-p75').innerHTML = `${sym} ${Number(est.percentile_75).toLocaleString(loc)}${p75Lpa}`;
+            document.getElementById('est-p90').innerHTML = `${sym} ${Number(est.percentile_90).toLocaleString(loc)}${p90Lpa}`;
             document.getElementById('est-demand').textContent = est.market_demand_rating + ' Demand';
             document.getElementById('est-drivers').innerHTML = (est.salary_drivers || []).map(d => `<li>${d}</li>`).join('');
             document.getElementById('est-leverage').textContent = est.negotiation_leverage_summary || '';
@@ -296,8 +333,14 @@ document.getElementById('ppp-converter-form').addEventListener('submit', functio
         btn.innerHTML = '<i class="bi bi-arrow-left-right me-1"></i> Calculate PPP';
         if (data.success && data.data) {
             const d = data.data;
-            document.getElementById('ppp-nominal-val').textContent = d.home_currency + ' ' + Number(d.nominal_exchange_value).toLocaleString();
-            document.getElementById('ppp-buying-power').textContent = d.home_currency + ' ' + Number(d.local_ppp_buying_power).toLocaleString();
+            const isINR = d.home_currency === 'INR';
+            const sym = isINR ? '₹' : d.home_currency;
+            const loc = isINR ? 'en-IN' : 'en-US';
+            const nomLpa = (isINR && d.nominal_exchange_value >= 100000) ? ` (${(d.nominal_exchange_value / 100000).toFixed(1)} LPA)` : '';
+            const pppLpa = (isINR && d.local_ppp_buying_power >= 100000) ? ` (${(d.local_ppp_buying_power / 100000).toFixed(1)} LPA)` : '';
+
+            document.getElementById('ppp-nominal-val').textContent = `${sym} ${Number(d.nominal_exchange_value).toLocaleString(loc)}${nomLpa}`;
+            document.getElementById('ppp-buying-power').textContent = `${sym} ${Number(d.local_ppp_buying_power).toLocaleString(loc)}${pppLpa}`;
             document.getElementById('ppp-multiplier').textContent = d.ppp_multiplier + 'x Multiplier';
             document.getElementById('ppp-analysis-text').textContent = d.analysis || '';
             document.getElementById('ppp-result-box').classList.remove('d-none');
