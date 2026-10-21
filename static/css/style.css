@@ -141,7 +141,8 @@ body {
         transform: translateX(-100%) !important;
     }
 
-    body.sidebar-collapsed .app-main-wrapper {
+    body.sidebar-collapsed .app-main-wrapper,
+    body.landing-mode .app-main-wrapper {
         margin-left: 0 !important;
     }
 }

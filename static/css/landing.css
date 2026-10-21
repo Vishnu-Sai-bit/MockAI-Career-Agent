@@ -25,6 +25,19 @@
     --landing-border: rgba(255, 255, 255, 0.1);
 }
 
+/* Reset desktop sidebar margin on landing page */
+@media (min-width: 992px) {
+    body.landing-mode,
+    body.landing-mode .app-main-wrapper,
+    .landing-wrapper,
+    .app-main-wrapper.landing-wrapper {
+        margin-left: 0 !important;
+        width: 100% !important;
+        max-width: 100vw !important;
+        padding-left: 0 !important;
+    }
+}
+
 /* 1. Landing Top Navigation */
 .landing-navbar {
     background-color: var(--landing-card-bg);

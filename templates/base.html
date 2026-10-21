@@ -21,7 +21,7 @@
     </script>
     {% block extra_css %}{% endblock %}
 </head>
-<body class="app-body">
+<body class="app-body {% if request.endpoint == 'dashboard.index' %}landing-mode{% endif %}">
     {% if request.endpoint != 'dashboard.index' %}
     <!-- 1. Dedicated App Navigation Sidebar (Permanent on Desktop, Offcanvas on Mobile) -->
     <aside class="offcanvas-lg offcanvas-start d-flex flex-column" tabindex="-1" id="appSidebar" aria-labelledby="appSidebarLabel">
@@ -160,7 +160,7 @@
     {% endif %}
 
     <!-- 2. Main Wrapper (Header Topbar, Content, Footer) -->
-    <div class="app-main-wrapper flex-grow-1 d-flex flex-column {% if request.endpoint == 'dashboard.index' %}p-0 w-100{% endif %}">
+    <div class="app-main-wrapper flex-grow-1 d-flex flex-column {% if request.endpoint == 'dashboard.index' %}p-0 w-100 m-0 landing-wrapper{% endif %}">
 
         {% if request.endpoint != 'dashboard.index' %}
         <!-- Top App Bar (Header with context & utilities including Notifications, NO duplicate links) -->
