@@ -66,7 +66,7 @@
                     <li class="nav-item">
                         <a class="sidebar-link {% if 'application' in request.endpoint %}active{% endif %}" href="{{ url_for('applications.list_applications') }}">
                             <i class="bi bi-kanban-fill text-info"></i>
-                            <span>Applications Kanban</span>
+                            <span>Application Tracker</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -170,7 +170,7 @@
                     <span class="fw-semibold text-body">
                         {% if request.endpoint == 'dashboard.dashboard' %}Dashboard
                         {% elif 'jobs' in request.endpoint %}Jobs Discovery
-                        {% elif 'application' in request.endpoint %}Applications Kanban
+                        {% elif 'application' in request.endpoint %}Application Tracker
                         {% elif 'ats' in request.endpoint %}ATS Match Intelligence
                         {% elif 'assistant' in request.endpoint %}AI Career Assistant
                         {% elif 'interview' in request.endpoint %}Mock Interview Simulator

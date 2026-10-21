@@ -27,26 +27,82 @@
                 </div>
                 <div class="mt-4 pt-2 d-flex align-items-center gap-4 text-muted small">
                     <div><i class="bi bi-check-circle-fill text-success me-1"></i> No fake URLs</div>
-                    <div><i class="bi bi-check-circle-fill text-success me-1"></i> Transparent ATS math</div>
+                    <div><i class="bi bi-check-circle-fill text-success me-1"></i> Transparent ATS scoring</div>
                     <div><i class="bi bi-check-circle-fill text-success me-1"></i> Verified sources</div>
                 </div>
             </div>
             <div class="col-lg-5">
                 <div class="card shadow-lg border-0 rounded-4 p-4 bg-light">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-award-fill text-primary me-2"></i>Explainable Match Formula</h6>
-                        <span class="badge bg-success">Active Engine</span>
+                        <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-kanban-fill text-primary me-2"></i>Application Tracker</h6>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i class="bi bi-broadcast me-1"></i>Live Pipeline</span>
                     </div>
-                    <div class="p-3 bg-white rounded-3 border mb-3 font-monospace small">
-                        <strong>M = 0.40S + 0.25E + 0.15K + 0.10P + 0.10Q</strong>
+
+                    <!-- Mini Stage Progress Stepper -->
+                    <div class="d-flex justify-content-between align-items-center mb-3 p-2 bg-white rounded-3 border small">
+                        <div class="text-center flex-fill">
+                            <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2 py-1 fw-bold">Saved</span>
+                            <div class="fs-8 fw-semibold text-muted mt-1">2 Saved</div>
+                        </div>
+                        <i class="bi bi-arrow-right text-muted fs-8"></i>
+                        <div class="text-center flex-fill">
+                            <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-1 fw-bold">Applied</span>
+                            <div class="fs-8 fw-semibold text-primary mt-1">5 Applied</div>
+                        </div>
+                        <i class="bi bi-arrow-right text-muted fs-8"></i>
+                        <div class="text-center flex-fill">
+                            <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-2 py-1 fw-bold">Interview</span>
+                            <div class="fs-8 fw-semibold text-warning-emphasis mt-1">2 Active</div>
+                        </div>
+                        <i class="bi bi-arrow-right text-muted fs-8"></i>
+                        <div class="text-center flex-fill">
+                            <span class="badge bg-success-subtle text-success rounded-pill px-2 py-1 fw-bold">Offer</span>
+                            <div class="fs-8 fw-semibold text-success mt-1">1 Offer</div>
+                        </div>
                     </div>
-                    <ul class="list-unstyled small text-muted mb-0">
-                        <li class="mb-2"><i class="bi bi-cpu text-info me-2"></i> <strong>S (40%)</strong>: Required & Preferred Skill Overlap</li>
-                        <li class="mb-2"><i class="bi bi-clock-history text-primary me-2"></i> <strong>E (25%)</strong>: Relevant Experience Alignment</li>
-                        <li class="mb-2"><i class="bi bi-key text-warning me-2"></i> <strong>K (15%)</strong>: Description Keyword Coverage</li>
-                        <li class="mb-2"><i class="bi bi-folder-check text-success me-2"></i> <strong>P (10%)</strong>: Concrete Project Evidence</li>
-                        <li><i class="bi bi-mortarboard text-secondary me-2"></i> <strong>Q (10%)</strong>: Educational Qualifications</li>
-                    </ul>
+
+                    <!-- Real-world Application Pipeline Cards -->
+                    <div class="d-flex flex-column gap-2 mb-3">
+                        <div class="p-3 bg-white rounded-3 border shadow-sm">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <div>
+                                    <div class="fw-bold text-dark small">Data Analyst</div>
+                                    <div class="text-muted fs-8">FlixTrain • Bengaluru / Remote</div>
+                                </div>
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle fs-9">
+                                    <i class="bi bi-calendar-check me-1"></i> Technical Round 2
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top fs-8 text-muted">
+                                <span><i class="bi bi-patch-check-fill text-success me-1"></i> Verified Direct Portal</span>
+                                <span class="text-primary fw-medium">Mock Practice Ready</span>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-white rounded-3 border shadow-sm">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <div>
+                                    <div class="fw-bold text-dark small">Junior Data Analyst</div>
+                                    <div class="text-muted fs-8">Stripe • Global Remote</div>
+                                </div>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle fs-9">
+                                    <i class="bi bi-send-check me-1"></i> Applied via Greenhouse
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center pt-2 mt-2 border-top fs-8 text-muted">
+                                <span><i class="bi bi-shield-check text-info me-1"></i> Direct ATS Confirmation</span>
+                                <span class="text-success fw-medium">85% Compatibility</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pipeline Footer Note -->
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top text-muted small">
+                        <span><i class="bi bi-arrow-left-right text-info me-1"></i> Drag-and-drop status tracking</span>
+                        <a href="{{ url_for('jobs.list_jobs') }}" class="text-primary text-decoration-none fw-semibold">
+                            Explore Jobs &rarr;
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
