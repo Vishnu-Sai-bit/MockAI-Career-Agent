@@ -1,19 +1,104 @@
 {% extends "base.html" %}
 
-{% block title %}Settings & Career Preferences — AI Job Agent{% endblock %}
+{% block title %}Account, Profile & Settings — AI Job Agent{% endblock %}
 
 {% block content %}
 <div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card p-4 p-md-5 custom-card border-0 bg-white shadow-sm">
-                <div class="mb-4">
-                    <h3 class="fw-bold mb-1"><i class="bi bi-gear-fill text-primary me-2"></i>Career Preferences & Settings</h3>
-                    <p class="text-muted small mb-0">Customize your preferred locations, work modes, and titles to fine-tune matching scores.</p>
+        <div class="col-lg-9">
+            <!-- Header -->
+            <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+                <div>
+                    <h3 class="fw-bold mb-1"><i class="bi bi-gear-fill text-primary me-2"></i>Account & Settings</h3>
+                    <p class="text-muted small mb-0">Manage your account identity, active career profile, uploaded resume, and job matching criteria.</p>
+                </div>
+                <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-outline-danger">
+                    <i class="bi bi-box-arrow-right me-1"></i> Sign Out
+                </a>
+            </div>
+
+            <!-- 1. Account Identity & Credentials Card -->
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-4" style="width: 50px; height: 50px;">
+                            {{ current_user.email[0].upper() }}
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark">{{ profile.full_name or current_user.email.split('@')[0] }}</h5>
+                            <span class="text-muted small">{{ current_user.email }}</span> · 
+                            <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-shield-check me-1"></i>Verified Candidate</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-secondary small d-block text-end">Account Status</span>
+                        <span class="badge bg-light text-dark border">Active Session</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Active Resume & Career Intelligence Card -->
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
+                <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
+                    <h5 class="fw-bold text-dark mb-0">
+                        <i class="bi bi-file-earmark-person-fill text-primary me-2"></i>Active Career Resume
+                    </h5>
+                    <div class="d-flex gap-2">
+                        {% if active_resume %}
+                            <a href="{{ url_for('resume.resume_analysis') }}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-graph-up me-1"></i> View ATS Analysis
+                            </a>
+                        {% endif %}
+                        <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-sm btn-primary-custom">
+                            <i class="bi bi-cloud-arrow-up me-1"></i> {% if active_resume %}Update Resume{% else %}Upload Resume{% endif %}
+                        </a>
+                    </div>
                 </div>
 
+                {% if active_resume %}
+                    <div class="p-3 bg-light rounded-3 border d-flex flex-wrap justify-content-between align-items-center gap-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded bg-white p-2 border text-danger fs-3">
+                                <i class="bi bi-file-earmark-pdf-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0 text-dark">{{ active_resume.filename }}</h6>
+                                <small class="text-muted">
+                                    Uploaded {{ active_resume.uploaded_at.strftime('%b %d, %Y') if active_resume.uploaded_at else 'Recently' }} · 
+                                    Format: <strong>{{ active_resume.file_type|upper }}</strong>
+                                </small>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            {% if profile.skills %}
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                    <i class="bi bi-stars me-1"></i>{{ profile.skills|length }} Extracted Skills
+                                </span>
+                            {% endif %}
+                            <a href="{{ url_for('resume.resume_analysis') }}" class="btn btn-sm btn-link text-primary p-0 fw-semibold">
+                                Full Breakdown &rarr;
+                            </a>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="p-3 bg-light rounded-3 border text-center py-4">
+                        <i class="bi bi-file-earmark-arrow-up text-muted fs-2 mb-2 d-block"></i>
+                        <h6 class="fw-semibold text-dark mb-1">No active resume on file</h6>
+                        <p class="text-muted small mb-3">Upload your resume to enable instant ATS parsing, tailored applications, and smart match ranking.</p>
+                        <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-sm btn-primary-custom">
+                            <i class="bi bi-cloud-arrow-up me-1"></i> Upload Resume Now
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- 3. Profile Information & Matching Preferences Form -->
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm">
                 <form method="POST" action="{{ url_for('dashboard.settings') }}">
-                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Profile Information</h5>
+                    <!-- Profile Personal Details -->
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                        <i class="bi bi-person-lines-fill text-info me-2"></i>Profile Details
+                    </h5>
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Full Name</label>
@@ -41,7 +126,10 @@
                         </div>
                     </div>
 
-                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">Job Matching Preferences</h5>
+                    <!-- Job Preferences -->
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                        <i class="bi bi-sliders text-success me-2"></i>Job Matching Preferences
+                    </h5>
                     <div class="row g-3 mb-4">
                         <div class="col-12">
                             <label class="form-label small fw-semibold">Target Job Titles (Comma-separated)</label>
@@ -49,7 +137,7 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Preferred Countries (Comma-separated)</label>
-                            <input type="text" name="preferred_countries" class="form-control" value="{{ profile.preferred_countries|join(', ') }}" placeholder="e.g. United States, India, Germany, United Kingdom">
+                            <input type="text" name="preferred_countries" class="form-control" value="{{ profile.preferred_countries|join(', ') }}" placeholder="e.g. India, United States, Germany, United Kingdom">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-semibold">Preferred Cities (Comma-separated)</label>
@@ -104,7 +192,9 @@
                     </div>
 
                     <div class="text-end">
-                        <button type="submit" class="btn btn-primary-custom px-4 py-2">Save Preferences & Update Matching</button>
+                        <button type="submit" class="btn btn-primary-custom px-4 py-2">
+                            <i class="bi bi-check2-circle me-1"></i> Save Preferences & Update Matching
+                        </button>
                     </div>
                 </form>
             </div>

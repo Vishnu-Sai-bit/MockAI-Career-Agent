@@ -86,6 +86,11 @@ def dashboard():
 @login_required
 def settings():
     profile = current_user.candidate_profile
+    if not profile:
+        profile = CandidateProfile(user=current_user)
+        db.session.add(profile)
+        db.session.commit()
+
     if request.method == "POST":
         profile.full_name = request.form.get("full_name", "").strip()
         profile.phone = request.form.get("phone", "").strip()
@@ -125,7 +130,8 @@ def settings():
         flash("Profile and preferences updated successfully.", "success")
         return redirect(url_for("dashboard.settings"))
 
-    return render_template("settings.html", profile=profile)
+    active_resume = current_user.get_active_resume()
+    return render_template("settings.html", profile=profile, active_resume=active_resume)
 
 
 @dashboard_bp.route("/api/candidate-profile")

@@ -108,21 +108,15 @@
                     </li>
                 </ul>
 
-                <!-- Section 3: Account & Profile -->
+                <!-- Section 3: Settings -->
                 <div class="sidebar-heading text-uppercase px-2">
-                    Account & Profile
+                    Settings
                 </div>
                 <ul class="nav flex-column mb-2 sidebar-nav">
                     <li class="nav-item">
-                        <a class="sidebar-link {% if 'resume' in request.endpoint %}active{% endif %}" href="{{ url_for('resume.resume_analysis') }}">
-                            <i class="bi bi-file-earmark-person-fill text-primary"></i>
-                            <span>Career Profile & Resume</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="sidebar-link {% if request.endpoint == 'dashboard.settings' %}active{% endif %}" href="{{ url_for('dashboard.settings') }}">
-                            <i class="bi bi-sliders text-info"></i>
-                            <span>Candidate Preferences</span>
+                            <i class="bi bi-gear-fill text-info"></i>
+                            <span>Settings & Profile</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -282,9 +276,9 @@
                         <ul class="dropdown-menu dropdown-menu-end shadow border" aria-labelledby="userMenuButton">
                             <li class="dropdown-header small text-muted">Signed in as<br><strong class="text-body text-truncate d-block">{{ current_user.email }}</strong></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item small" href="{{ url_for('dashboard.settings') }}"><i class="bi bi-sliders me-2"></i> Candidate Preferences</a></li>
-                            <li><a class="dropdown-item small" href="{{ url_for('resume.resume_analysis') }}"><i class="bi bi-file-earmark-person me-2"></i> Career Profile & Resume</a></li>
-                            <li><a class="dropdown-item small" href="{{ url_for('resume.upload_resume') }}"><i class="bi bi-upload me-2"></i> Upload New Resume</a></li>
+                            <li><a class="dropdown-item small" href="{{ url_for('dashboard.settings') }}"><i class="bi bi-gear-fill me-2 text-info"></i> Account & Settings</a></li>
+                            <li><a class="dropdown-item small" href="{{ url_for('resume.resume_analysis') }}"><i class="bi bi-file-earmark-person me-2 text-primary"></i> ATS Resume Analysis</a></li>
+                            <li><a class="dropdown-item small" href="{{ url_for('resume.upload_resume') }}"><i class="bi bi-upload me-2 text-success"></i> Upload New Resume</a></li>
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item small text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i> Sign Out</a></li>
                         </ul>
