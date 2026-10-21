@@ -114,14 +114,24 @@ class JobSearchService:
             # - Lead (8.0+ yrs): 8+ Yrs (Lead) jobs appear FIRST!
             # All remaining jobs outside candidate's tier appear NEXT.
             if cand_years <= 1.5:
-                # Fresher preference: entry-level jobs and titles with fresher/intern/junior/entry/graduate
+                # Fresher preference: entry-level jobs (0-2 yrs), strictly excluding senior or lead roles
+                is_sr_or_lead = or_(
+                    Job.experience_level.in_(["senior", "lead"]),
+                    Job.title.ilike("%senior%"),
+                    Job.title.ilike("%lead%"),
+                    Job.title.ilike("%principal%"),
+                    Job.title.ilike("%staff%"),
+                    Job.title.ilike("%director%")
+                )
                 exp_fit = case(
+                    (is_sr_or_lead, 0),
                     (or_(
                         Job.experience_level == "entry",
                         Job.title.ilike("%fresher%"),
-                        Job.title.ilike("%intern%"),
-                        Job.title.ilike("%entry%"),
+                        Job.title.ilike("%internship%"),
                         Job.title.ilike("%junior%"),
+                        Job.title.ilike("%jr.%"),
+                        Job.title.ilike("%trainee%"),
                         Job.title.ilike("%graduate%")
                     ), 1),
                     else_=0
@@ -219,18 +229,21 @@ class JobSearchService:
             # Check if this job specifically fits the candidate's experience tier
             is_job_exp_fit = False
             if active_resume:
+                import re
                 title_lower = (job.title or "").lower()
+                lvl = (job.experience_level or "mid").lower()
+                is_sr_lead = lvl in ("senior", "lead") or any(w in title_lower for w in ["senior", "lead", "principal", "staff", "director"])
                 if cand_years <= 1.5:
-                    is_job_exp_fit = bool(
-                        job.experience_level == "entry" or 
-                        any(w in title_lower for w in ["fresher", "intern", "entry", "junior", "graduate"])
+                    is_job_exp_fit = (not is_sr_lead) and (
+                        lvl == "entry" or 
+                        bool(re.search(r"\b(entry|fresher|intern|internship|junior|jr|graduate|trainee)\b", title_lower))
                     )
                 elif cand_years < 5.0:
-                    is_job_exp_fit = bool(job.experience_level == "mid")
+                    is_job_exp_fit = (lvl == "mid") and not is_sr_lead
                 elif cand_years < 8.0:
-                    is_job_exp_fit = bool(job.experience_level == "senior")
+                    is_job_exp_fit = (lvl == "senior")
                 else:
-                    is_job_exp_fit = bool(job.experience_level == "lead")
+                    is_job_exp_fit = (lvl == "lead")
 
             results.append({
                 "job": job,
