@@ -122,14 +122,16 @@ def test_skill_extractor_canonicalization_and_categories():
     categories = skill_extractor.extract_skills_by_category(text)
     assert "Languages" in categories
     assert "Go" in categories["Languages"]
-    assert "Frameworks & Libraries" in categories
-    assert "React" in categories["Frameworks & Libraries"]
-    assert "Cloud & DevOps" in categories
-    assert "Kubernetes" in categories["Cloud & DevOps"]
-    assert "Databases & Storage" in categories
-    assert "PostgreSQL" in categories["Databases & Storage"]
-    assert "AI / ML & Data Science" in categories
-    assert "Scikit-Learn" in categories["AI / ML & Data Science"]
+    assert "Frontend & UI Libraries" in categories
+    assert "React" in categories["Frontend & UI Libraries"]
+    assert "Cloud Platforms & Serverless" in categories
+    assert "AWS" in categories["Cloud Platforms & Serverless"]
+    assert "DevOps & Containerization" in categories
+    assert "Kubernetes" in categories["DevOps & Containerization"]
+    assert "Relational & SQL Databases" in categories
+    assert "PostgreSQL" in categories["Relational & SQL Databases"]
+    assert "Data Science & Machine Learning" in categories
+    assert "Scikit-Learn" in categories["Data Science & Machine Learning"]
 
 def test_pdf_two_column_and_link_extraction(tmp_path):
     import pymupdf

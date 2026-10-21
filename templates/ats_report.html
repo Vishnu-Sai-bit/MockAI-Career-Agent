@@ -348,91 +348,95 @@
         </div>
     {% endif %}
 
-    <!-- Multi-Stage Resume Parsing Pipeline Architecture -->
+    <!-- Two Decoupled High-Performance Pipelines: Extraction (Phase 1) & Analysis (Phase 2) -->
     <div class="card p-4 custom-card border-0 bg-white shadow-sm mt-4">
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
             <div>
-                <h5 class="fw-bold mb-1"><i class="bi bi-diagram-3-fill text-primary me-2"></i>Multi-Stage Resume Parsing Pipeline Architecture</h5>
-                <p class="text-muted small mb-0">How your document is spatially extracted, normalized across 1,000+ skills, and structured for ATS scoring</p>
+                <h5 class="fw-bold mb-1"><i class="bi bi-diagram-3-fill text-primary me-2"></i>Two Decoupled Processing Pipelines: Extraction (Phase 1) & Analysis (Phase 2)</h5>
+                <p class="text-muted small mb-0">High-performance spatial layout extraction, 16-domain universal normalization, and 4-dimension ATS auditing</p>
             </div>
             <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-2">
-                <i class="bi bi-shield-check me-1"></i> Transparent & Explainable
+                <i class="bi bi-shield-check me-1"></i> Decoupled Architecture
             </span>
         </div>
 
         <div class="row g-3">
-            <!-- Step 1 -->
+            <!-- Phase 1: Ingestion & Spatial Sorting -->
             <div class="col-lg-6">
                 <div class="p-3 border rounded-3 bg-light h-100">
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <span class="badge bg-primary rounded-pill">Step 1</span>
-                        <h6 class="fw-bold mb-0 text-dark">Multi-Format Ingestion & Text Extraction</h6>
+                        <span class="badge bg-primary rounded-pill">Phase 1.1</span>
+                        <h6 class="fw-bold mb-0 text-dark">Multi-Format Ingestion & 2-Column Spatial Sorting</h6>
                     </div>
-                    <p class="small text-muted mb-2">Dedicated extractors handle visual layout, coordinate sorting, and text cleanliness:</p>
+                    <p class="small text-muted mb-2">Eliminates left-to-right cross-column text scrambling:</p>
                     <ul class="small text-muted mb-0 ps-3">
-                        <li class="mb-1"><strong>2-Column Layout Sorting (PDF):</strong> Calculates midpoint (<code>mid_x = page.width / 2</code>) and sorts blocks column-by-column by vertical position (<code>y0</code>), eliminating cross-column text scrambling.</li>
-                        <li class="mb-1"><strong>Embedded Link Extraction:</strong> Scans PDF annotation objects (<code>page.get_links()</code>) to extract clickable LinkedIn, GitHub, and portfolio URLs.</li>
-                        <li class="mb-1"><strong>Scanned PDF Check:</strong> Flags scanned or image-only documents when character count falls below 50.</li>
-                        <li><strong>DOCX & Text Formats:</strong> Parses paragraphs and table cells with whitespace stripping.</li>
+                        <li class="mb-1"><strong>PyMuPDF (fitz) Spatial Engine:</strong> Calculates midpoint (<code>mid_x = page.width / 2</code>) and sorts blocks column-by-column:
+                            <code class="d-block my-1 bg-white border p-1 rounded small">def get_block_key(b): col = 1 if b[0] >= mid_x else 0; return (col, b[1])</code>
+                        </li>
+                        <li class="mb-1"><strong>Hyperlink Recovery:</strong> Scans annotations (<code>page.get_links()</code>) recovering real URLs for GitHub, LinkedIn, and portfolios even when masked under generic text.</li>
+                        <li class="mb-1"><strong>Scanned PDF Check:</strong> Flags scanned or image-only documents when character count &lt; 50.</li>
+                        <li><strong>Format Parsers:</strong> Dedicated document traversal for <code>.docx</code>, <code>.doc / .rtf</code>, <code>.odt</code>, and <code>.txt</code>.</li>
                     </ul>
                 </div>
             </div>
 
-            <!-- Step 2 -->
+            <!-- Phase 1: Entity & Section Segmentation -->
             <div class="col-lg-6">
                 <div class="p-3 border rounded-3 bg-light h-100">
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <span class="badge bg-info text-white rounded-pill">Step 2</span>
-                        <h6 class="fw-bold mb-0 text-dark">Information & Section Segmentation</h6>
+                        <span class="badge bg-info text-white rounded-pill">Phase 1.2</span>
+                        <h6 class="fw-bold mb-0 text-dark">Entity & Section Extraction Heuristics</h6>
                     </div>
-                    <p class="small text-muted mb-2">Deterministic NLP heuristics segment the extracted text into logical sections:</p>
+                    <p class="small text-muted mb-2">Deterministic NLP heuristics segment the extracted text into structured entities:</p>
                     <ul class="small text-muted mb-0 ps-3">
-                        <li class="mb-1"><strong>Contact Info:</strong> Standard regex for email, international telephone patterns, candidate name heuristic, and location patterns.</li>
-                        <li class="mb-1"><strong>Career Timeline:</strong> Tenure calculation extracting calendar years (1990–2026), role progression, and measurable bullet points.</li>
-                        <li class="mb-1"><strong>Education & Degrees:</strong> Pattern heuristics for accredited degrees (B.Tech, B.E., B.S., M.S., M.Tech, MBA, Ph.D) and affiliated universities.</li>
-                        <li><strong>Projects & Certifications:</strong> Tech stacks, GitHub repositories, and industry credentials (AWS, Azure, GCP, PMP, Scrum Master).</li>
+                        <li class="mb-1"><strong>Contact Details:</strong> RFC regex for email, international telephone patterns, candidate name heuristic (first non-empty 2–4 capitalized words), and location patterns.</li>
+                        <li class="mb-1"><strong>Education Credentials:</strong> Pattern regex for accredited degrees (<code>B.Tech</code>, <code>B.E.</code>, <code>B.S.</code>, <code>M.S.</code>, <code>M.Tech</code>, <code>MBA</code>, <code>Ph.D</code>) with proximity institutional matching.</li>
+                        <li class="mb-1"><strong>Chronology Calculation:</strong> Extracts 4-digit years (<code>1990–2026</code>) and calculates total career tenure (capped at 35 years).</li>
+                        <li><strong>Role Separation:</strong> Tracks section transitions and identifies individual roles using keyword flags (<code>developer</code>, <code>engineer</code>, <code>lead</code>, <code>manager</code>).</li>
                     </ul>
                 </div>
             </div>
 
-            <!-- Step 3 -->
+            <!-- Phase 1: Skill Extraction & Canonicalization -->
             <div class="col-lg-6">
                 <div class="p-3 border rounded-3 bg-light h-100">
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <span class="badge bg-warning text-dark rounded-pill">Step 3</span>
-                        <h6 class="fw-bold mb-0 text-dark">Three-Tier Universal Skill Normalization</h6>
+                        <span class="badge bg-warning text-dark rounded-pill">Phase 1.3</span>
+                        <h6 class="fw-bold mb-0 text-dark">16-Domain Universal Skill Normalization</h6>
                     </div>
-                    <p class="small text-muted mb-2">Comprehensive dictionary covering 1,000+ technical, cloud, AI, and data competencies:</p>
+                    <p class="small text-muted mb-2">Comprehensive dictionary covering 1,000+ technical, cloud, AI, and enterprise competencies:</p>
                     <ul class="small text-muted mb-0 ps-3">
-                        <li class="mb-1"><strong>Word-Boundary Matching:</strong> Uses boundary regex (<code>(?&lt;!\w)skill(?!\w)</code>) to prevent substring collisions (e.g., prevents matching "go" inside "algorithm").</li>
-                        <li class="mb-1"><strong>Canonicalization:</strong> Normalizes variants into standard names:
-                            <code class="text-primary">postgres</code> &rarr; <strong>PostgreSQL</strong>,
-                            <code class="text-primary">react.js</code> &rarr; <strong>React</strong>,
+                        <li class="mb-1"><strong>Boundary-Constrained Regex:</strong> Uses <code>(?&lt;!\w)skill(?!\w)</code> to eliminate false positives (e.g. "Go" in "Good", "C" in "Cat").</li>
+                        <li class="mb-1"><strong>Synonym Canonicalization:</strong>
+                            <code class="text-primary">react.js / reactjs</code> &rarr; <strong>React</strong>,
+                            <code class="text-primary">postgres / postgresql</code> &rarr; <strong>PostgreSQL</strong>,
                             <code class="text-primary">k8s</code> &rarr; <strong>Kubernetes</strong>,
+                            <code class="text-primary">rest api / restful api</code> &rarr; <strong>REST APIs</strong>,
                             <code class="text-primary">sklearn</code> &rarr; <strong>Scikit-Learn</strong>,
-                            <code class="text-primary">golang</code> &rarr; <strong>Go</strong>,
-                            <code class="text-primary">rest</code> &rarr; <strong>REST APIs</strong>.
+                            <code class="text-primary">golang</code> &rarr; <strong>Go</strong>.
                         </li>
-                        <li><strong>Domain Categorization:</strong> Groups skills across Languages, Frameworks, Cloud & DevOps, Databases, AI/ML, and Analytics.</li>
+                        <li><strong>16-Domain Taxonomy:</strong> Languages, Frontend, Backend, Cloud, DevOps, Relational DBs, NoSQL, Caching, AI/Vision, NLP/LLMs, Data Science, Big Data, BI, Cybersecurity, Enterprise ERPs (SAP, Salesforce, Workday), and Architecture.</li>
                     </ul>
                 </div>
             </div>
 
-            <!-- Step 4 -->
+            <!-- Phase 2: Resume Quality & ATS Analysis -->
             <div class="col-lg-6">
                 <div class="p-3 border rounded-3 bg-light h-100">
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <span class="badge bg-success rounded-pill">Step 4</span>
-                        <h6 class="fw-bold mb-0 text-dark">Structuring & Scoring Engine Handoff</h6>
+                        <span class="badge bg-success rounded-pill">Phase 2</span>
+                        <h6 class="fw-bold mb-0 text-dark">Resume Quality & ATS Analysis (Q)</h6>
                     </div>
-                    <p class="small text-muted mb-2">The parsed data is structured into a clean <code>ResumeData</code> object and passed to:</p>
+                    <p class="small text-muted mb-1">Audited across four weighted dimensions:</p>
+                    <div class="p-2 mb-2 bg-white border rounded small text-center">
+                        <code class="text-primary fw-bold">Quality Score (Q) = 0.30×R + 0.35×C + 0.20×I + 0.15×F</code>
+                    </div>
                     <ul class="small text-muted mb-0 ps-3">
-                        <li class="mb-2"><strong>ATS Resume Scorer:</strong> Calculates your Intrinsic Resume Quality Score (0–100%) across Contact (10%), Skills (30%), Experience (20%), Education (15%), Projects (15%), and Certifications (10%).</li>
-                        <li><strong>Job Matching Engine:</strong> Evaluates vacancies via explainable compatibility formula:
-                            <div class="mt-1">
-                                <code class="bg-white border text-primary px-2 py-1 rounded small">M = 0.35S + 0.20E + 0.15K + 0.10P + 0.10L + 0.10Q</code>
-                            </div>
-                        </li>
+                        <li class="mb-1"><strong>Readability (R — 30%):</strong> Conciseness & pacing (400–800 words; base 90, &lt;150 fixed at 40, &gt;1200 capped at 70, words/line &gt;25: -10).</li>
+                        <li class="mb-1"><strong>Completeness (C — 35%):</strong> Essential sections (Skills &lt;3: -25, Experience: -25, Education: -15, Email: -15, Phone: -10, Projects: -10).</li>
+                        <li class="mb-1"><strong>Impact & Metrics (I — 20%):</strong> Action verbs (<code>spearheaded</code>, <code>architected</code>, <code>optimized</code>: +5 each, up to +25) & quantifiable metrics (+5 each, up to +25).</li>
+                        <li class="mb-1"><strong>Formatting (F — 15%):</strong> ATS-parseable layout & bullet points (&lt;5: -15).</li>
+                        <li><strong>Connection to Matcher:</strong> Feeds into <code>M = 0.35S + 0.20E + 0.15K + 0.10P + 0.10L + 0.10Q</code> where <strong>Q</strong> is the Phase 2 Quality Score!</li>
                     </ul>
                 </div>
             </div>

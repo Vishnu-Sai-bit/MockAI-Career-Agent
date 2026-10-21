@@ -58,11 +58,21 @@ class ResumeAnalyzer:
         impact_score, impact_feedback = self._evaluate_impact_and_metrics(raw_text_clean)
         formatting_score, formatting_feedback = self._evaluate_formatting(raw_text_clean)
 
-        # Overall Intrinsic Quality Score (0–100%)
-        overall_quality = round(
+        # Four-Dimension Quality Score Q = 0.30*R + 0.35*C + 0.20*I + 0.15*F
+        quality_score_q = round(
+            0.30 * readability_score +
+            0.35 * completeness_score +
+            0.20 * impact_score +
+            0.15 * formatting_score,
+            1
+        )
+
+        section_quality = round(
             contact_score + skills_score + exp_score + edu_score + proj_score + cert_score,
             1
         )
+
+        overall_quality = quality_score_q
         if not raw_text_clean and not data:
             overall_quality = 20.0
 

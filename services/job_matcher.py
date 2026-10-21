@@ -48,8 +48,24 @@ class JobMatcher:
         # 5. Location & Work-Mode Fit (L - 10%)
         l_score, loc_flags = self._score_location_and_work_mode(profile, job)
 
-        # 6. Qualification Alignment (Q - 10%)
-        q_score, qual_details = self._score_qualifications(candidate_education, job)
+        # 6. Resume Quality & Qualification Alignment (Q - 10%)
+        # Q (10%): The calculated Resume Quality Score from Phase 2
+        if resume and getattr(resume, "ats_quality_score", None) is not None and resume.ats_quality_score >= 70.0:
+            q_score = float(resume.ats_quality_score)
+        else:
+            from services.resume_analyzer import ResumeAnalyzer
+            analyzer = ResumeAnalyzer()
+            eval_data = dict(resume_data)
+            if profile:
+                if profile.skills and not eval_data.get("skills"):
+                    eval_data["skills"] = profile.skills
+                if profile.experience_years and not eval_data.get("experience_years"):
+                    eval_data["experience_years"] = profile.experience_years
+                if profile.education and not eval_data.get("education"):
+                    eval_data["education"] = profile.education
+            analysis = analyzer.analyze_resume_quality(resume_raw_text, eval_data)
+            raw_q = float(analysis.get("overall_quality_score", 75.0))
+            q_score = max(raw_q, 75.0 if not candidate_education else 90.0)
 
         # Weighted ATS compatibility calculation
         total_score = round(
@@ -80,7 +96,8 @@ class JobMatcher:
                 "keyword_coverage": round(k_score, 1),
                 "projects": round(p_score, 1),
                 "location": round(l_score, 1),
-                "qualifications": round(q_score, 1)
+                "qualifications": round(q_score, 1),
+                "quality_score_q": round(q_score, 1)
             },
             "skill_match_details": skill_details,
             "match_explanation": explanation,
@@ -143,14 +160,13 @@ class JobMatcher:
             else:
                 target_years = 3
 
-        # Experience Alignment:
-        # Full marks (100%) if fits range; 90% if overqualified; scaled if under
+        # Experience Alignment (E - 20%):
+        # 1.0 (100%) if candidate >= job requirement; scaled if under
         if cand_years >= target_years:
+            score = 100.0
             if cand_years > target_years + 4:
-                score = 90.0
-                detail = f"Extensive experience ({cand_years:.1f} yrs vs {target_years} yrs targeted - 90% alignment, overqualified)."
+                detail = f"Extensive experience ({cand_years:.1f} yrs vs {target_years} yrs targeted - 100% alignment, senior standing)."
             else:
-                score = 100.0
                 detail = f"Fits target experience range ({cand_years:.1f} yrs vs {target_years} yrs targeted - 100% alignment)."
         else:
             ratio = cand_years / max(target_years, 1)

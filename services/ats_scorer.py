@@ -45,3 +45,13 @@ class ATSScorer:
             "actionable_feedback": analysis["actionable_feedback"],
             "missing_sections": analysis["missing_sections"]
         }
+
+    def calculate_job_match(self, resume, profile, job) -> Dict[str, Any]:
+        """
+        Calculates the job-specific compatibility score against live openings:
+        M = 0.35S + 0.20E + 0.15K + 0.10P + 0.10L + 0.10Q
+        where Q is the Phase 2 Resume Quality Score.
+        """
+        from services.job_matcher import JobMatcher
+        matcher = JobMatcher()
+        return matcher.compute_match(resume, profile, job)

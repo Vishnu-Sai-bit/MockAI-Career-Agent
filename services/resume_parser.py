@@ -227,6 +227,18 @@ class ResumeParser:
             total_years = round(int(explicit_months_match.group(1)) / 12.0, 1)
         elif explicit_years_match:
             total_years = round(float(explicit_years_match.group(1)), 1)
+        elif exp_text:
+            # Chronology calculation: subtract minimum employment year from current year (capped at 35)
+            years_found = [int(y) for y in re.findall(r"\b(20[0-2][0-9]|199[0-9])\b", exp_text)]
+            if years_found:
+                min_year = min(years_found)
+                current_year = datetime.now().year
+                if current_year >= min_year:
+                    total_years = min(35.0, float(current_year - min_year))
+                else:
+                    total_years = 0.0
+            else:
+                total_years = 0.0
         else:
             total_years = 0.0
 

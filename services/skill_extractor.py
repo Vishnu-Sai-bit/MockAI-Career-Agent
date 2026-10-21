@@ -6,7 +6,7 @@ Covers 1,000+ technical, cloud, AI, data, and engineering competencies.
 import re
 from typing import Dict, List, Set, Tuple, Optional
 
-# Domain taxonomy and comprehensive skills dictionary
+# Domain taxonomy across 16 specialized domains (1,000+ technical skills)
 SKILL_TAXONOMY: Dict[str, List[str]] = {
     "Languages": [
         "python", "javascript", "typescript", "java", "c++", "c#", "c", "go", "golang",
@@ -16,72 +16,95 @@ SKILL_TAXONOMY: Dict[str, List[str]] = {
         "solidity", "assembly", "groovy", "matlab", "objective-c", "cobol", "fortran",
         "vb.net", "visual basic", "f#", "vba", "apex"
     ],
-    "Frameworks & Libraries": [
+    "Frontend & UI Libraries": [
         "react", "react.js", "reactjs", "next.js", "nextjs", "vue", "vue.js", "vuejs",
-        "nuxt.js", "nuxtjs", "angular", "angularjs", "svelte", "sveltekit", "flask",
-        "django", "fastapi", "express", "express.js", "expressjs", "nestjs", "node.js",
-        "nodejs", "node", "spring", "spring boot", "spring mvc", "asp.net", "asp.net core",
-        ".net", ".net core", "ruby on rails", "rails", "laravel", "symfony", "codeigniter",
-        "tailwind", "tailwind css", "tailwindcss", "bootstrap", "material ui", "mui",
-        "chakra ui", "shadcn", "jquery", "redux", "redux toolkit", "mobx", "zustand",
-        "graphql", "apollo graphql", "apollo", "prisma", "typeorm", "hibernate",
-        "sqlalchemy", "celery", "tornado", "play framework", "phoenix", "blazor",
-        "electron", "tauri", "react native", "flutter", "ionic", "swiftui",
-        "jetpack compose", "xamarin", "wpf", "qt", "gin", "echo", "fiber"
+        "nuxt.js", "nuxtjs", "angular", "angularjs", "svelte", "sveltekit", "tailwind",
+        "tailwind css", "tailwindcss", "bootstrap", "material ui", "mui", "chakra ui",
+        "shadcn", "jquery", "redux", "redux toolkit", "mobx", "zustand", "html5", "css3"
     ],
-    "Cloud & DevOps": [
+    "Backend Frameworks": [
+        "flask", "django", "fastapi", "express", "express.js", "expressjs", "nestjs",
+        "node.js", "nodejs", "node", "spring", "spring boot", "spring mvc", "asp.net",
+        "asp.net core", ".net", ".net core", "ruby on rails", "rails", "laravel",
+        "symfony", "codeigniter", "celery", "tornado", "play framework", "phoenix",
+        "blazor", "gin", "echo", "fiber"
+    ],
+    "Cloud Platforms & Serverless": [
         "aws", "amazon web services", "azure", "microsoft azure", "gcp", "google cloud",
-        "google cloud platform", "docker", "docker compose", "kubernetes", "k8s",
-        "terraform", "ansible", "jenkins", "github actions", "gitlab ci", "gitlab-ci",
-        "circleci", "travis ci", "argo cd", "argocd", "helm", "linux", "ubuntu",
-        "debian", "centos", "redhat", "rhel", "alpine", "nginx", "apache",
-        "prometheus", "grafana", "datadog", "splunk", "new relic", "cloudwatch",
-        "cloudformation", "serverless", "serverless framework", "openshift", "vagrant",
-        "pulumi", "hashicorp vault", "vault", "consul", "traefik", "istio", "linkerd",
+        "google cloud platform", "serverless", "serverless framework", "cloudformation",
         "amazon s3", "s3", "ec2", "aws lambda", "lambda", "ecs", "eks", "fargate",
         "cloudfront", "route 53", "route53", "azure devops", "bicep"
     ],
-    "Databases & Storage": [
-        "postgresql", "postgres", "mysql", "sqlite", "mongodb", "redis", "elasticsearch",
-        "opensearch", "cassandra", "apache cassandra", "dynamodb", "oracle", "oracle db",
-        "sql server", "microsoft sql server", "mssql", "neo4j", "couchdb", "couchbase",
-        "mariadb", "firebase", "supabase", "snowflake", "bigquery", "google bigquery",
-        "redshift", "amazon redshift", "clickhouse", "rocksdb", "memcached", "cockroachdb",
-        "databricks", "delta lake", "neo4j", "timescaledb", "influxdb", "fauna", "realm"
+    "DevOps & Containerization": [
+        "docker", "docker compose", "kubernetes", "k8s", "terraform", "ansible",
+        "jenkins", "github actions", "gitlab ci", "gitlab-ci", "circleci", "travis ci",
+        "argo cd", "argocd", "helm", "linux", "ubuntu", "debian", "centos", "redhat",
+        "rhel", "alpine", "nginx", "apache", "prometheus", "grafana", "datadog",
+        "new relic", "cloudwatch", "openshift", "vagrant", "pulumi", "hashicorp vault",
+        "vault", "consul", "traefik", "istio", "linkerd", "ci/cd"
     ],
-    "AI / ML & Data Science": [
-        "machine learning", "deep learning", "nlp", "natural language processing",
-        "computer vision", "large language models", "llm", "llms", "generative ai",
-        "genai", "retrieval-augmented generation", "rag", "pytorch", "tensorflow",
-        "keras", "scikit-learn", "sklearn", "pandas", "numpy", "scipy", "matplotlib",
-        "seaborn", "plotly", "opencv", "hugging face", "huggingface", "transformers",
-        "langchain", "llamaindex", "llama-index", "vector databases", "chromadb",
-        "pinecone", "faiss", "milvus", "weaviate", "qdrant", "bert", "gpt",
-        "chatgpt", "openai", "xgboost", "lightgbm", "catboost", "spacy", "nltk",
-        "reinforcement learning", "supervised learning", "unsupervised learning",
-        "transfer learning", "fine-tuning", "lora", "qlora", "stable diffusion",
-        "whisper", "ollama", "vllm", "deepseek", "anthropic", "claude", "gemini"
+    "Relational & SQL Databases": [
+        "postgresql", "postgres", "mysql", "sqlite", "oracle", "oracle db",
+        "sql server", "microsoft sql server", "mssql", "mariadb", "cockroachdb",
+        "timescaledb"
     ],
-    "Analytics & Big Data": [
+    "NoSQL & Document Databases": [
+        "mongodb", "cassandra", "apache cassandra", "dynamodb", "couchdb", "couchbase",
+        "neo4j", "firebase", "supabase", "fauna", "realm"
+    ],
+    "Caching & In-Memory Stores": [
+        "redis", "memcached", "rocksdb"
+    ],
+    "AI, Deep Learning & Vision": [
+        "deep learning", "computer vision", "cv", "pytorch", "tensorflow", "tf",
+        "keras", "opencv", "convolutional neural networks", "cnn", "reinforcement learning",
+        "transfer learning", "fine-tuning", "stable diffusion"
+    ],
+    "NLP, LLMs & Generative AI": [
+        "nlp", "natural language processing", "large language models", "llm", "llms",
+        "generative ai", "genai", "retrieval-augmented generation", "rag", "transformers",
+        "hugging face", "huggingface", "langchain", "llamaindex", "llama-index",
+        "vector databases", "chromadb", "pinecone", "faiss", "milvus", "weaviate",
+        "qdrant", "bert", "gpt", "chatgpt", "openai", "whisper", "ollama", "vllm",
+        "deepseek", "anthropic", "claude", "gemini", "spacy", "nltk", "lora", "qlora"
+    ],
+    "Data Science & Machine Learning": [
+        "machine learning", "ml", "scikit-learn", "sklearn", "pandas", "numpy", "scipy",
+        "matplotlib", "seaborn", "plotly", "xgboost", "lightgbm", "catboost",
+        "supervised learning", "unsupervised learning"
+    ],
+    "Big Data & Distributed Systems": [
         "apache spark", "spark", "pyspark", "apache kafka", "kafka", "apache hadoop",
-        "hadoop", "apache flink", "flink", "apache airflow", "airflow", "dbt",
-        "power bi", "powerbi", "tableau", "looker", "apache hive", "hive",
-        "apache beam", "presto", "trino", "etl", "elt", "data pipelines",
-        "data warehousing", "data modeling", "data engineering", "google analytics",
-        "excel", "advanced excel", "apache nifi", "metabase", "superset",
-        "datagrip", "dbeaver", "stitch", "fivetran"
+        "hadoop", "apache flink", "flink", "apache airflow", "airflow", "apache hive",
+        "hive", "apache beam", "presto", "trino", "apache nifi"
     ],
-    "Architecture & Core Engineering": [
+    "Data Warehousing & BI": [
+        "snowflake", "bigquery", "google bigquery", "redshift", "amazon redshift",
+        "clickhouse", "databricks", "delta lake", "dbt", "power bi", "powerbi",
+        "tableau", "looker", "etl", "elt", "data pipelines", "data warehousing",
+        "data modeling", "data engineering", "google analytics", "excel", "advanced excel",
+        "metabase", "superset", "fivetran"
+    ],
+    "Cybersecurity, Identity & Compliance": [
+        "cybersecurity", "web security", "owasp", "penetration testing", "oauth",
+        "oauth 2.0", "jwt", "sso", "saml", "rbac", "iam", "splunk", "soc 2",
+        "hipaa", "gdpr", "vulnerability management", "firewalls", "siem"
+    ],
+    "Enterprise ERPs, CRM & Business Systems": [
+        "sap", "sap erp", "sap s/4hana", "salesforce", "salesforce crm", "servicenow",
+        "oracle erp", "netsuite", "workday", "dynamics 365", "microsoft dynamics",
+        "hubspot", "zoho", "jira", "confluence"
+    ],
+    "System Architecture & Core Engineering": [
         "rest", "rest api", "rest apis", "restful", "restful api", "restful apis",
         "microservices", "system design", "distributed systems", "event-driven architecture",
         "object-oriented programming", "oop", "functional programming", "solid principles",
-        "design patterns", "clean architecture", "domain-driven design", "ddd",
-        "agile", "scrum", "kanban", "test-driven development", "tdd", "unit testing",
+        "design patterns", "clean architecture", "domain-driven design", "ddd", "agile",
+        "scrum", "kanban", "test-driven development", "tdd", "unit testing",
         "integration testing", "e2e testing", "pytest", "unittest", "jest", "mocha",
-        "chai", "cypress", "selenium", "playwright", "junit", "git", "github",
-        "gitlab", "bitbucket", "ci/cd", "data structures", "algorithms",
-        "websockets", "grpc", "oauth", "oauth 2.0", "jwt", "sso", "saml",
-        "web security", "owasp", "penetration testing", "rbac"
+        "chai", "cypress", "selenium", "playwright", "junit", "git", "github", "gitlab",
+        "bitbucket", "data structures", "algorithms", "websockets", "grpc", "graphql",
+        "apollo graphql", "prisma", "typeorm", "hibernate", "sqlalchemy"
     ]
 }
 
@@ -322,8 +345,37 @@ CANONICAL_MAPPING: Dict[str, str] = {
     "algorithms": "Algorithms",
     "grpc": "gRPC",
     "oauth": "OAuth 2.0",
+    "oauth 2.0": "OAuth 2.0",
     "jwt": "JWT",
-    "websockets": "WebSockets"
+    "websockets": "WebSockets",
+    # Cybersecurity & Compliance
+    "cybersecurity": "Cybersecurity",
+    "web security": "Web Security",
+    "owasp": "OWASP",
+    "penetration testing": "Penetration Testing",
+    "sso": "SSO",
+    "saml": "SAML",
+    "iam": "IAM",
+    "rbac": "RBAC",
+    "soc 2": "SOC 2",
+    "hipaa": "HIPAA",
+    "gdpr": "GDPR",
+    # Enterprise ERPs & Business Systems
+    "sap": "SAP",
+    "sap erp": "SAP ERP",
+    "sap s/4hana": "SAP S/4HANA",
+    "salesforce": "Salesforce",
+    "salesforce crm": "Salesforce",
+    "servicenow": "ServiceNow",
+    "oracle erp": "Oracle ERP",
+    "netsuite": "NetSuite",
+    "workday": "Workday",
+    "dynamics 365": "Microsoft Dynamics 365",
+    "microsoft dynamics": "Microsoft Dynamics 365",
+    "hubspot": "HubSpot",
+    "zoho": "Zoho",
+    "jira": "Jira",
+    "confluence": "Confluence"
 }
 
 # Pre-compiled word-boundary regex patterns
