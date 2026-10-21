@@ -194,13 +194,12 @@
             <!-- Topbar Right Utilities: Notifications, Theme Toggle, User Profile Avatar -->
             <div class="d-flex align-items-center gap-2">
                 {% if current_user.is_authenticated %}
-                    <!-- Prominent Notifications Dropdown in Navbar -->
+                    <!-- Notifications Dropdown in Navbar (Symbol Only) -->
                     <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary border-secondary position-relative d-flex align-items-center gap-2 px-2 px-sm-3 py-1" type="button" id="notifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Job Alerts & Notifications">
-                            <i class="bi bi-bell-fill text-warning"></i>
-                            <span class="d-none d-sm-inline small fw-semibold">Notifications</span>
+                        <button class="btn btn-sm btn-outline-secondary border-secondary position-relative d-flex align-items-center px-2 py-1" type="button" id="notifDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Job Alerts & Notifications">
+                            <i class="bi bi-bell-fill text-warning fs-6"></i>
                             {% if navbar_notification_count > 0 %}
-                                <span class="badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.62rem;">
                                     {{ navbar_notification_count }}
                                 </span>
                             {% endif %}
