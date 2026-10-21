@@ -1,29 +1,14 @@
 import re
 from datetime import datetime
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
+from services.skill_extractor import skill_extractor, SKILL_TAXONOMY, CANONICAL_MAPPING
 
-COMMON_SKILLS = [
-    # Programming Languages
-    "python", "javascript", "typescript", "java", "c++", "c#", "go", "golang", "rust", "ruby", "php", "swift", "kotlin", "scala",
-    # Frameworks & Libraries
-    "flask", "django", "fastapi", "express", "react", "react.js", "next.js", "vue", "vue.js", "angular", "node.js", "nodejs",
-    "spring", "spring boot", "asp.net", "laravel", "rails", "ruby on rails", "tailwind", "tailwind css", "bootstrap", "jquery",
-    # Databases & Caching
-    "sql", "postgresql", "postgres", "mysql", "sqlite", "mongodb", "redis", "elasticsearch", "cassandra", "dynamodb", "oracle",
-    # Cloud & DevOps
-    "aws", "amazon web services", "azure", "gcp", "google cloud", "docker", "kubernetes", "k8s", "terraform", "ansible",
-    "ci/cd", "jenkins", "github actions", "gitlab ci", "linux", "bash", "nginx", "apache",
-    # AI / ML & Data Science
-    "machine learning", "deep learning", "nlp", "computer vision", "tensorflow", "pytorch", "keras", "scikit-learn",
-    "pandas", "numpy", "matplotlib", "seaborn", "data analysis", "llm", "langchain", "hugging face", "vector databases",
-    # Architecture & Practices
-    "rest", "restful api", "rest api", "graphql", "microservices", "system design", "agile", "scrum", "git", "github", "gitlab",
-    "unit testing", "pytest", "test driven development", "tdd", "object-oriented programming", "oop", "data structures", "algorithms"
-]
+# Export COMMON_SKILLS for backward compatibility across collectors and normalizers
+COMMON_SKILLS = [skill for sublist in SKILL_TAXONOMY.values() for skill in sublist]
 
 DEGREE_PATTERNS = [
-    r"\b(bachelor['’]?s?|b\.?s\.?|b\.?e\.?|b\.?tech\.?|undergraduate)\b",
-    r"\b(master['’]?s?|m\.?s\.?|m\.?e\.?|m\.?tech\.?|mba|postgraduate)\b",
+    r"\b(b\.?tech\.?|b\.?e\.?|b\.?s\.?|bachelor['’]?s?|bba|bca|undergraduate)\b",
+    r"\b(m\.?tech\.?|m\.?e\.?|m\.?s\.?|master['’]?s?|mba|mca|postgraduate)\b",
     r"\b(ph\.?d\.?|doctorate|doctoral)\b",
     r"\b(associate['’]?s?|diploma)\b"
 ]
@@ -36,15 +21,20 @@ MONTH_MAP = {
 }
 
 class ResumeParser:
+    def __init__(self):
+        self.skill_engine = skill_extractor
+
     def parse(self, raw_text: str) -> Dict[str, Any]:
         """
-        Parses raw text of resume into structured data.
+        Parses raw text of resume into a clean ResumeData object
+        following the 4-stage pipeline.
         """
         cleaned = raw_text.strip()
         lines = [l.strip() for l in cleaned.split("\n") if l.strip()]
 
         contact_info = self._extract_contact_info(cleaned, lines)
-        skills = self._extract_skills(cleaned)
+        skills = self.skill_engine.extract_skills(cleaned)
+        skills_by_category = self.skill_engine.extract_skills_by_category(cleaned)
         experience_info = self._extract_experience(cleaned, lines)
         education_info = self._extract_education(cleaned, lines)
         projects = self._extract_projects(cleaned, lines)
@@ -56,12 +46,16 @@ class ResumeParser:
             "email": contact_info["email"],
             "phone": contact_info["phone"],
             "location": contact_info["location"],
+            "linkedin": contact_info.get("linkedin", ""),
+            "github": contact_info.get("github", ""),
+            "portfolio": contact_info.get("portfolio", ""),
             "present_address": contact_info.get("present_address", contact_info["location"]),
             "preferred_locations": contact_info.get("preferred_locations", []),
             "open_to_relocation": contact_info.get("open_to_relocation", True),
             "headline": contact_info["headline"],
             "summary": summary,
             "skills": skills,
+            "skills_by_category": skills_by_category,
             "experience_years": experience_info["total_years"],
             "experience": experience_info["roles"],
             "education": education_info,
@@ -69,7 +63,7 @@ class ResumeParser:
             "certifications": certifications
         }
 
-    def _extract_contact_info(self, text: str, lines: List[str]) -> Dict[str, str]:
+    def _extract_contact_info(self, text: str, lines: List[str]) -> Dict[str, Any]:
         email = ""
         email_match = re.search(r"[\w\.-]+@[\w\.-]+\.\w+", text)
         if email_match:
@@ -80,13 +74,30 @@ class ResumeParser:
         if phone_match:
             phone = phone_match.group(0).strip()
 
-        # Name heuristic: First non-empty line that doesn't contain email/phone/url
+        # Link extraction (LinkedIn, GitHub, Portfolio)
+        linkedin = ""
+        li_match = re.search(r"(?:https?://)?(?:www\.)?linkedin\.com/in/([a-zA-Z0-9\-_%]+)", text, re.IGNORECASE)
+        if li_match:
+            linkedin = f"https://linkedin.com/in/{li_match.group(1)}"
+
+        github = ""
+        gh_match = re.search(r"(?:https?://)?(?:www\.)?github\.com/([a-zA-Z0-9\-_%]+)", text, re.IGNORECASE)
+        if gh_match and gh_match.group(1).lower() not in ("features", "pricing", "marketplace"):
+            github = f"https://github.com/{gh_match.group(1)}"
+
+        portfolio = ""
+        port_match = re.search(r"(?:https?://)?(?:www\.)?([a-zA-Z0-9\-_]+\.(?:io|dev|me|app|vercel\.app|netlify\.app)(?:/[^\s,;]*)?)", text, re.IGNORECASE)
+        if port_match:
+            portfolio = f"https://{port_match.group(1)}"
+
+        # Name heuristic: First non-empty 2-to-4 word line that doesn't contain email/phone/url
         name = ""
         headline = ""
         for line in lines[:5]:
             if "@" in line or "http" in line or any(c.isdigit() for c in line if line.count(c) > 3):
                 continue
-            if len(line.split()) in [2, 3, 4] and not name:
+            words = line.split()
+            if len(words) in [2, 3, 4] and not name and not any(w.lower() in ("resume", "curriculum", "vitae", "profile") for w in words):
                 name = line.title()
             elif name and not headline and len(line) < 60:
                 headline = line
@@ -116,6 +127,9 @@ class ResumeParser:
             "name": name or "Candidate",
             "email": email,
             "phone": phone,
+            "linkedin": linkedin,
+            "github": github,
+            "portfolio": portfolio,
             "location": location,
             "present_address": location,
             "preferred_locations": preferred_locations,
@@ -124,29 +138,10 @@ class ResumeParser:
         }
 
     def _extract_skills(self, text: str) -> List[str]:
-        lowered = text.lower()
-        found = set()
-        for skill in COMMON_SKILLS:
-            # Word boundary matching
-            pattern = r"(?<!\w)" + re.escape(skill) + r"(?!\w)"
-            if re.search(pattern, lowered):
-                # Standardize capitalization
-                found.add(self._canonicalize_skill(skill))
-        return sorted(list(found))
+        return self.skill_engine.extract_skills(text)
 
     def _canonicalize_skill(self, skill: str) -> str:
-        mapping = {
-            "python": "Python", "javascript": "JavaScript", "typescript": "TypeScript",
-            "react": "React", "react.js": "React", "vue": "Vue.js", "vue.js": "Vue.js",
-            "flask": "Flask", "django": "Django", "fastapi": "FastAPI",
-            "node.js": "Node.js", "nodejs": "Node.js", "sql": "SQL",
-            "postgresql": "PostgreSQL", "postgres": "PostgreSQL", "mongodb": "MongoDB",
-            "docker": "Docker", "kubernetes": "Kubernetes", "aws": "AWS",
-            "gcp": "GCP", "azure": "Azure", "ci/cd": "CI/CD", "html": "HTML",
-            "css": "CSS", "rest": "REST APIs", "rest api": "REST APIs",
-            "restful api": "REST APIs", "graphql": "GraphQL", "git": "Git"
-        }
-        return mapping.get(skill.lower(), skill.title())
+        return self.skill_engine.canonicalize(skill)
 
     def _extract_experience(self, text: str, lines: List[str]) -> Dict[str, Any]:
         """
@@ -285,12 +280,21 @@ class ResumeParser:
 
     def _extract_certifications(self, text: str, lines: List[str]) -> List[str]:
         certs = []
-        cert_keywords = ["certified", "certification", "aws certified", "pmp", "comptia", "cissp", "scrum master"]
-        lowered = text.lower()
-        for kw in cert_keywords:
-            if kw in lowered:
-                certs.append(kw.title())
-        return list(set(certs))
+        cert_definitions = [
+            ("AWS Certified", r"\b(?:aws\s+certified|aws\s+solutions\s+architect|aws\s+cloud\s+practitioner|aws\s+developer)\b"),
+            ("Azure Fundamentals", r"\b(?:azure\s+fundamentals|az-900|azure\s+certified|azure\s+solutions\s+architect)\b"),
+            ("GCP Cloud Architect", r"\b(?:gcp\s+certified|gcp\s+cloud\s+architect|google\s+cloud\s+certified|gcp\s+data\s+engineer)\b"),
+            ("CKA (Kubernetes Administrator)", r"\b(?:cka|certified\s+kubernetes\s+administrator|ckad)\b"),
+            ("PMP", r"\b(?:pmp|project\s+management\s+professional)\b"),
+            ("Scrum Master", r"\b(?:scrum\s+master|certified\s+scrum\s+master|csm|psm\s*i)\b"),
+            ("CompTIA", r"\b(?:comptia(?:\s+security\+|\s+network\+|\s+a\+)?)\b"),
+            ("CISSP", r"\b(?:cissp|certified\s+information\s+systems\s+security\s+professional)\b"),
+            ("Terraform Associate", r"\b(?:hashicorp\s+certified|terraform\s+associate)\b"),
+        ]
+        for canonical, pat in cert_definitions:
+            if re.search(pat, text, re.IGNORECASE):
+                certs.append(canonical)
+        return list(dict.fromkeys(certs))
 
     def _extract_summary(self, lines: List[str]) -> str:
         for i, line in enumerate(lines[:10]):

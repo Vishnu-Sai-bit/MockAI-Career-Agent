@@ -101,3 +101,77 @@ def test_file_validation_rejections():
     valid, err, ext = validate_uploaded_file(fs_valid_pdf)
     assert valid
     assert ext == "pdf"
+
+def test_skill_extractor_canonicalization_and_categories():
+    from services.skill_extractor import skill_extractor
+    text = (
+        "Experienced engineer skilled in postgres, react.js, rest apis, "
+        "k8s, sklearn, and golang. Also worked with AWS, Docker, and PyTorch."
+    )
+    skills = skill_extractor.extract_skills(text)
+    assert "PostgreSQL" in skills
+    assert "React" in skills
+    assert "REST APIs" in skills
+    assert "Kubernetes" in skills
+    assert "Scikit-Learn" in skills
+    assert "Go" in skills
+    assert "AWS" in skills
+    assert "Docker" in skills
+    assert "PyTorch" in skills
+
+    categories = skill_extractor.extract_skills_by_category(text)
+    assert "Languages" in categories
+    assert "Go" in categories["Languages"]
+    assert "Frameworks & Libraries" in categories
+    assert "React" in categories["Frameworks & Libraries"]
+    assert "Cloud & DevOps" in categories
+    assert "Kubernetes" in categories["Cloud & DevOps"]
+    assert "Databases & Storage" in categories
+    assert "PostgreSQL" in categories["Databases & Storage"]
+    assert "AI / ML & Data Science" in categories
+    assert "Scikit-Learn" in categories["AI / ML & Data Science"]
+
+def test_pdf_two_column_and_link_extraction(tmp_path):
+    import pymupdf
+    from utils.text_extraction import extract_text_from_pdf
+
+    pdf_path = str(tmp_path / "two_column_resume.pdf")
+    doc = pymupdf.open()
+    page = doc.new_page(width=600, height=800)
+
+    # Column 0 (left column: x0=50, mid_x=300)
+    page.insert_text((50, 100), "Left Col 1: Contact & Summary")
+    page.insert_text((50, 200), "Left Col 2: Skills - Python, SQL")
+
+    # Column 1 (right column: x0=350, mid_x=300)
+    page.insert_text((350, 100), "Right Col 1: Work Experience")
+    page.insert_text((350, 200), "Right Col 2: Education & Projects")
+
+    # Add embedded link
+    rect = pymupdf.Rect(50, 300, 200, 320)
+    page.insert_link({"kind": pymupdf.LINK_URI, "from": rect, "uri": "https://linkedin.com/in/alexjohnson"})
+
+    doc.save(pdf_path)
+    doc.close()
+
+    extracted, err = extract_text_from_pdf(pdf_path)
+    assert err is None
+    assert "Left Col 1" in extracted
+    assert "Right Col 1" in extracted
+    assert "https://linkedin.com/in/alexjohnson" in extracted
+
+def test_scanned_pdf_check(tmp_path):
+    import pymupdf
+    from utils.text_extraction import extract_text_from_pdf
+
+    pdf_path = str(tmp_path / "scanned_or_short.pdf")
+    doc = pymupdf.open()
+    page = doc.new_page(width=600, height=800)
+    # Insert tiny text (< 50 chars)
+    page.insert_text((50, 100), "Hello")
+    doc.save(pdf_path)
+    doc.close()
+
+    extracted, err = extract_text_from_pdf(pdf_path)
+    assert extracted == ""
+    assert "insufficient extractable text" in err
