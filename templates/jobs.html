@@ -154,7 +154,7 @@
                     <div class="col-lg-2 col-md-4">
                         <label class="form-label small fw-semibold text-secondary">Source Platform</label>
                         <select name="platform" class="form-select form-select-sm">
-                            <option value="all" {% if platform == 'all' %}selected{% endif %}>All Sources (16+ ATS)</option>
+                            <option value="all" {% if platform == 'all' %}selected{% endif %}>All</option>
                             {% for p in available_platforms %}
                                 <option value="{{ p }}" {% if platform == p %}selected{% endif %}>{{ p|title }}</option>
                             {% endfor %}
@@ -163,8 +163,8 @@
                     <div class="col-lg-2 col-md-4">
                         <label class="form-label small fw-semibold text-secondary">Sort By</label>
                         <select name="sort_by" class="form-select form-select-sm">
-                            <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>🎯 Matched First & Fresh</option>
-                            <option value="match" {% if sort_by == 'match' %}selected{% endif %}>🔥 Highest Match Score</option>
+                            <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>🎯 Relevant First & Fresh</option>
+                            <option value="match" {% if sort_by == 'match' %}selected{% endif %}>🔥 Highest Relevance Score</option>
                             <option value="salary" {% if sort_by == 'salary' %}selected{% endif %}>💰 Highest Salary</option>
                             <option value="all_fresh" {% if sort_by == 'all_fresh' %}selected{% endif %}>🕒 All Freshest First</option>
                         </select>
@@ -188,7 +188,7 @@
             <span class="text-muted small">Found <strong>{{ results.total }}</strong> verified postings</span>
             {% if current_user.is_authenticated and current_user.get_active_resume() %}
                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2">
-                    <i class="bi bi-bullseye me-1"></i> Matched Roles Ranked First
+                    <i class="bi bi-bullseye me-1"></i> Relevant Roles Ranked First
                 </span>
                 {% if current_user.candidate_profile and current_user.candidate_profile.experience_years is not none %}
                     <span class="badge bg-light text-dark border ms-2">
