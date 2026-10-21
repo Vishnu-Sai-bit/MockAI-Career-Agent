@@ -85,14 +85,17 @@ def test_sidebar_career_coach_order(app_instance, client):
     assert resp.status_code == 200
     html = resp.data.decode("utf-8")
     
-    # Assert AI Career Coach appears after Salary Intelligence
+    # Assert Salary Intelligence is removed from the sidebar
+    # and AI Career Coach appears as the last item in AI Career Suite
     idx_ats = html.find("ATS Match Report")
     idx_interview = html.find("AI Mock Interview")
-    idx_salary = html.find("Salary Intelligence")
     idx_coach = html.find("AI Career Coach")
 
     assert idx_ats != -1
     assert idx_interview != -1
-    assert idx_salary != -1
     assert idx_coach != -1
-    assert idx_ats < idx_interview < idx_salary < idx_coach
+    assert idx_ats < idx_interview < idx_coach
+
+    # Ensure Salary Intelligence is not present in the sidebar nav
+    sidebar_part = html[html.find('id="appSidebar"'):html.find('</nav>')]
+    assert "Salary Intelligence" not in sidebar_part
