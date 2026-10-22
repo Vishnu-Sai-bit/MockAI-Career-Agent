@@ -132,9 +132,33 @@ class JobSearchService:
 
             cutoff = None
 
-            if dp in ("24h", "1d", "24hours", "1day"):
+            if dp in ("15m", "15min", "15mins", "15minutes"):
+
+                cutoff = now - timedelta(minutes=15)
+
+            elif dp in ("30m", "30min", "30mins", "30minutes"):
+
+                cutoff = now - timedelta(minutes=30)
+
+            elif dp in ("1h", "1hour", "hour", "60m"):
+
+                cutoff = now - timedelta(hours=1)
+
+            elif dp in ("6h", "6hours"):
+
+                cutoff = now - timedelta(hours=6)
+
+            elif dp in ("12h", "12hours"):
+
+                cutoff = now - timedelta(hours=12)
+
+            elif dp in ("24h", "1d", "24hours", "1day"):
 
                 cutoff = now - timedelta(hours=24)
+
+            elif dp in ("2d", "2days"):
+
+                cutoff = now - timedelta(days=2)
 
             elif dp in ("3d", "3days"):
 
@@ -602,6 +626,16 @@ class JobSearchService:
 
                     )
 
+            is_matched_case = case(
+
+                (JobMatch.match_score >= 60.0, 2),
+
+                (JobMatch.match_score.isnot(None), 1),
+
+                else_=0
+
+            )
+
             if sort_by == "salary":
 
                 query = query.order_by(
@@ -649,21 +683,14 @@ class JobSearchService:
                 )
 
             else:
-
-                # Default (Recommended: India Jobs First, Fresher & Data Analyst First, Match Score High to Low %):
-
+                # Default (Recommended: India Jobs First, Priority/Exp Rank, Matched Roles First, Freshest Minutes/Hours/Days/Weeks):
                 query = query.order_by(
-
                     desc(is_india),
-
                     priority_rank.asc(),
-
-                    desc(JobMatch.match_score),
-
+                    desc(is_matched_case),
                     desc(Job.published_at),
-
+                    desc(JobMatch.match_score),
                     desc(Job.id)
-
                 )
 
         else:

@@ -18,7 +18,8 @@ GENERIC_CAREERS_PATTERNS = [
     r"^https?://(?:www\.)?linkedin\.com/jobs/search",
     r"^https?://(?:www\.)?indeed\.com/jobs\?q=",
     r"^https?://(?:www\.)?glassdoor\.com/Job/",
-    r"^https?://(?:www\.)?google\.com/search\?.*ibp=htl;jobs"
+    r"^https?://(?:www\.)?google\.com/search\?.*ibp=htl;jobs",
+    r"^https?://(?:www\.)?adzuna\.(?:in|com|co\.uk|de|fr)/details/"
 ]
 
 # Patterns confirming a real, grounded job requisition ID
@@ -96,6 +97,10 @@ def resolve_verified_apply_link(job) -> Tuple[bool, str, Optional[str]]:
     raw_url = unwrap_destination_apply_link(job)
     if not raw_url:
         return False, "", "No application URL available for this job."
+
+    # Intercept aggregator redirect wrappers like Adzuna
+    if any(agg in raw_url.lower() for agg in ["adzuna.in", "adzuna.com", "adzuna.co.uk"]):
+        return False, raw_url, "Application link points to an external aggregator (Adzuna) rather than the direct official employer career portal."
 
     # Validate against security constraints
     platform = getattr(job, "source_platform", None)

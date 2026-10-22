@@ -150,11 +150,15 @@
                         <label class="form-label small fw-semibold text-secondary">Date Posted</label>
                         <select name="date_posted" class="form-select form-select-sm">
                             <option value="all" {% if date_posted == 'all' or not date_posted %}selected{% endif %}>Any Time</option>
-                            <option value="24h" {% if date_posted == '24h' or date_posted == '1d' %}selected{% endif %}>Past 24 Hours (1 Day)</option>
+                            <option value="15m" {% if date_posted in ['15m', '15mins'] %}selected{% endif %}>Past 15 Minutes</option>
+                            <option value="1h" {% if date_posted in ['1h', '1hour'] %}selected{% endif %}>Past 1 Hour</option>
+                            <option value="6h" {% if date_posted == '6h' %}selected{% endif %}>Past 6 Hours</option>
+                            <option value="24h" {% if date_posted in ['24h', '1d'] %}selected{% endif %}>Past 24 Hours (1 Day)</option>
+                            <option value="2d" {% if date_posted == '2d' %}selected{% endif %}>Past 2 Days</option>
                             <option value="3d" {% if date_posted == '3d' %}selected{% endif %}>Past 3 Days</option>
-                            <option value="7d" {% if date_posted == '7d' or date_posted == '1w' %}selected{% endif %}>Past Week (7 Days)</option>
-                            <option value="14d" {% if date_posted == '14d' or date_posted == '2w' %}selected{% endif %}>Past 2 Weeks</option>
-                            <option value="30d" {% if date_posted == '30d' or date_posted == '1m' %}selected{% endif %}>Past Month (30 Days)</option>
+                            <option value="7d" {% if date_posted in ['7d', '1w'] %}selected{% endif %}>Past Week (7 Days)</option>
+                            <option value="14d" {% if date_posted in ['14d', '2w'] %}selected{% endif %}>Past 2 Weeks</option>
+                            <option value="30d" {% if date_posted in ['30d', '1m'] %}selected{% endif %}>Past Month (30 Days)</option>
                         </select>
                     </div>
                     <div class="col-lg-2 col-md-4">
@@ -169,7 +173,7 @@
                     <div class="col-lg-2 col-md-4">
                         <label class="form-label small fw-semibold text-secondary">Sort By</label>
                         <select name="sort_by" class="form-select form-select-sm">
-                            <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>India Jobs First, Relevant First & Fresher (High to Low %)</option>
+                            <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>India First, Relevant First & Freshest (Minutes, Hours, Days, Weeks)</option>
                             <option value="match" {% if sort_by == 'match' %}selected{% endif %}>Highest Relevance Score</option>
                             <option value="salary" {% if sort_by == 'salary' %}selected{% endif %}>Highest Salary</option>
                             <option value="all_fresh" {% if sort_by == 'all_fresh' %}selected{% endif %}>All Freshest First</option>

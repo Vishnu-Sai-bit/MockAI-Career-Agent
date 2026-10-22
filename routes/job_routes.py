@@ -159,8 +159,11 @@ def safe_apply_redirect(job_id):
     from services.job_links.normalizer import resolve_verified_apply_link
     is_valid, clean_url, err_msg = resolve_verified_apply_link(job)
     if not is_valid:
-        # Fallback to direct validation of raw stored URLs
         destination_url = job.apply_url or job.original_url
+        if destination_url and any(agg in destination_url.lower() for agg in ["adzuna.in", "adzuna.com", "adzuna.co.uk"]):
+            flash("Notice: This job was listed via an aggregator (Adzuna). Please apply directly through the employer's official careers portal.", "warning")
+            return redirect(url_for("jobs.job_details", job_id=job.id))
+        # Fallback to direct validation of raw stored URLs
         if not destination_url:
             flash("No valid application URL stored for this job.", "danger")
             return redirect(url_for("jobs.job_details", job_id=job.id))
