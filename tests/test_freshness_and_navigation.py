@@ -338,4 +338,93 @@ def test_two_years_experience_candidate_gets_mid_jobs_first_remaining_next(app_w
     assert items[1]["is_exp_fit"] is False
 
 
+def test_data_analyst_fresher_experience_progression_and_score_descending(app_with_db, test_user, test_source):
+    from models.job_match import JobMatch
+    now = datetime.now(timezone.utc)
+
+    # 1. Candidate is Data Analyst fresher (0.5 years)
+    test_user.candidate_profile.headline = "Data Analyst"
+    test_user.candidate_profile.experience_years = 0.5
+    resume = Resume(
+        user_id=test_user.id,
+        filename="da_fresher.pdf",
+        file_path="uploads/da_fresher.pdf",
+        file_type="pdf",
+        target_role="Data Analyst",
+        parsed_data={"experience_years": 0.5, "skills": ["Python", "SQL", "Tableau", "Power BI"], "headline": "Data Analyst"},
+        is_active=True
+    )
+    db.session.add(resume)
+    db.session.commit()
+
+    # 2. Add jobs across experience tiers and domain fits
+    j_da_entry_low = Job(
+        source_id=test_source.id, source_company_key="testco", title="Data Analyst, Intern",
+        company="Co A", location="Remote", experience_level="entry", source_platform="greenhouse",
+        source_job_id="da-1", original_url="https://example.com/da-1", apply_url="https://example.com/da-1",
+        published_at=now, status="active"
+    )
+    j_da_entry_high = Job(
+        source_id=test_source.id, source_company_key="testco", title="Junior Data Analyst",
+        company="Co B", location="Remote", experience_level="entry", source_platform="greenhouse",
+        source_job_id="da-2", original_url="https://example.com/da-2", apply_url="https://example.com/da-2",
+        published_at=now, status="active"
+    )
+    j_analytics_entry = Job(
+        source_id=test_source.id, source_company_key="testco", title="Strategy & Analytics Analyst",
+        company="Co C", location="Remote", experience_level="entry", source_platform="greenhouse",
+        source_job_id="da-3", original_url="https://example.com/da-3", apply_url="https://example.com/da-3",
+        published_at=now, status="active"
+    )
+    j_da_mid = Job(
+        source_id=test_source.id, source_company_key="testco", title="Data Analyst (2-4 Yrs)",
+        company="Co D", location="Remote", experience_level="mid", source_platform="greenhouse",
+        source_job_id="da-4", original_url="https://example.com/da-4", apply_url="https://example.com/da-4",
+        published_at=now, status="active"
+    )
+    j_lead_architect = Job(
+        source_id=test_source.id, source_company_key="testco", title="Lead Data Architect",
+        company="Co E", location="Remote", experience_level="lead", source_platform="greenhouse",
+        source_job_id="da-5", original_url="https://example.com/da-5", apply_url="https://example.com/da-5",
+        published_at=now, status="active"
+    )
+    db.session.add_all([j_da_entry_low, j_da_entry_high, j_analytics_entry, j_da_mid, j_lead_architect])
+    db.session.commit()
+
+    # 3. Add match scores:
+    # Notice: j_lead_architect has 98% score, but being a Lead role, it must NOT precede fresher roles!
+    m1 = JobMatch(user_id=test_user.id, resume_id=resume.id, job_id=j_da_entry_low.id, match_score=75.0)
+    m2 = JobMatch(user_id=test_user.id, resume_id=resume.id, job_id=j_da_entry_high.id, match_score=92.0)
+    m3 = JobMatch(user_id=test_user.id, resume_id=resume.id, job_id=j_analytics_entry.id, match_score=88.0)
+    m4 = JobMatch(user_id=test_user.id, resume_id=resume.id, job_id=j_da_mid.id, match_score=85.0)
+    m5 = JobMatch(user_id=test_user.id, resume_id=resume.id, job_id=j_lead_architect.id, match_score=98.0)
+    db.session.add_all([m1, m2, m3, m4, m5])
+    db.session.commit()
+
+    service = JobSearchService()
+    results = service.search_jobs(user=test_user, sort_by="fresh")
+    items = results["jobs"]
+
+    assert len(items) == 5
+    # Tier 1: Fresher Data Analyst jobs ordered by match score High to Low %
+    assert items[0]["job"].title == "Junior Data Analyst"  # 92.0%
+    assert items[0]["match"].match_score == 92.0
+    assert items[0]["is_exp_fit"] is True
+
+    assert items[1]["job"].title == "Data Analyst, Intern"  # 75.0%
+    assert items[1]["match"].match_score == 75.0
+    assert items[1]["is_exp_fit"] is True
+
+    # Tier 2: Fresher Analytics related jobs
+    assert items[2]["job"].title == "Strategy & Analytics Analyst"  # 88.0%
+    assert items[2]["match"].match_score == 88.0
+    assert items[2]["is_exp_fit"] is True
+
+    # Tier 3: Mid-level (2+ yrs) Data Analyst
+    assert items[3]["job"].title == "Data Analyst (2-4 Yrs)"  # 85.0%
+
+    # Tier 4: Lead role appears at the end for a fresher
+    assert items[4]["job"].title == "Lead Data Architect"
+
+
 

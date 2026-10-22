@@ -169,7 +169,7 @@
                     <div class="col-lg-2 col-md-4">
                         <label class="form-label small fw-semibold text-secondary">Sort By</label>
                         <select name="sort_by" class="form-select form-select-sm">
-                            <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>Relevant First & Fresh</option>
+                            <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>Fresher & Relevant First (High to Low %)</option>
                             <option value="match" {% if sort_by == 'match' %}selected{% endif %}>Highest Relevance Score</option>
                             <option value="salary" {% if sort_by == 'salary' %}selected{% endif %}>Highest Salary</option>
                             <option value="all_fresh" {% if sort_by == 'all_fresh' %}selected{% endif %}>All Freshest First</option>

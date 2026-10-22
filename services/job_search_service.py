@@ -157,90 +157,137 @@ class JobSearchService:
                 elif min_match_score is None:
                     query = query.filter(JobMatch.match_score >= 60.0)
 
-            # Experience-tier priority:
-            # - Fresher (0 to 1.5 yrs): Fresher / Entry-Level (0-2 Yrs) jobs appear FIRST!
-            # - 2 Years Experience (1.5 to 5.0 yrs): 2-5 Yrs (Mid-Level) jobs appear FIRST!
-            # - Senior (5.0 to 8.0 yrs): 5-8 Yrs (Senior) jobs appear FIRST!
-            # - Lead (8.0+ yrs): 8+ Yrs (Lead) jobs appear FIRST!
-            # All remaining jobs outside candidate's tier appear NEXT.
-            if cand_years <= 1.5:
-                # Fresher preference: entry-level jobs (0-2 yrs), strictly excluding senior or lead roles
-                is_sr_or_lead = or_(
-                    Job.experience_level.in_(["senior", "lead"]),
-                    Job.title.ilike("%senior%"),
-                    Job.title.ilike("%lead%"),
-                    Job.title.ilike("%principal%"),
-                    Job.title.ilike("%staff%"),
-                    Job.title.ilike("%director%")
-                )
-                exp_fit = case(
-                    (is_sr_or_lead, 0),
-                    (or_(
-                        Job.experience_level == "entry",
-                        Job.title.ilike("%fresher%"),
-                        Job.title.ilike("%internship%"),
-                        Job.title.ilike("%junior%"),
-                        Job.title.ilike("%jr.%"),
-                        Job.title.ilike("%trainee%"),
-                        Job.title.ilike("%graduate%")
-                    ), 1),
-                    else_=0
-                )
-            elif cand_years < 5.0:
-                # 2 years or 2+ years mid-level preference (2-5 yrs)
-                exp_fit = case(
-                    (Job.experience_level == "mid", 1),
-                    (or_(Job.experience_level == "entry", Job.experience_level == "senior"), 0),
-                    else_=0
-                )
-            elif cand_years < 8.0:
-                # Senior preference (5-8 yrs)
-                exp_fit = case(
-                    (Job.experience_level == "senior", 1),
-                    else_=0
-                )
-            else:
-                # Lead preference (8+ yrs)
-                exp_fit = case(
-                    (Job.experience_level == "lead", 1),
-                    else_=0
-                )
-
-            # Relevance match indicator (match score >= 60%)
-            is_matched = case(
-                (and_(JobMatch.match_score.isnot(None), JobMatch.match_score >= 60.0), 1),
-                else_=0
+            # Experience Level Detection (strictly identifies senior/lead/manager vs fresher/entry vs mid)
+            is_senior_or_lead = or_(
+                Job.experience_level.in_(["senior", "lead"]),
+                Job.title.ilike("%senior%"),
+                Job.title.ilike("%sr.%"),
+                Job.title.ilike("%lead%"),
+                Job.title.ilike("%staff%"),
+                Job.title.ilike("%principal%"),
+                Job.title.ilike("%director%"),
+                Job.title.ilike("%manager%"),
+                Job.title.ilike("%head%")
             )
 
-            order_prefix = [desc(domain_fit)] if domain_fit is not None else []
-
-            if sort_by == "match":
-                query = query.order_by(
-                    *order_prefix,
-                    desc(exp_fit),
-                    desc(is_matched),
-                    desc(JobMatch.match_score),
-                    desc(Job.published_at),
-                    desc(Job.id)
+            is_fresher_entry = and_(
+                ~is_senior_or_lead,
+                or_(
+                    Job.experience_level == "entry",
+                    Job.title.ilike("%fresher%"),
+                    Job.title.ilike("%intern%"),
+                    Job.title.ilike("%internship%"),
+                    Job.title.ilike("%junior%"),
+                    Job.title.ilike("%jr.%"),
+                    Job.title.ilike("%trainee%"),
+                    Job.title.ilike("%graduate%"),
+                    Job.title.ilike("%working student%"),
+                    Job.title.ilike("%associate%")
                 )
-            elif sort_by == "salary":
+            )
+
+            is_mid = and_(
+                ~is_senior_or_lead,
+                ~is_fresher_entry,
+                Job.experience_level == "mid"
+            )
+
+            # Combined Priority Hierarchy based on Candidate Experience Tier and Domain:
+            # - Fresher (0 to 1.5 yrs):
+            #     1. Fresher Data Analyst (Direct Target Role)
+            #     2. Fresher Analytics / BI / Analyst Related
+            #     3. Fresher Data / ML / SQL
+            #     4. Mid-level (2-3 / 2-5 yrs) Data Analyst
+            #     5. Mid-level Analytics / BI
+            #     6. Mid-level Data / ML
+            #     7. Other Fresher / Entry roles
+            #     8. Other Mid-level roles
+            #     9. Senior / Lead Data & Analytics roles
+            #     10. All remaining roles
+            # - Mid-Level (1.5 to 5.0 yrs): Mid-level Data Analyst first, then Fresher, then Senior
+            # - Senior (5.0 to 8.0 yrs): Senior Data roles first
+            # - Lead (8.0+ yrs): Lead Data roles first
+            if domain_fit is not None:
+                if cand_years <= 1.5:
+                    priority_rank = case(
+                        (and_(is_fresher_entry, domain_fit == 3), 1),
+                        (and_(is_fresher_entry, domain_fit == 2), 2),
+                        (and_(is_fresher_entry, domain_fit == 1), 3),
+                        (and_(is_mid, domain_fit == 3), 4),
+                        (and_(is_mid, domain_fit == 2), 5),
+                        (and_(is_mid, domain_fit == 1), 6),
+                        (is_fresher_entry, 7),
+                        (is_mid, 8),
+                        (domain_fit >= 1, 9),
+                        else_=10
+                    )
+                elif cand_years < 5.0:
+                    priority_rank = case(
+                        (and_(is_mid, domain_fit == 3), 1),
+                        (and_(is_mid, domain_fit == 2), 2),
+                        (and_(is_mid, domain_fit == 1), 3),
+                        (and_(is_fresher_entry, domain_fit == 3), 4),
+                        (and_(is_fresher_entry, domain_fit == 2), 5),
+                        (and_(is_fresher_entry, domain_fit == 1), 6),
+                        (is_mid, 7),
+                        (is_fresher_entry, 8),
+                        (domain_fit >= 1, 9),
+                        else_=10
+                    )
+                elif cand_years < 8.0:
+                    priority_rank = case(
+                        (and_(Job.experience_level == "senior", domain_fit == 3), 1),
+                        (and_(Job.experience_level == "senior", domain_fit >= 1), 2),
+                        (and_(Job.experience_level == "lead", domain_fit >= 1), 3),
+                        (and_(is_mid, domain_fit >= 1), 4),
+                        (Job.experience_level == "senior", 5),
+                        (Job.experience_level == "lead", 6),
+                        (is_mid, 7),
+                        else_=8
+                    )
+                else:
+                    priority_rank = case(
+                        (and_(Job.experience_level == "lead", domain_fit == 3), 1),
+                        (and_(Job.experience_level == "lead", domain_fit >= 1), 2),
+                        (and_(Job.experience_level == "senior", domain_fit >= 1), 3),
+                        (Job.experience_level == "lead", 4),
+                        (Job.experience_level == "senior", 5),
+                        else_=6
+                    )
+            else:
+                if cand_years <= 1.5:
+                    priority_rank = case(
+                        (is_fresher_entry, 1),
+                        (is_mid, 2),
+                        else_=3
+                    )
+                elif cand_years < 5.0:
+                    priority_rank = case(
+                        (is_mid, 1),
+                        (is_fresher_entry, 2),
+                        else_=3
+                    )
+                else:
+                    priority_rank = case(
+                        (Job.experience_level == "senior", 1),
+                        (Job.experience_level == "lead", 2),
+                        else_=3
+                    )
+
+            if sort_by == "salary":
                 query = query.order_by(
-                    *order_prefix,
-                    desc(exp_fit),
-                    desc(is_matched),
+                    priority_rank.asc(),
                     desc(Job.salary_max),
+                    desc(JobMatch.match_score),
                     desc(Job.published_at),
                     desc(Job.id)
                 )
             elif sort_by == "all_fresh":
                 query = query.order_by(desc(Job.published_at), desc(Job.id))
             else:
-                # Default: Data Analyst & related domain jobs matching candidate experience tier FIRST,
-                # ordered by highest relevance and freshness, followed by remaining jobs next
+                # Default (Recommended: Fresher & Data Analyst First, Match Score High to Low %):
                 query = query.order_by(
-                    *order_prefix,
-                    desc(exp_fit),
-                    desc(is_matched),
+                    priority_rank.asc(),
                     desc(JobMatch.match_score),
                     desc(Job.published_at),
                     desc(Job.id)
@@ -287,11 +334,11 @@ class JobSearchService:
                 import re
                 title_lower = (job.title or "").lower()
                 lvl = (job.experience_level or "mid").lower()
-                is_sr_lead = lvl in ("senior", "lead") or any(w in title_lower for w in ["senior", "lead", "principal", "staff", "director"])
+                is_sr_lead = lvl in ("senior", "lead") or any(w in title_lower for w in ["senior", "sr.", "lead", "principal", "staff", "director", "manager", "head"])
                 if cand_years <= 1.5:
                     is_job_exp_fit = (not is_sr_lead) and (
                         lvl == "entry" or 
-                        bool(re.search(r"\b(entry|fresher|intern|internship|junior|jr|graduate|trainee)\b", title_lower))
+                        bool(re.search(r"\b(entry|fresher|intern|internship|junior|jr|graduate|trainee|working student|associate)\b", title_lower))
                     )
                 elif cand_years < 5.0:
                     is_job_exp_fit = (lvl == "mid") and not is_sr_lead
