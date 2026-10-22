@@ -192,39 +192,6 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
             <span class="text-muted small">Found <strong>{{ results.total }}</strong> verified postings</span>
-            {% if current_user.is_authenticated and current_user.get_active_resume() %}
-                <span class="badge bg-success-subtle text-success border border-success-subtle ms-2">
-                    <i class="bi bi-geo-alt-fill me-1"></i> India Jobs Ranked First
-                </span>
-                <span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-2">
-                    <i class="bi bi-bullseye me-1"></i> Relevant Roles Ranked First
-                </span>
-                {% if current_user.candidate_profile and current_user.candidate_profile.experience_years is not none %}
-                    <span class="badge bg-light text-dark border ms-2">
-                        <i class="bi bi-person-workspace text-primary me-1"></i>Your Level: 
-                        <strong>
-                            {% if current_user.candidate_profile.experience_years <= 1.5 %}
-                                Fresher (0–2 Yrs)
-                            {% elif current_user.candidate_profile.experience_years < 5.0 %}
-                                Mid-Level ({{ current_user.candidate_profile.experience_years }} Yrs)
-                            {% elif current_user.candidate_profile.experience_years < 8.0 %}
-                                Senior ({{ current_user.candidate_profile.experience_years }} Yrs)
-                            {% else %}
-                                Lead ({{ current_user.candidate_profile.experience_years }} Yrs)
-                            {% endif %}
-                        </strong>
-                    </span>
-                {% endif %}
-                {% if current_user.candidate_profile and current_user.candidate_profile.preferred_cities %}
-                    <span class="badge bg-light text-dark border ms-2" title="Preferred target work cities">
-                        <i class="bi bi-geo-alt-fill text-success me-1"></i>Target Locations: <strong>{{ current_user.candidate_profile.preferred_cities[:3]|join(', ') }}</strong>
-                    </span>
-                {% elif current_user.candidate_profile and current_user.candidate_profile.location %}
-                    <span class="badge bg-light text-muted border ms-2" title="Present residence address (Open to relocation)">
-                        <i class="bi bi-house me-1"></i>Residence: <strong>{{ current_user.candidate_profile.location.split(',')[0] }}</strong> (Open to Relocation)
-                    </span>
-                {% endif %}
-            {% endif %}
         </div>
         <div class="d-flex align-items-center gap-2">
             {% if current_user.is_authenticated and current_user.get_active_resume() %}
