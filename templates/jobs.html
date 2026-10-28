@@ -227,13 +227,29 @@
                     <div class="card p-4 custom-card border-0 bg-white shadow-sm h-100 job-card d-flex flex-column justify-content-between">
                         <div>
                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <h5 class="fw-bold mb-1">
-                                        <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="text-dark text-decoration-none">{{ job.title }}</a>
-                                    </h5>
-                                    <div class="text-muted small">
-                                        <strong>{{ job.company }}</strong> · 
-                                        <span><i class="bi bi-geo-alt"></i> {{ job.location }}</span>
+                                <div class="d-flex align-items-start gap-2">
+                                    <div class="company-logo-box rounded-3 border bg-light d-flex align-items-center justify-content-center flex-shrink-0 mt-1" style="width: 42px; height: 42px;">
+                                        <img src="https://www.google.com/s2/favicons?domain={{ job.company|lower|replace(' ', '') }}.com&sz=64" alt="{{ job.company }}" class="company-logo-img rounded-2" style="width: 26px; height: 26px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="company-logo-fallback fw-bold text-primary align-items-center justify-content-center" style="display: none; width: 100%; height: 100%; font-size: 0.8rem;">
+                                            {{ job.company[:2].upper() }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-1">
+                                            <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="text-dark text-decoration-none">{{ job.title }}</a>
+                                        </h5>
+                                        <div class="text-muted small d-flex align-items-center gap-1 flex-wrap">
+                                            <a href="{{ url_for('jobs.list_jobs', q=job.company) }}" class="text-decoration-none text-body fw-bold">
+                                                {{ job.company }}
+                                            </a>
+                                            {% if current_user.is_authenticated %}
+                                                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 ms-1 btn-toggle-company-follow" data-company="{{ job.company }}" title="{% if item.is_dream_company %}Unfollow Dream Company{% else %}Follow Company{% endif %}">
+                                                    <i class="bi bi-star{% if item.is_dream_company %}-fill text-warning{% else %} text-muted{% endif %}" style="font-size: 0.85rem;"></i>
+                                                </button>
+                                            {% endif %}
+                                            <span class="mx-1">·</span>
+                                            <span><i class="bi bi-geo-alt"></i> {{ job.location }}</span>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="text-end">
@@ -362,3 +378,36 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/jobs.js') }}"></script>
 {% endblock %}
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-toggle-company-follow').forEach(btn => {
+        btn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const companyName = this.getAttribute('data-company');
+            const icon = this.querySelector('i');
+            try {
+                const res = await fetch("{{ url_for('jobs.toggle_company_follow') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ company_name: companyName })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (data.is_following) {
+                        icon.className = 'bi bi-star-fill text-warning';
+                        this.setAttribute('title', 'Unfollow Dream Company');
+                    } else {
+                        icon.className = 'bi bi-star text-muted';
+                        this.setAttribute('title', 'Follow Company');
+                    }
+                }
+            } catch (err) {
+                console.error('Error toggling dream company:', err);
+            }
+        });
+    });
+});
+</script>

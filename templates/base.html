@@ -72,6 +72,12 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="sidebar-link {% if 'companies' in request.endpoint %}active{% endif %}" href="{{ url_for('jobs.list_companies') }}">
+                            <i class="bi bi-buildings-fill text-info"></i>
+                            <span>Browse Companies</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="sidebar-link {% if 'watchlist' in request.endpoint %}active{% endif %}" href="{{ url_for('watchlist.view_watchlist') }}">
                             <i class="bi bi-star-fill text-warning"></i>
                             <span>Dream Companies</span>
@@ -131,6 +137,9 @@
                     <p class="text-secondary small mb-3">Access live jobs, automatic ATS scoring, and your personal AI career coach.</p>
                     <a href="{{ url_for('auth.login') }}" class="btn btn-primary-custom w-100 mb-2">Sign In</a>
                     <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light w-100 mb-3">Get Started</a>
+                    <a href="{{ url_for('jobs.list_companies') }}" class="sidebar-link text-center justify-content-center mb-2">
+                        <i class="bi bi-buildings me-1"></i> Top Employers (620+)
+                    </a>
                     <a href="{{ url_for('jobs.list_jobs') }}" class="sidebar-link text-center justify-content-center">
                         <i class="bi bi-search me-1"></i> Browse Real Jobs
                     </a>
@@ -182,6 +191,7 @@
                 <div class="d-none d-md-flex align-items-center gap-2 ms-2 text-muted small">
                     <span class="fw-semibold text-body">
                         {% if request.endpoint == 'dashboard.dashboard' %}Dashboard
+                        {% elif request.endpoint == 'jobs.list_companies' %}Verified Employers
                         {% elif 'jobs' in request.endpoint %}Jobs Discovery
                         {% elif 'application' in request.endpoint %}Application Tracker
                         {% elif 'ats' in request.endpoint %}ATS Match Intelligence

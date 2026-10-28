@@ -56,8 +56,29 @@
                         <span class="badge bg-danger-subtle text-danger">{{ job.status|title }}</span>
                     {% endif %}
                 </div>
-                <h3 class="fw-bold mb-1 text-dark">{{ job.title }}</h3>
-                <h5 class="text-muted fw-normal mb-2">{{ job.company }} · <i class="bi bi-geo-alt"></i> {{ job.location }}</h5>
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="company-logo-box rounded-3 border bg-light d-flex align-items-center justify-content-center flex-shrink-0" style="width: 52px; height: 52px;">
+                        <img src="https://www.google.com/s2/favicons?domain={{ job.company|lower|replace(' ', '') }}.com&sz=64" alt="{{ job.company }}" class="company-logo-img rounded-2" style="width: 34px; height: 34px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="company-logo-fallback fw-bold text-primary align-items-center justify-content-center" style="display: none; width: 100%; height: 100%; font-size: 0.95rem;">
+                            {{ job.company[:2].upper() }}
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-1 text-dark">{{ job.title }}</h3>
+                        <h5 class="text-muted fw-normal mb-0 d-flex align-items-center gap-2 flex-wrap">
+                            <a href="{{ url_for('jobs.list_jobs', q=job.company) }}" class="text-decoration-none text-body fw-bold">
+                                {{ job.company }}
+                            </a>
+                            {% if current_user.is_authenticated %}
+                                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 btn-toggle-company-follow" data-company="{{ job.company }}" title="Follow Company">
+                                    <i class="bi bi-star text-muted" style="font-size: 1rem;"></i>
+                                </button>
+                            {% endif %}
+                            <span>·</span>
+                            <span><i class="bi bi-geo-alt"></i> {{ job.location }}</span>
+                        </h5>
+                    </div>
+                </div>
                 <div class="small text-muted d-flex flex-wrap gap-2 align-items-center">
                     <span>Source Job ID: <code>{{ job.source_job_id }}</code></span> · 
                     <span><i class="bi bi-clock me-1 text-primary"></i>Posted: <strong>{{ job.posted_relative_time }}</strong> ({{ job.published_at.strftime('%b %d, %Y') if job.published_at else 'Recently' }})</span> · 
@@ -485,3 +506,35 @@ if (gapModalEl) {
 }
 </script>
 {% endblock %}
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-toggle-company-follow').forEach(btn => {
+        btn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const companyName = this.getAttribute('data-company');
+            const icon = this.querySelector('i');
+            try {
+                const res = await fetch("{{ url_for('jobs.toggle_company_follow') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ company_name: companyName })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (data.is_following) {
+                        icon.className = 'bi bi-star-fill text-warning';
+                        this.setAttribute('title', 'Unfollow Dream Company');
+                    } else {
+                        icon.className = 'bi bi-star text-muted';
+                        this.setAttribute('title', 'Follow Company');
+                    }
+                }
+            } catch (err) {
+                console.error('Error toggling dream company:', err);
+            }
+        });
+    });
+});
+</script>

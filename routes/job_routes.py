@@ -259,3 +259,46 @@ def refresh_jobs():
         flash(f"Error during job refresh: {str(e)}", "danger")
     
     return redirect(url_for("jobs.list_jobs"))
+
+@jobs_bp.route("/companies")
+def list_companies():
+    """
+    Dedicated Company Directory:
+    Displays all verified hiring companies, total active vacancies,
+    location tags, and allows 1-click tracking.
+    """
+    q = request.args.get("q", "").strip()
+    filter_type = request.args.get("filter", "all").strip().lower()
+    sort_by = request.args.get("sort", "jobs").strip().lower()
+    page = request.args.get("page", 1, type=int)
+
+    from services.company_service import CompanyService
+    service = CompanyService()
+    user_id = current_user.id if current_user.is_authenticated else None
+    data = service.get_companies_directory(
+        search_query=q or None,
+        filter_type=filter_type,
+        sort_by=sort_by,
+        user_id=user_id,
+        page=page,
+        per_page=24
+    )
+    return render_template("companies.html", **data)
+
+
+@jobs_bp.route("/api/companies/toggle-follow", methods=["POST"])
+@login_required
+def toggle_company_follow():
+    """
+    1-Click Follow/Unfollow company endpoint for instant watchlist management from cards.
+    """
+    data = request.get_json(silent=True) or request.form
+    company_name = data.get("company_name", "").strip()
+    if not company_name:
+        return jsonify({"success": False, "message": "Company name required"}), 400
+
+    from services.dream_company_service import DreamCompanyService
+    service = DreamCompanyService()
+    res = service.toggle_dream_company(current_user.id, company_name)
+    return jsonify(res)
+

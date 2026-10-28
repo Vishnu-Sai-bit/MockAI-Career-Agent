@@ -93,6 +93,27 @@ class DreamCompanyService:
             return True
         return False
 
+    def toggle_dream_company(self, user_id: int, company_name: str) -> Dict[str, Any]:
+        """
+        Toggles follow/unfollow for a company by name for quick 1-click following from job cards.
+        """
+        clean_name = company_name.strip()
+        if not clean_name:
+            return {"success": False, "is_following": False, "message": "Company name is required."}
+
+        existing = DreamCompany.query.filter(
+            DreamCompany.user_id == user_id,
+            DreamCompany.company_name.ilike(clean_name)
+        ).first()
+
+        if existing:
+            db.session.delete(existing)
+            db.session.commit()
+            return {"success": True, "is_following": False, "message": f"Removed {clean_name} from your Dream Companies."}
+        else:
+            self.add_dream_company(user_id=user_id, company_name=clean_name)
+            return {"success": True, "is_following": True, "message": f"Now tracking {clean_name} as a Dream Company!"}
+
     def get_user_watchlist(self, user_id: int) -> List[Dict[str, Any]]:
         """
         Returns all tracked companies for a user along with active vacancies found in the DB.

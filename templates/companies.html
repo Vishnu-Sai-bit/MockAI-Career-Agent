@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Top Verified Employers & Companies — AI Job Agent{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
+        <div>
+            <h3 class="fw-bold mb-1">
+                <i class="bi bi-buildings-fill text-primary me-2"></i>Verified Companies & Employers
+            </h3>
+            <p class="text-muted small mb-0">
+                Explore {{ total_companies }} verified global tech organizations and employers with live openings grounded directly in their official ATS portals.
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-custom">
+                <i class="bi bi-briefcase me-1"></i> Browse All Jobs
+            </a>
+        </div>
+    </div>
+
+    <!-- Search & Filter Controls -->
+    <div class="card p-3 custom-card border-0 bg-white shadow-sm mb-4">
+        <form method="GET" action="{{ url_for('jobs.list_companies') }}" id="companiesSearchForm">
+            <div class="row g-2 align-items-center">
+                <div class="col-lg-6 col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="q" class="form-control" placeholder="Search company by name (e.g. Stripe, NVIDIA, Spotify)..." value="{{ search_query }}">
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light"><i class="bi bi-funnel text-muted"></i></span>
+                        <select name="filter" class="form-select" onchange="this.form.submit()">
+                            <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All Companies ({{ total_companies }})</option>
+                            <option value="india" {% if filter_type == 'india' %}selected{% endif %}>Hiring in India</option>
+                            <option value="remote" {% if filter_type == 'remote' %}selected{% endif %}>Remote-Friendly</option>
+                            <option value="top" {% if filter_type == 'top' %}selected{% endif %}>Top Employers (5+ Jobs)</option>
+                            {% if current_user.is_authenticated %}
+                                <option value="dream" {% if filter_type == 'dream' %}selected{% endif %}>My Dream Companies</option>
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary-custom flex-grow-1">
+                        <i class="bi bi-search me-1"></i> Search
+                    </button>
+                    {% if search_query or filter_type != 'all' %}
+                        <a href="{{ url_for('jobs.list_companies') }}" class="btn btn-outline-secondary" title="Reset Filters">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Companies Grid -->
+    {% if companies %}
+        <div class="row g-3">
+            {% for c in companies %}
+                <div class="col-xl-3 col-lg-4 col-md-6">
+                    <div class="card custom-card border-0 bg-white shadow-sm h-100 p-3 d-flex flex-column justify-content-between company-card">
+                        <div>
+                            <!-- Header: Logo, Name & Star Button -->
+                            <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                                <div class="d-flex align-items-center gap-2 overflow-hidden">
+                                    <div class="company-logo-box rounded-3 border bg-light d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px;">
+                                        <img src="{{ c.logo_url }}" alt="{{ c.name }} logo" class="company-logo-img rounded-2" style="width: 28px; height: 28px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="company-logo-fallback fw-bold text-primary align-items-center justify-content-center" style="display: none; width: 100%; height: 100%; font-size: 0.85rem;">
+                                            {{ c.name[:2].upper() }}
+                                        </div>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <h6 class="fw-bold mb-0 text-truncate">
+                                            <a href="{{ url_for('jobs.list_jobs', q=c.name) }}" class="text-dark text-decoration-none" title="{{ c.name }}">
+                                                {{ c.name }}
+                                            </a>
+                                        </h6>
+                                        <small class="text-muted" style="font-size: 0.72rem;">{{ c.primary_platform }} Partner</small>
+                                    </div>
+                                </div>
+
+                                {% if current_user.is_authenticated %}
+                                    <button class="btn btn-sm btn-link text-decoration-none p-1 btn-toggle-company-star" data-company="{{ c.name }}" title="{% if c.is_dream %}Unfollow Dream Company{% else %}Follow as Dream Company{% endif %}">
+                                        <i class="bi bi-star{% if c.is_dream %}-fill text-warning{% else %} text-muted{% endif %} fs-5"></i>
+                                    </button>
+                                {% endif %}
+                            </div>
+
+                            <!-- Badges -->
+                            <div class="d-flex flex-wrap align-items-center gap-1 mb-2">
+                                <span class="badge bg-primary-subtle text-primary fw-semibold">
+                                    <i class="bi bi-briefcase me-1"></i>{{ c.total_jobs }} Open {{ 'Role' if c.total_jobs == 1 else 'Roles' }}
+                                </span>
+                                {% if c.has_india %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                        <i class="bi bi-geo-alt-fill me-1"></i>India
+                                    </span>
+                                {% endif %}
+                                {% if c.has_remote %}
+                                    <span class="badge bg-info-subtle text-info border border-info-subtle">
+                                        <i class="bi bi-globe me-1"></i>Remote
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Sample Openings -->
+                            <div class="mt-2 mb-3">
+                                <small class="text-muted d-block fw-semibold mb-1" style="font-size: 0.75rem;">Sample Openings:</small>
+                                <ul class="list-unstyled mb-0 small">
+                                    {% for title in c.sample_titles[:2] %}
+                                        <li class="text-truncate text-secondary mb-1" style="font-size: 0.78rem;">
+                                            <i class="bi bi-arrow-right-short text-primary"></i> {{ title }}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Card Action -->
+                        <div class="pt-2 border-top mt-auto">
+                            <a href="{{ url_for('jobs.list_jobs', q=c.name) }}" class="btn btn-sm btn-outline-custom w-100 fw-semibold">
+                                View {{ c.total_jobs }} Verified {{ 'Role' if c.total_jobs == 1 else 'Roles' }} &rarr;
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if pages > 1 %}
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if not has_prev %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('jobs.list_companies', page=page - 1, q=search_query, filter=filter_type, sort=sort_by) }}">Previous</a>
+                    </li>
+                    <li class="page-item active">
+                        <span class="page-link">{{ page }} / {{ pages }}</span>
+                    </li>
+                    <li class="page-item {% if not has_next %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('jobs.list_companies', page=page + 1, q=search_query, filter=filter_type, sort=sort_by) }}">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        {% endif %}
+
+    {% else %}
+        <div class="card p-5 text-center custom-card border-0 bg-white shadow-sm">
+            <i class="bi bi-buildings text-muted display-4 mb-3"></i>
+            <h5 class="fw-bold">No companies found</h5>
+            <p class="text-muted small mb-3">Try adjusting your search query or reset the filter.</p>
+            <div>
+                <a href="{{ url_for('jobs.list_companies') }}" class="btn btn-outline-custom btn-sm">Reset Filters</a>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1-Click Toggle Company Follow
+    document.querySelectorAll('.btn-toggle-company-star').forEach(btn => {
+        btn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const companyName = this.getAttribute('data-company');
+            const icon = this.querySelector('i');
+
+            try {
+                const res = await fetch("{{ url_for('jobs.toggle_company_follow') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ company_name: companyName })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (data.is_following) {
+                        icon.className = 'bi bi-star-fill text-warning fs-5';
+                        this.setAttribute('title', 'Unfollow Dream Company');
+                    } else {
+                        icon.className = 'bi bi-star text-muted fs-5';
+                        this.setAttribute('title', 'Follow as Dream Company');
+                    }
+                }
+            } catch (err) {
+                console.error('Error toggling dream company:', err);
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

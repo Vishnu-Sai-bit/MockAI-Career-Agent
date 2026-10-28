@@ -1,0 +1,190 @@
+"""
+Company Directory Service:
+Aggregates company profiles, verified job volume, locations, ATS platforms,
+and provides logo domain resolution and dream company integration.
+"""
+import re
+from typing import Dict, Any, List, Optional, Set
+from collections import defaultdict
+from urllib.parse import urlparse
+
+from extensions import db
+from models.job import Job
+from services.dream_company_service import DreamCompanyService
+
+COMMON_LEGAL_SUFFIXES = [
+    r"\bgmbh\b", r"\binc\b", r"\bllc\b", r"\bltd\b", r"\bcorp\b",
+    r"\bco\b", r"\bag\b", r"\bholding\b", r"\bgroup\b", r"\btechnologies\b"
+]
+
+INDIA_KEYWORDS = [
+    "india", "bengaluru", "bangalore", "hyderabad", "mumbai", "pune",
+    "delhi", "noida", "gurgaon", "gurugram", "chennai", "kolkata"
+]
+
+KNOWN_COMPANY_DOMAINS = {
+    "stripe": "stripe.com",
+    "gitlab": "gitlab.com",
+    "nvidia": "nvidia.com",
+    "spotify": "spotify.com",
+    "autodesk": "autodesk.com",
+    "avery dennison": "averydennison.com",
+    "linear": "linear.app",
+    "adobe": "adobe.com",
+    "bunq": "bunq.com",
+    "elevenlabs": "elevenlabs.io",
+    "openai": "openai.com",
+    "binance": "binance.com",
+    "ashby": "ashbyhq.com",
+    "hellofresh": "hellofresh.com",
+    "canonical": "canonical.com",
+    "mozilla": "mozilla.org",
+    "clickup": "clickup.com",
+    "dropbox": "dropbox.com",
+    "fastly": "fastly.com",
+    "fivetran": "fivetran.com",
+    "grafana labs": "grafana.com",
+    "reddit": "reddit.com",
+    "servicenow": "servicenow.com",
+    "uber": "uber.com",
+    "bank of america": "bankofamerica.com",
+    "monzo": "monzo.com",
+    "samsara": "samsara.com",
+    "chainguard": "chainguard.dev",
+    "deepgram": "deepgram.com",
+    "stackadapt": "stackadapt.com"
+}
+
+def resolve_company_domain(company_name: str, sample_url: str = "") -> str:
+    norm_name = company_name.strip().lower()
+    for known_k, domain in KNOWN_COMPANY_DOMAINS.items():
+        if known_k in norm_name or norm_name in known_k:
+            return domain
+
+    # Try extracting domain from job URL if direct ATS
+    if sample_url:
+        host = urlparse(sample_url).netloc.lower()
+        if host and not any(agg in host for agg in ["arbeitnow", "remoteok", "remotive", "adzuna", "jobicy"]):
+            # e.g. stripe.com or nvidia.wd5.myworkdayjobs.com -> nvidia.com
+            parts = host.split(".")
+            if len(parts) >= 2:
+                return ".".join(parts[-2:])
+
+    # Clean legal suffixes
+    cleaned = norm_name
+    for suff in COMMON_LEGAL_SUFFIXES:
+        cleaned = re.sub(suff, "", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"[^\w]", "", cleaned).strip()
+    return f"{cleaned}.com" if cleaned else "company.com"
+
+class CompanyService:
+    def get_companies_directory(
+        self,
+        search_query: Optional[str] = None,
+        filter_type: str = "all",
+        sort_by: str = "jobs",
+        user_id: Optional[int] = None,
+        page: int = 1,
+        per_page: int = 24
+    ) -> Dict[str, Any]:
+        """
+        Aggregates active jobs by company and returns a paginated directory
+        with metadata, badges, and dream company tracking status.
+        """
+        active_jobs = Job.query.filter_by(status="active").all()
+
+        # Build dream companies set
+        dream_companies: Set[str] = set()
+        if user_id:
+            dream_companies = DreamCompanyService().get_dream_company_names(user_id)
+
+        # Aggregate jobs by company
+        grouped = defaultdict(list)
+        for job in active_jobs:
+            c = job.company.strip()
+            if c:
+                grouped[c].append(job)
+
+        company_list = []
+        for c_name, jobs in grouped.items():
+            locs = set()
+            platforms = set()
+            has_india = False
+            has_remote = False
+            sample_url = ""
+
+            for j in jobs:
+                loc = (j.location or "").strip()
+                if loc:
+                    locs.add(loc)
+                loc_low = f"{loc} {j.country or ''} {j.city or ''}".lower()
+                if any(k in loc_low for k in INDIA_KEYWORDS):
+                    has_india = True
+                if "remote" in loc_low or (j.work_mode or "").lower() == "remote":
+                    has_remote = True
+                if j.source_platform:
+                    platforms.add(j.source_platform.title())
+                if not sample_url and (j.original_url or j.apply_url):
+                    sample_url = j.original_url or j.apply_url
+
+            domain = resolve_company_domain(c_name, sample_url)
+            is_dream = c_name.lower().strip() in dream_companies
+
+            # Top 3 role titles for preview
+            sample_titles = [j.title for j in jobs[:3]]
+
+            company_list.append({
+                "name": c_name,
+                "total_jobs": len(jobs),
+                "has_india": has_india,
+                "has_remote": has_remote,
+                "platforms": sorted(list(platforms)),
+                "primary_platform": sorted(list(platforms))[0] if platforms else "Direct",
+                "top_locations": sorted(list(locs))[:2],
+                "sample_titles": sample_titles,
+                "domain": domain,
+                "logo_url": f"https://www.google.com/s2/favicons?domain={domain}&sz=64",
+                "is_dream": is_dream
+            })
+
+        # Apply Filters
+        if search_query:
+            q_clean = search_query.strip().lower()
+            company_list = [c for c in company_list if q_clean in c["name"].lower()]
+
+        if filter_type == "india":
+            company_list = [c for c in company_list if c["has_india"]]
+        elif filter_type == "remote":
+            company_list = [c for c in company_list if c["has_remote"]]
+        elif filter_type == "top":
+            company_list = [c for c in company_list if c["total_jobs"] >= 5]
+        elif filter_type == "dream" and user_id:
+            company_list = [c for c in company_list if c["is_dream"]]
+
+        # Sorting
+        if sort_by == "alpha":
+            company_list.sort(key=lambda x: x["name"].lower())
+        else:
+            # Default: most jobs first, then alpha
+            company_list.sort(key=lambda x: (-x["total_jobs"], x["name"].lower()))
+
+        total_matching = len(company_list)
+        total_pages = max(1, (total_matching + per_page - 1) // per_page)
+        page = max(1, min(page, total_pages))
+
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        paginated_items = company_list[start_idx:end_idx]
+
+        return {
+            "companies": paginated_items,
+            "total_companies": total_matching,
+            "total_jobs_in_db": len(active_jobs),
+            "page": page,
+            "pages": total_pages,
+            "has_next": page < total_pages,
+            "has_prev": page > 1,
+            "search_query": search_query or "",
+            "filter_type": filter_type,
+            "sort_by": sort_by
+        }
