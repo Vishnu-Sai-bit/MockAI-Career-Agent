@@ -68,7 +68,29 @@ KNOWN_COMPANY_DOMAINS = {
     "wikimedia": "wikimedia.org",
     "wise": "wise.com",
     "brex": "brex.com",
-    "groww": "groww.in"
+    "groww": "groww.in",
+    "netflix": "netflix.com",
+    "atlassian": "atlassian.com",
+    "postman": "postman.com",
+    "snapchat": "snap.com",
+    "snap": "snap.com",
+    "mongodb": "mongodb.com",
+    "confluent": "confluent.io",
+    "doordash": "doordash.com",
+    "notion": "notion.so",
+    "canva": "canva.com",
+    "vercel": "vercel.com",
+    "replit": "replit.com",
+    "cursor": "cursor.com",
+    "deel": "deel.com",
+    "posthog": "posthog.com",
+    "sentry": "sentry.io",
+    "cohere": "cohere.com",
+    "visa": "visa.com",
+    "bosch": "bosch.com",
+    "block": "block.xyz",
+    "deliveroo": "deliveroo.co.uk",
+    "bolt": "bolt.eu"
 }
 
 def resolve_company_domain(company_name: str, sample_url: str = "") -> str:
