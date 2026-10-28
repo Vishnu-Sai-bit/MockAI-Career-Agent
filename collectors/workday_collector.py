@@ -97,9 +97,25 @@ class WorkdayCollector(BaseCollector):
         """
         Workday provider adapter.
         Queries modern Workday CXS search endpoint and retrieves official job postings.
+        Dynamically resolves company configurations across 3,700+ enterprise Workday tenants.
         """
-        tenant_info = WORKDAY_TENANTS.get(company_key.lower(), {})
-        config = kwargs.get("config", {}) or tenant_info
+        config = kwargs.get("config", {})
+        if not config:
+            tenant_info = WORKDAY_TENANTS.get(company_key.lower())
+            if not tenant_info:
+                try:
+                    from services.workday_directory_service import workday_directory
+                    matched = workday_directory.get_company(company_key)
+                    if matched:
+                        tenant_info = {
+                            "host": matched["host"],
+                            "tenant": matched["tenant"],
+                            "site": matched["site"],
+                            "company_name": matched["company_name"]
+                        }
+                except Exception:
+                    tenant_info = None
+            config = tenant_info or {}
 
         host = config.get("host") or f"{company_key}.myworkdayjobs.com"
         tenant = config.get("tenant") or company_key
@@ -149,28 +165,31 @@ class WorkdayCollector(BaseCollector):
                 loc = item.get("locationsText", "")
                 work_mode = "remote" if "remote" in loc.lower() or "remote" in title.lower() else "on-site"
 
-                # Attempt to fetch full description via CXS detail endpoint
-                description = f"Workday posting for {title} at {company_display}. Location: {loc}."
-                raw_html = ""
-                detail_endpoint = f"https://{host}/wday/cxs/{tenant}/{site}{ext_path}"
-                try:
-                    detail_resp = self.session.get(detail_endpoint, headers=headers, timeout=5)
-                    if detail_resp.status_code == 200:
-                        detail_data = detail_resp.json()
-                        info = detail_data.get("jobPostingInfo", {})
-                        if info.get("externalUrl"):
-                            original_url = info["externalUrl"]
-                            apply_url = f"{original_url}/apply"
-                        raw_desc = info.get("jobDescription", "")
-                        if raw_desc:
-                            raw_html = raw_desc
-                            description = BeautifulSoup(raw_desc, "html.parser").get_text(separator="\n").strip()
-                        if info.get("timeType"):
-                            emp_type = info["timeType"].lower()
-                        if info.get("location"):
-                            loc = info["location"]
-                except Exception as ex:
-                    logger.debug(f"Could not fetch full Workday detail for {job_id}: {ex}")
+                # Description and detail handling
+                description = f"Official Workday vacancy for {title} at {company_display}. Location: {loc or 'Worldwide'}. Open position on {company_display}'s verified career board."
+                raw_html = f"<p>{description}</p>"
+                
+                # Fetch full rich HTML if explicitly requested
+                if kwargs.get("fetch_detail", False) and ext_path:
+                    detail_endpoint = f"https://{host}/wday/cxs/{tenant}/{site}{ext_path}"
+                    try:
+                        detail_resp = self.session.get(detail_endpoint, headers=headers, timeout=2)
+                        if detail_resp.status_code == 200:
+                            detail_data = detail_resp.json()
+                            info = detail_data.get("jobPostingInfo", {})
+                            if info.get("externalUrl"):
+                                original_url = info["externalUrl"]
+                                apply_url = f"{original_url}/apply"
+                            raw_desc = info.get("jobDescription", "")
+                            if raw_desc:
+                                raw_html = raw_desc
+                                description = BeautifulSoup(raw_desc, "html.parser").get_text(separator="\n").strip()
+                            if info.get("timeType"):
+                                emp_type = info["timeType"].lower()
+                            if info.get("location"):
+                                loc = info["location"]
+                    except Exception as ex:
+                        logger.debug(f"Could not fetch full Workday detail for {job_id}: {ex}")
 
                 job_record = RawJobRecord(
                     source_platform=self.platform_name,

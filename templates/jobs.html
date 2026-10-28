@@ -72,6 +72,9 @@
                 <a href="{{ url_for('jobs.list_jobs', work_mode='remote') }}" class="badge {% if work_mode == 'remote' %}bg-info text-white{% else %}bg-light text-info border{% endif %} text-decoration-none py-1 px-2">
                     <i class="bi bi-laptop me-1"></i>Remote
                 </a>
+                <a href="{{ url_for('jobs.list_jobs', platform='workday') }}" class="badge {% if platform == 'workday' %}bg-secondary text-white{% else %}bg-light text-secondary border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-briefcase-fill me-1"></i>Workday Roles
+                </a>
                 <a href="{{ url_for('jobs.list_jobs', q='Data Analyst') }}" class="badge bg-light text-dark border text-decoration-none py-1 px-2">
                     <i class="bi bi-graph-up me-1"></i>Data Analyst
                 </a>

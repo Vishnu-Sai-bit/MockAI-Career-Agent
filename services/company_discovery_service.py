@@ -72,9 +72,16 @@ PLATFORM_COMPANY_CATALOG = {
 
 class CompanyDiscoveryService:
     def get_catalog_stats(self) -> Dict[str, Any]:
-        """Returns statistics on all cataloged companies across platforms."""
-        total = sum(len(comps) for comps in PLATFORM_COMPANY_CATALOG.values())
+        """Returns statistics on all cataloged companies across platforms including 3,700+ Workday employers."""
         breakdown = {plat: len(comps) for plat, comps in PLATFORM_COMPANY_CATALOG.items()}
+        try:
+            from services.workday_directory_service import workday_directory
+            w_stats = workday_directory.get_stats()
+            breakdown["workday_directory"] = w_stats["total_companies"]
+            total = sum(len(comps) for plat, comps in PLATFORM_COMPANY_CATALOG.items() if plat != "workday") + w_stats["total_companies"]
+        except Exception:
+            total = sum(len(comps) for comps in PLATFORM_COMPANY_CATALOG.values())
+
         return {
             "total_supported_employers": total,
             "platform_breakdown": breakdown

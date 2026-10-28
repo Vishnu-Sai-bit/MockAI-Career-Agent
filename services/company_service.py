@@ -90,7 +90,22 @@ KNOWN_COMPANY_DOMAINS = {
     "bosch": "bosch.com",
     "block": "block.xyz",
     "deliveroo": "deliveroo.co.uk",
-    "bolt": "bolt.eu"
+    "bolt": "bolt.eu",
+    "hitachi": "hitachi.com",
+    "dxc": "dxc.com",
+    "iqvia": "iqvia.com",
+    "jll": "jll.com",
+    "thermo fisher": "thermofisher.com",
+    "cisco": "cisco.com",
+    "medtronic": "medtronic.com",
+    "santander": "santander.com",
+    "wells fargo": "wellsfargo.com",
+    "ecolab": "ecolab.com",
+    "airbus": "airbus.com",
+    "dbs bank": "dbs.com",
+    "leidos": "leidos.com",
+    "thales": "thalesgroup.com",
+    "stryker": "stryker.com"
 }
 
 def resolve_company_domain(company_name: str, sample_url: str = "") -> str:
@@ -203,6 +218,8 @@ class CompanyService:
             company_list = [c for c in company_list if c["has_remote"]]
         elif filter_type == "top":
             company_list = [c for c in company_list if c["total_jobs"] >= 5]
+        elif filter_type == "workday":
+            company_list = [c for c in company_list if "Workday" in c["platforms"]]
         elif filter_type == "dream" and user_id:
             company_list = [c for c in company_list if c["is_dream"]]
 
