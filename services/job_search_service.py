@@ -78,6 +78,23 @@ class JobSearchService:
             ~Job.apply_url.ilike('%/page-not-found%')
         )
 
+        # Dynamic On-Demand Workday Ingestion for 3,700+ CSV Companies
+        if keyword and len(keyword.strip()) >= 3:
+            try:
+                from services.workday_directory_service import workday_directory
+                matched_comp = workday_directory.get_company(keyword.strip())
+                if matched_comp:
+                    existing_count = Job.query.filter(
+                        Job.company.ilike(f"%{matched_comp['company_name']}%"),
+                        Job.status == "active"
+                    ).count()
+                    if existing_count == 0:
+                        from services.workday_harvester_service import WorkdayHarvesterService
+                        harvester = WorkdayHarvesterService()
+                        harvester.harvest_batch([matched_comp["slug"]], limit_companies=1, jobs_per_company=12)
+            except Exception:
+                pass
+
         # Multi-term keyword filtering
 
         if keyword:

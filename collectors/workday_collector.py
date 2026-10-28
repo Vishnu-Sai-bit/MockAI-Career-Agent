@@ -122,7 +122,6 @@ class WorkdayCollector(BaseCollector):
         site = config.get("site") or f"{company_key}Careers"
         company_display = config.get("company_name") or company_key.replace("-", " ").title()
 
-        endpoint = f"https://{host}/wday/cxs/{tenant}/{site}/jobs"
         headers = {
             "Accept": "application/json",
             "Content-Type": "application/json",
@@ -137,19 +136,58 @@ class WorkdayCollector(BaseCollector):
 
         jobs: List[RawJobRecord] = []
         try:
-            resp = self.session.post(endpoint, json=payload, headers=headers, timeout=self.timeout)
-            if resp.status_code != 200:
-                logger.info(f"Workday CXS API returned status {resp.status_code} for {host}")
+        
+            # Check primary site and standard fallbacks if primary site is dead/404
+            site_candidates = [site]
+            if site != "External":
+                site_candidates.append("External")
+            if site != f"{tenant}Careers":
+                site_candidates.append(f"{tenant}Careers")
+
+            postings = []
+            active_site = site
+            for candidate_site in site_candidates:
+                endpoint = f"https://{host}/wday/cxs/{tenant}/{candidate_site}/jobs"
+                try:
+                    resp = self.session.post(endpoint, json=payload, headers=headers, timeout=self.timeout)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        if isinstance(data, dict):
+                            postings = data.get("jobPostings", [])
+                            active_site = candidate_site
+                            break
+                except Exception:
+                    continue
+
+            if not postings:
                 return jobs
 
-            data = resp.json()
-            postings = data.get("jobPostings", [])
+            seen_in_batch = set()
+            seen_batch_ids = set()
 
             for item in postings:
                 title = item.get("title", "").strip()
                 ext_path = item.get("externalPath", "")
+
+                # Aggressively filter out 'not found' or closure signals
+                if not title or len(title) < 2:
+                    continue
+                low_title = title.lower()
+                if any(phrase in low_title for phrase in [
+                    "not found", "page not found", "job not found",
+                    "position closed", "job closed", "[closed]", "(closed)",
+                    "no longer accepting", "expired", "404", "error"
+                ]):
+                    continue
+
+                low_path = ext_path.lower()
+                if any(sig in low_path for sig in [
+                    "not_found=true", "job_closed=true", "/not-found",
+                    "/page-not-found", "/404", "status=closed", "error"
+                ]):
+                    continue
                 
-                # Extract requisition / job ID
+                    # Extract requisition / job ID
                 bullet_fields = item.get("bulletFields", [])
                 job_id = bullet_fields[0] if bullet_fields else ""
                 if not job_id and ext_path:
@@ -161,14 +199,14 @@ class WorkdayCollector(BaseCollector):
                 clean_path = ext_path.lstrip("/")
                 original_url = f"https://{host}/{site}/{clean_path}"
                 apply_url = f"https://{host}/{site}/{clean_path}/apply"
-                
+
                 loc = item.get("locationsText", "")
                 work_mode = "remote" if "remote" in loc.lower() or "remote" in title.lower() else "on-site"
 
                 # Description and detail handling
                 description = f"Official Workday vacancy for {title} at {company_display}. Location: {loc or 'Worldwide'}. Open position on {company_display}'s verified career board."
                 raw_html = f"<p>{description}</p>"
-                
+
                 # Fetch full rich HTML if explicitly requested
                 if kwargs.get("fetch_detail", False) and ext_path:
                     detail_endpoint = f"https://{host}/wday/cxs/{tenant}/{site}{ext_path}"
@@ -191,6 +229,13 @@ class WorkdayCollector(BaseCollector):
                     except Exception as ex:
                         logger.debug(f"Could not fetch full Workday detail for {job_id}: {ex}")
 
+                # Intra-batch deduplication: prevent duplicate postings from same company
+                norm_key = (title.lower().strip(), (loc or "").lower().strip())
+                if norm_key in seen_in_batch or str(job_id) in seen_batch_ids:
+                    continue
+                seen_in_batch.add(norm_key)
+                seen_batch_ids.add(str(job_id))
+
                 job_record = RawJobRecord(
                     source_platform=self.platform_name,
                     source_company_key=company_key.lower(),
@@ -209,7 +254,7 @@ class WorkdayCollector(BaseCollector):
                         "postedOn": item.get("postedOn"),
                         "bulletFields": bullet_fields,
                         "host": host,
-                        "site": site,
+                        "site": active_site,
                         "tenant": tenant
                     }
                 )
