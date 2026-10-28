@@ -199,6 +199,7 @@ class JobCleanerService:
                             or any(phrase in low_details for phrase in [
                                 "job not found", "page not found", "no longer available",
                                 "position is closed", "position has been closed", "does not exist",
+                                "doesn't exist", "page you are looking for", "document not found",
                                 "expired", "404", "closed", "not_found", "no longer open",
                                 "position has been filled", "posting has expired", "unlisted"
                             ])

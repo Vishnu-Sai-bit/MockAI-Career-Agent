@@ -19,6 +19,8 @@ def clean_company_name(raw_name: str) -> str:
     if not raw_name:
         return ""
     name = raw_name.strip()
+    # Strip leading regional prefixes like 'US: '
+    name = re.sub(r"^(?:US|UK|IN|EU|CA|AU):\s*", "", name, flags=re.I)
     # Strip subsidiary or legal entity qualifiers like '(BEL Innovex Belgium NV)'
     m = re.match(r"^([^\(]+)\s*\([^\)]+\)", name)
     if m:
@@ -26,10 +28,12 @@ def clean_company_name(raw_name: str) -> str:
     # Clean legal suffixes
     for suffix in [
         " LLC", ", LLC", " Inc.", ", Inc.", " Ltd", " Ltd.", " Limited",
-        " S.A.S.", " Corp", ", Corp", " Corporation", " GMBH", " Pty", " N. A.", " NA"
+        " S.A.S.", " Corp", ", Corp", " Corporation", " GMBH", " Pty", " N. A.", " NA", " Inc"
     ]:
         if name.endswith(suffix):
             name = name[:-len(suffix)].strip()
+    # Clean trailing punctuation
+    name = re.sub(r"[,.\s]+$", "", name)
     return name.strip() or raw_name.strip()
 
 def make_slug(name: str) -> str:

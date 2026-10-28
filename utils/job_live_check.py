@@ -1,10 +1,12 @@
 """
 Robust Live Job Availability and Soft-Closure Checker.
-Detects HTTP status codes (404, 410, etc.), redirect traps (e.g. ?not_found=true),
-and in-page closure phrases ("job not found", "no longer available", "position has been closed").
+Detects HTTP status codes (404, 410, etc.), direct ATS verification (Workday CXS, Greenhouse, Lever),
+redirect traps (e.g. ?not_found=true), and in-page closure phrases
+("the page you are looking for doesn't exist", "job not found", "no longer available", "position has been closed").
 """
-from typing import Tuple
-from urllib.parse import urlparse, parse_qs
+import re
+from typing import Tuple, Optional
+from urllib.parse import urlparse, parse_qs, urljoin
 import requests
 
 CLOSED_PHRASES = (
@@ -12,6 +14,17 @@ CLOSED_PHRASES = (
     "job not found",
     "posting has expired",
     "page not found",
+    "the page you are looking for doesn't exist",
+    "the page you are looking for does not exist",
+    "page you are looking for doesn't exist",
+    "page you are looking for does not exist",
+    "doesn't exist",
+    "does not exist",
+    "we couldn't find the page",
+    "we couldn't find that page",
+    "page could not be found",
+    "sorry, we can't find that page",
+    "sorry, we couldn't find that page",
     "no longer open",
     "position is closed",
     "position has been closed",
@@ -40,6 +53,11 @@ CLOSED_PHRASES = (
     "job is unlisted",
     "position you are looking for is no longer open",
     "the job you are trying to view is no longer available",
+    "document not found",
+    "job_posting_anchor_id=",
+    "\"errorcode\": \"s21\"",
+    "\"errorcode\":\"s21\"",
+    "not found: job_posting"
 )
 
 CLOSED_URL_SIGNALS = (
@@ -53,9 +71,80 @@ CLOSED_URL_SIGNALS = (
     "/404"
 )
 
+def _parse_workday_cxs_endpoint(url: str) -> Optional[str]:
+    """
+    Constructs internal Workday CXS detail endpoint from a public job URL.
+    Workday web pages return HTTP 200 with an empty SPA shell even when a job is 404.
+    The CXS API returns true HTTP 404 ("not found: Job_Posting_Anchor_ID=...")
+    or HTTP 200 with jobPostingInfo.
+    """
+    try:
+        parsed = urlparse(url)
+        host = parsed.netloc
+        if not host or "myworkdayjobs.com" not in host.lower():
+            return None
+        
+        parts = host.split(".")
+        if len(parts) < 3:
+            return None
+        tenant = parts[0]
+        
+        clean_path = parsed.path.strip("/")
+        path_segments = [p for p in clean_path.split("/") if p]
+        if path_segments and path_segments[-1].lower() == "apply":
+            path_segments = path_segments[:-1]
+        
+        if "job" not in path_segments:
+            return None
+            
+        job_idx = path_segments.index("job")
+        prefix = path_segments[:job_idx]
+        
+        # Filter out locale codes like en-US, fr-FR, es, etc.
+        locale_re = re.compile(r"^[a-z]{2}(-[A-Za-z]{2,4})?$", re.I)
+        site_parts = [p for p in prefix if not locale_re.match(p)]
+        site = site_parts[0] if site_parts else "External"
+        
+        job_path = "/" + "/".join(path_segments[job_idx:])
+        return f"https://{host}/wday/cxs/{tenant}/{site}{job_path}"
+    except Exception:
+        return None
+
+def _parse_lever_api_endpoint(url: str) -> Optional[str]:
+    try:
+        parsed = urlparse(url)
+        if "jobs.lever.co" not in parsed.netloc.lower():
+            return None
+        parts = [p for p in parsed.path.strip("/").split("/") if p]
+        if len(parts) >= 2:
+            company = parts[0]
+            job_id = parts[1].split("?")[0].split("#")[0]
+            if job_id and job_id.lower() != "apply":
+                return f"https://api.lever.co/v0/postings/{company}/{job_id}"
+    except Exception:
+        pass
+    return None
+
+def _parse_greenhouse_api_endpoint(url: str) -> Optional[str]:
+    try:
+        parsed = urlparse(url)
+        if "boards.greenhouse.io" not in parsed.netloc.lower():
+            return None
+        parts = [p for p in parsed.path.strip("/").split("/") if p]
+        if len(parts) >= 3 and parts[1].lower() == "jobs":
+            company = parts[0]
+            job_id = parts[2].split("?")[0].split("#")[0]
+            if job_id and job_id.lower() != "apply":
+                return f"https://boards-api.greenhouse.io/v1/boards/{company}/jobs/{job_id}"
+    except Exception:
+        pass
+    return None
+
 def check_url_live(url: str, timeout: int = 6, max_redirects: int = 5) -> Tuple[bool, int, str]:
     """
     Checks if a job URL is live and accessible.
+    Supports authoritative ATS endpoint inspection for Workday (CXS API),
+    Greenhouse, and Lever, as well as general HTTP status and in-page closure phrases.
     Returns (is_active: bool, http_status: int, details: str).
     """
     if not url:
@@ -74,6 +163,56 @@ def check_url_live(url: str, timeout: int = 6, max_redirects: int = 5) -> Tuple[
         "Accept-Language": "en-US,en;q=0.9"
     })
 
+    # 1. Authoritative ATS Direct API Verification
+    # Workday CXS Detail Endpoint
+    cxs_url = _parse_workday_cxs_endpoint(url)
+    if cxs_url:
+        try:
+            resp = session.get(cxs_url, headers={"Accept": "application/json"}, timeout=timeout)
+            if resp.status_code in (404, 410):
+                return False, 404, f"Job posting returned HTTP {resp.status_code} (Expired/Not Found: The page you are looking for doesn't exist)"
+            elif resp.status_code == 400 and ("not found" in resp.text.lower() or "errorcode" in resp.text.lower()):
+                return False, 404, f"Job posting returned HTTP 404 (Expired/Not Found: The page you are looking for doesn't exist)"
+            elif resp.status_code == 200:
+                try:
+                    data = resp.json()
+                    if "errorCode" in data:
+                        msg = data.get("message") or "The page you are looking for does not exist"
+                        return False, 404, f"Job posting returned HTTP 404 (Expired/Not Found: {msg})"
+                    if "jobPostingInfo" in data:
+                        return True, 200, "Workday CXS verified live and active"
+                except Exception:
+                    pass
+                return True, 200, "Workday CXS verified live and active"
+        except requests.exceptions.RequestException:
+            # Fall back to HTML navigation if network error
+            pass
+
+    # Greenhouse Direct Job Endpoint
+    gh_url = _parse_greenhouse_api_endpoint(url)
+    if gh_url:
+        try:
+            resp = session.get(gh_url, headers={"Accept": "application/json"}, timeout=timeout)
+            if resp.status_code in (404, 410):
+                return False, 404, f"Job posting returned HTTP {resp.status_code} (Expired/Not Found)"
+            elif resp.status_code == 200:
+                return True, 200, "Greenhouse API verified live and active"
+        except requests.exceptions.RequestException:
+            pass
+
+    # Lever Direct Job Endpoint
+    lev_url = _parse_lever_api_endpoint(url)
+    if lev_url:
+        try:
+            resp = session.get(lev_url, headers={"Accept": "application/json"}, timeout=timeout)
+            if resp.status_code in (404, 410):
+                return False, 404, f"Job posting returned HTTP {resp.status_code} (Expired/Not Found)"
+            elif resp.status_code == 200:
+                return True, 200, "Lever API verified live and active"
+        except requests.exceptions.RequestException:
+            pass
+
+    # 2. Standard HTTP and In-Page Verification
     current_url = url
     try:
         for _ in range(max_redirects):
@@ -85,7 +224,6 @@ def check_url_live(url: str, timeout: int = 6, max_redirects: int = 5) -> Tuple[
                 if not loc:
                     break
                 if loc.startswith("/"):
-                    from urllib.parse import urljoin
                     current_url = urljoin(current_url, loc)
                 else:
                     current_url = loc
