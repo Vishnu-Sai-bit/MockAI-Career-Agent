@@ -149,8 +149,7 @@ def run_job_refresh(limit_per_source: int = 25) -> Dict[str, Any]:
                             ~Job.source_job_id.in_(fetched_ids)
                         ).all()
                         for stale in stale_active_jobs:
-                            stale.status = "closed"
-                            stale.last_verified_at = utc_now()
+                            db.session.delete(stale)
                             total_closed_reconciled += 1
                         if stale_active_jobs:
                             db.session.commit()
@@ -250,7 +249,10 @@ def prune_dead_jobs(batch_size: int = 50) -> Dict[str, Any]:
         if is_live:
             active_count += 1
         else:
+            db.session.delete(job)
             closed_count += 1
+    if closed_count > 0:
+        db.session.commit()
 
     return {
         "checked": len(jobs_to_check),

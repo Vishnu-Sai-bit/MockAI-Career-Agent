@@ -64,6 +64,20 @@ class JobSearchService:
 
             query = query.filter(Job.status == status)
 
+        # Defensive exclusion of any closed or not-found vacancies
+        query = query.filter(
+            ~Job.title.ilike('%[closed]%'),
+            ~Job.title.ilike('%position closed%'),
+            ~Job.title.ilike('%job closed%'),
+            ~Job.title.ilike('%not found%'),
+            ~Job.title.ilike('%no longer accepting%'),
+            ~Job.title.ilike('%posting expired%'),
+            ~Job.apply_url.ilike('%not_found=true%'),
+            ~Job.apply_url.ilike('%job_closed=true%'),
+            ~Job.apply_url.ilike('%/not-found%'),
+            ~Job.apply_url.ilike('%/page-not-found%')
+        )
+
         # Multi-term keyword filtering
 
         if keyword:

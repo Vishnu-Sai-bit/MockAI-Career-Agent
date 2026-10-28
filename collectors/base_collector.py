@@ -52,7 +52,7 @@ class BaseCollector(ABC):
         """Fetch raw job records from the specific provider."""
         pass
 
-    def verify_job_live(self, original_url: str, apply_url: str) -> Tuple[bool, int, str]:
+    def verify_job_live(self, original_url: str, apply_url: str, **kwargs) -> Tuple[bool, int, str]:
         """
         Default HTTP verification for job availability with in-page content checking.
         Returns (is_active, http_status, details).

@@ -244,8 +244,7 @@ def refresh_jobs():
     try:
         stats = run_job_refresh(limit_per_source=20)
         from services.job_cleaner_service import JobCleanerService
-        JobCleanerService.purge_inactive_jobs()
-        JobCleanerService.purge_duplicate_jobs()
+        JobCleanerService.run_full_cleanup(check_network=False)
         active_resume = current_user.get_active_resume()
         if active_resume:
             from tasks.recompute_matches import recompute_user_matches
@@ -261,6 +260,27 @@ def refresh_jobs():
     except Exception as e:
         flash(f"Error during job refresh: {str(e)}", "danger")
     
+    return redirect(url_for("jobs.list_jobs"))
+
+@jobs_bp.route("/jobs/clean", methods=["GET", "POST"])
+def clean_jobs():
+    """
+    Repository Cleaner Route:
+    Purges inactive/closed listings, closure-signal records, invalid URLs,
+    and duplicates so candidates only see 100% verified active postings.
+    """
+    from services.job_cleaner_service import JobCleanerService
+    check_net = request.args.get("network", "false").lower() in ("true", "1", "yes")
+    stats = JobCleanerService.run_full_cleanup(check_network=check_net)
+    
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+        return jsonify({"success": True, "stats": stats})
+        
+    flash(
+        f"Repository sweep complete: Purged {stats['total_purged']} closed/not-found/duplicate postings. "
+        f"{stats['total_remaining_active']} verified active jobs remain.",
+        "success"
+    )
     return redirect(url_for("jobs.list_jobs"))
 
 @jobs_bp.route("/companies")
