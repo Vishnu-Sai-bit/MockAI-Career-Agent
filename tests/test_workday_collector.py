@@ -8,6 +8,10 @@ def test_workday_tenants_registry():
     assert "adobe" in WORKDAY_TENANTS
     assert "autodesk" in WORKDAY_TENANTS
     assert "target" in WORKDAY_TENANTS
+    assert "salesforce" in WORKDAY_TENANTS
+    assert "cisco" in WORKDAY_TENANTS
+    assert "intel" in WORKDAY_TENANTS
+    assert "mastercard" in WORKDAY_TENANTS
     assert "myworkdayjobs.com" in WORKDAY_TENANTS["nvidia"]["host"]
 
 def test_workday_fetch_jobs():

@@ -33,6 +33,60 @@ WORKDAY_TENANTS: Dict[str, Dict[str, str]] = {
         "tenant": "target",
         "site": "targetcareers",
         "company_name": "Target"
+    },
+    "salesforce": {
+        "host": "salesforce.wd12.myworkdayjobs.com",
+        "tenant": "salesforce",
+        "site": "External_Career_Site",
+        "company_name": "Salesforce"
+    },
+    "cisco": {
+        "host": "cisco.wd5.myworkdayjobs.com",
+        "tenant": "cisco",
+        "site": "Cisco_Careers",
+        "company_name": "Cisco"
+    },
+    "intel": {
+        "host": "intel.wd1.myworkdayjobs.com",
+        "tenant": "intel",
+        "site": "External",
+        "company_name": "Intel"
+    },
+    "walmart": {
+        "host": "walmart.wd5.myworkdayjobs.com",
+        "tenant": "walmart",
+        "site": "walmart_careers",
+        "company_name": "Walmart"
+    },
+    "mastercard": {
+        "host": "mastercard.wd1.myworkdayjobs.com",
+        "tenant": "mastercard",
+        "site": "Mastercard_Careers",
+        "company_name": "Mastercard"
+    },
+    "hp": {
+        "host": "hp.wd5.myworkdayjobs.com",
+        "tenant": "hp",
+        "site": "ExternalCareerSite",
+        "company_name": "HP"
+    },
+    "dell": {
+        "host": "dell.wd1.myworkdayjobs.com",
+        "tenant": "dell",
+        "site": "External",
+        "company_name": "Dell"
+    },
+    "nike": {
+        "host": "nike.wd1.myworkdayjobs.com",
+        "tenant": "nike",
+        "site": "Nike_Careers",
+        "company_name": "Nike"
+    },
+    "accenture": {
+        "host": "accenture.wd3.myworkdayjobs.com",
+        "tenant": "accenture",
+        "site": "Accenture_Careers",
+        "company_name": "Accenture"
     }
 }
 
