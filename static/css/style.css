@@ -142,7 +142,8 @@ body {
     }
 
     body.sidebar-collapsed .app-main-wrapper,
-    body.landing-mode .app-main-wrapper {
+    body.landing-mode .app-main-wrapper,
+    body.auth-mode .app-main-wrapper {
         margin-left: 0 !important;
     }
 }
@@ -694,4 +695,66 @@ footer {
 [data-bs-theme="dark"] .table-hover > tbody > tr:hover > * {
     background-color: rgba(255, 255, 255, 0.05) !important;
 }
+
+/* ==========================================================================
+   Clean Centered Authentication Layout (Login & Register)
+   ========================================================================== */
+.auth-wrapper {
+    background: radial-gradient(circle at 50% 20%, rgba(59, 130, 246, 0.04) 0%, transparent 70%);
+    min-height: 100vh;
+}
+
+.auth-container {
+    min-height: calc(100vh - 130px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1rem;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 440px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+    border-radius: 1rem;
+    background-color: var(--bs-body-bg);
+}
+
+[data-bs-theme="dark"] .auth-card {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35) !important;
+}
+
+.auth-card .input-group-text {
+    background-color: var(--bs-tertiary-bg);
+    border-color: var(--border-color);
+    color: var(--text-muted);
+}
+
+.auth-card .form-control {
+    border-color: var(--border-color);
+}
+
+.auth-card .form-control:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+.password-toggle-btn {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    background-color: var(--bs-tertiary-bg);
+    border-color: var(--border-color);
+    color: var(--text-muted);
+    cursor: pointer;
+    border-left: none;
+}
+
+.password-toggle-btn:hover {
+    color: var(--text-color);
+    background-color: var(--bs-secondary-bg);
+}
+
 

@@ -3,52 +3,90 @@
 {% block title %}Create Account — AI Job Agent{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card p-4 p-md-5 shadow-sm border-0 rounded-4 custom-card">
-                <div class="text-center mb-4">
-                    <div class="stat-icon stat-green mx-auto mb-3"><i class="bi bi-person-plus fs-3"></i></div>
-                    <h3 class="fw-bold text-dark">Get Started</h3>
-                    <p class="text-muted small">Create your account to start matching verified jobs</p>
-                </div>
-                <form method="POST" action="{{ url_for('auth.register') }}">
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Full Name</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
-                            <input type="text" name="full_name" class="form-control" placeholder="e.g. Alex Johnson" required autofocus>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Email Address</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="bi bi-envelope"></i></span>
-                            <input type="email" name="email" class="form-control" placeholder="name@example.com" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Password</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="bi bi-lock"></i></span>
-                            <input type="password" name="password" class="form-control" placeholder="At least 6 characters" minlength="6" required>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold">Confirm Password</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light"><i class="bi bi-shield-lock"></i></span>
-                            <input type="password" name="confirm_password" class="form-control" placeholder="Re-type password" minlength="6" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-primary-custom w-100 py-2">Create Free Account</button>
-                </form>
-                <div class="text-center mt-4 pt-2 border-top">
-                    <span class="text-muted small">Already have an account? </span>
-                    <a href="{{ url_for('auth.login') }}" class="small fw-semibold text-primary">Sign in</a>
+<div class="auth-container">
+    <div class="card auth-card p-4 p-sm-5 border">
+        <div class="text-center mb-4">
+            <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 54px; height: 54px; background: rgba(16, 185, 129, 0.12);">
+                <i class="bi bi-person-plus-fill fs-3 text-success"></i>
+            </div>
+            <h4 class="fw-bold mb-1 text-body">Create Account</h4>
+            <p class="text-secondary small mb-0">Join AI Job Agent for verified jobs & ATS intelligence</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('auth.register') }}">
+            <div class="mb-3">
+                <label class="form-label small fw-semibold text-body">Full Name</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person text-muted"></i></span>
+                    <input type="text" name="full_name" class="form-control" placeholder="e.g. Alex Johnson" required autofocus autocomplete="name">
                 </div>
             </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-semibold text-body">Email Address</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
+                    <input type="email" name="email" class="form-control" placeholder="name@example.com" required autocomplete="email">
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label small fw-semibold text-body">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock text-muted"></i></span>
+                    <input type="password" name="password" id="registerPassword" class="form-control" placeholder="At least 6 characters" minlength="6" required autocomplete="new-password">
+                    <button type="button" class="btn password-toggle-btn" onclick="togglePasswordVisibility('registerPassword', this)" title="Show / Hide Password" tabindex="-1">
+                        <i class="bi bi-eye text-muted"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label small fw-semibold text-body">Confirm Password</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-shield-lock text-muted"></i></span>
+                    <input type="password" name="confirm_password" id="registerConfirmPassword" class="form-control" placeholder="Re-type password" minlength="6" required autocomplete="new-password">
+                    <button type="button" class="btn password-toggle-btn" onclick="togglePasswordVisibility('registerConfirmPassword', this)" title="Show / Hide Password" tabindex="-1">
+                        <i class="bi bi-eye text-muted"></i>
+                    </button>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary-custom w-100 py-2 fw-semibold">
+                <i class="bi bi-check2-circle me-1"></i> Create Free Account
+            </button>
+        </form>
+
+        <div class="text-center mt-4 pt-3 border-top">
+            <p class="text-secondary small mb-2">
+                Already have an account?
+                <a href="{{ url_for('auth.login') }}" class="fw-semibold text-primary text-decoration-none">Sign in</a>
+            </p>
+            <a href="{{ url_for('jobs.list_jobs') }}" class="small text-secondary text-decoration-none d-inline-flex align-items-center gap-1">
+                <i class="bi bi-briefcase"></i> Browse verified jobs without signing in
+            </a>
         </div>
     </div>
 </div>
+
+<script>
+function togglePasswordVisibility(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        if (icon) {
+            icon.classList.remove('bi-eye');
+            icon.classList.add('bi-eye-slash');
+        }
+    } else {
+        input.type = 'password';
+        if (icon) {
+            icon.classList.remove('bi-eye-slash');
+            icon.classList.add('bi-eye');
+        }
+    }
+}
+</script>
 {% endblock %}

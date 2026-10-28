@@ -75,6 +75,32 @@ def test_sidebar_and_navigation_rendered(app_with_db):
     assert 'Relevant First' in html
     assert 'Past 24 Hours (1 Day)' in html
 
+def test_auth_pages_no_sidebar_centered(app_with_db):
+    """Ensure Login and Register pages do not show sidebar and render clean centered layout."""
+    client = app_with_db.test_client()
+
+    # Login Route
+    login_resp = client.get("/login")
+    assert login_resp.status_code == 200
+    login_html = login_resp.get_data(as_text=True)
+    assert 'id="appSidebar"' not in login_html
+    assert 'auth-mode' in login_html
+    assert 'auth-container' in login_html
+    assert 'auth-card' in login_html
+    assert 'togglePasswordVisibility' in login_html
+    # Check that brand link replaced the sidebar hamburger toggle
+    assert 'AI Job Agent' in login_html
+
+    # Register Route
+    reg_resp = client.get("/register")
+    assert reg_resp.status_code == 200
+    reg_html = reg_resp.get_data(as_text=True)
+    assert 'id="appSidebar"' not in reg_html
+    assert 'auth-mode' in reg_html
+    assert 'auth-container' in reg_html
+    assert 'auth-card' in reg_html
+    assert 'togglePasswordVisibility' in reg_html
+
 def test_matched_jobs_prioritized_first(app_with_db, test_user, test_source):
     from models.job_match import JobMatch
     now = datetime.now(timezone.utc)
