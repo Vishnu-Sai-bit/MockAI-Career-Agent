@@ -78,20 +78,54 @@ class JobSearchService:
             ~Job.apply_url.ilike('%/page-not-found%')
         )
 
-        # Dynamic On-Demand Workday Ingestion for 3,700+ CSV Companies
+        # Dynamic On-Demand Directory Ingestion for 14,700+ Verified Employers (Workday, Greenhouse, BambooHR)
         if keyword and len(keyword.strip()) >= 3:
+            kw_clean = keyword.strip()
+            # 1. Workday Directory Check
             try:
                 from services.workday_directory_service import workday_directory
-                matched_comp = workday_directory.get_company(keyword.strip())
-                if matched_comp:
+                matched_wd = workday_directory.get_company(kw_clean)
+                if matched_wd:
                     existing_count = Job.query.filter(
-                        Job.company.ilike(f"%{matched_comp['company_name']}%"),
+                        Job.company.ilike(f"%{matched_wd['company_name']}%"),
                         Job.status == "active"
                     ).count()
                     if existing_count == 0:
                         from services.workday_harvester_service import WorkdayHarvesterService
                         harvester = WorkdayHarvesterService()
-                        harvester.harvest_batch([matched_comp["slug"]], limit_companies=1, jobs_per_company=12)
+                        harvester.harvest_batch([matched_wd["slug"]], limit_companies=1, jobs_per_company=12)
+            except Exception:
+                pass
+
+            # 2. Greenhouse Directory Check
+            try:
+                from services.greenhouse_directory_service import greenhouse_directory
+                matched_gh = greenhouse_directory.get_company(kw_clean)
+                if matched_gh:
+                    existing_count = Job.query.filter(
+                        Job.company.ilike(f"%{matched_gh['company_name']}%"),
+                        Job.status == "active"
+                    ).count()
+                    if existing_count == 0:
+                        from services.enterprise_harvester_service import EnterpriseHarvesterService
+                        harvester = EnterpriseHarvesterService()
+                        harvester.harvest_greenhouse([matched_gh["board_token"]], jobs_per_company=12)
+            except Exception:
+                pass
+
+            # 3. BambooHR Directory Check
+            try:
+                from services.bamboohr_directory_service import bamboohr_directory
+                matched_bb = bamboohr_directory.get_company(kw_clean)
+                if matched_bb:
+                    existing_count = Job.query.filter(
+                        Job.company.ilike(f"%{matched_bb['company_name']}%"),
+                        Job.status == "active"
+                    ).count()
+                    if existing_count == 0:
+                        from services.enterprise_harvester_service import EnterpriseHarvesterService
+                        harvester = EnterpriseHarvesterService()
+                        harvester.harvest_bamboohr([matched_bb["subdomain"]], jobs_per_company=12)
             except Exception:
                 pass
 

@@ -20,16 +20,29 @@ class BambooHRCollector(BaseCollector):
     def fetch_jobs(self, company_key: str, limit: int = 25, **kwargs) -> List[RawJobRecord]:
         """
         Fetches job postings from BambooHR public careers endpoint.
-        Endpoint: https://{company_slug}.bamboohr.com/careers/list
+        Endpoint: https://{subdomain}.bamboohr.com/careers/list
+        Dynamically resolves company subdomains across 6,200+ enterprise BambooHR tenants.
         """
-        company_slug = company_key.lower().strip()
-        endpoint = f"https://{company_slug}.bamboohr.com/careers/list"
+        clean_key = (company_key or "").strip()
+        subdomain = clean_key.lower()
+        company_display = clean_key.replace("-", " ").title()
+
+        try:
+            from services.bamboohr_directory_service import bamboohr_directory
+            matched = bamboohr_directory.get_company(clean_key)
+            if matched:
+                subdomain = matched.get("subdomain", subdomain)
+                company_display = matched.get("company_name", company_display)
+        except Exception:
+            pass
+
+        endpoint = f"https://{subdomain}.bamboohr.com/careers/list"
         jobs: List[RawJobRecord] = []
 
         try:
             resp = self.session.get(endpoint, timeout=self.timeout)
             if resp.status_code != 200:
-                logger.info(f"BambooHR endpoint returned status {resp.status_code} for {company_slug}")
+                logger.info(f"BambooHR endpoint returned status {resp.status_code} for {clean_key} (subdomain: {subdomain})")
                 return jobs
 
             # BambooHR careers/list returns JSON with result list
@@ -49,35 +62,44 @@ class BambooHRCollector(BaseCollector):
                 if not job_id:
                     continue
 
-                title = item.get("jobOpeningName", item.get("title", "")).strip()
-                dept = item.get("department", "")
-                location = item.get("location", {}).get("city", "") if isinstance(item.get("location"), dict) else str(item.get("location", ""))
+                title = (item.get("jobOpeningName") or item.get("title") or "").strip()
+                dept = (item.get("department") or "").strip()
+                loc_raw = item.get("location")
+                if isinstance(loc_raw, dict):
+                    city = loc_raw.get("city") or ""
+                    state = loc_raw.get("state") or ""
+                    location = f"{city}, {state}".strip(", ") if city or state else ""
+                else:
+                    location = str(loc_raw or "").strip()
                 
-                job_url = f"https://{company_slug}.bamboohr.com/careers/{job_id}"
-                apply_url = f"https://{company_slug}.bamboohr.com/careers/{job_id}/apply"
+                emp_type = (item.get("employmentType") or "full-time").strip().lower()
+                title_lower = title.lower()
+
+                job_url = f"https://{subdomain}.bamboohr.com/careers/{job_id}"
+                apply_url = f"https://{subdomain}.bamboohr.com/careers/{job_id}/apply"
 
                 record = RawJobRecord(
                     source_platform=self.platform_name,
-                    source_company_key=company_slug,
+                    source_company_key=clean_key,
                     source_job_id=job_id,
                     title=title,
-                    company=company_slug.replace("-", " ").title(),
+                    company=company_display,
                     department=dept,
                     location=location or "Multiple Locations",
-                    work_mode="hybrid" if "hybrid" in title.lower() else ("remote" if "remote" in title.lower() else "on-site"),
-                    employment_type=item.get("employmentType", "full-time").lower(),
+                    work_mode="hybrid" if "hybrid" in title_lower else ("remote" if "remote" in title_lower else "on-site"),
+                    employment_type=emp_type or "full-time",
                     description=f"Job opening for {title} in {dept or 'team'}.",
                     raw_description=f"<p>Job opening for {title} in {dept or 'team'}.</p>",
                     required_skills=[dept] if dept else [],
                     original_url=job_url,
                     apply_url=apply_url,
                     published_at=datetime.now(timezone.utc),
-                    source_metadata={"bamboohr_id": job_id, "department": dept}
+                    source_metadata={"bamboohr_id": job_id, "subdomain": subdomain, "department": dept}
                 )
                 jobs.append(record)
 
         except Exception as e:
-            logger.error(f"Error fetching BambooHR jobs for {company_slug}: {e}")
+            logger.error(f"Error fetching BambooHR jobs for {clean_key}: {e}")
 
         return jobs
 

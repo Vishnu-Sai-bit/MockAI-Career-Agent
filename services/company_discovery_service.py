@@ -72,15 +72,31 @@ PLATFORM_COMPANY_CATALOG = {
 
 class CompanyDiscoveryService:
     def get_catalog_stats(self) -> Dict[str, Any]:
-        """Returns statistics on all cataloged companies across platforms including 3,700+ Workday employers."""
+        """Returns statistics on all cataloged companies across platforms including Workday, Greenhouse, and BambooHR directories."""
         breakdown = {plat: len(comps) for plat, comps in PLATFORM_COMPANY_CATALOG.items()}
         try:
             from services.workday_directory_service import workday_directory
             w_stats = workday_directory.get_stats()
             breakdown["workday_directory"] = w_stats["total_companies"]
-            total = sum(len(comps) for plat, comps in PLATFORM_COMPANY_CATALOG.items() if plat != "workday") + w_stats["total_companies"]
         except Exception:
-            total = sum(len(comps) for comps in PLATFORM_COMPANY_CATALOG.values())
+            w_stats = {"total_companies": 0}
+
+        try:
+            from services.greenhouse_directory_service import greenhouse_directory
+            gh_stats = greenhouse_directory.get_stats()
+            breakdown["greenhouse_directory"] = gh_stats["total_companies"]
+        except Exception:
+            gh_stats = {"total_companies": 0}
+
+        try:
+            from services.bamboohr_directory_service import bamboohr_directory
+            bb_stats = bamboohr_directory.get_stats()
+            breakdown["bamboohr_directory"] = bb_stats["total_companies"]
+        except Exception:
+            bb_stats = {"total_companies": 0}
+
+        catalog_base = sum(len(comps) for plat, comps in PLATFORM_COMPANY_CATALOG.items() if plat not in ("workday", "greenhouse"))
+        total = catalog_base + w_stats["total_companies"] + gh_stats["total_companies"] + bb_stats["total_companies"]
 
         return {
             "total_supported_employers": total,
@@ -142,6 +158,11 @@ class CompanyDiscoveryService:
         if "recruitee.com" in host:
             sub = host.split(".")[0]
             return ("recruitee", sub)
+
+        # BambooHR
+        if "bamboohr.com" in host:
+            sub = host.split(".")[0]
+            return ("bamboohr", sub)
 
         return None
 

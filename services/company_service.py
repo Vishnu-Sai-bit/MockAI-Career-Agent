@@ -220,6 +220,10 @@ class CompanyService:
             company_list = [c for c in company_list if c["total_jobs"] >= 5]
         elif filter_type == "workday":
             company_list = [c for c in company_list if "Workday" in c["platforms"]]
+        elif filter_type == "greenhouse":
+            company_list = [c for c in company_list if "Greenhouse" in c["platforms"]]
+        elif filter_type == "bamboohr":
+            company_list = [c for c in company_list if any("bamboo" in p.lower() for p in c["platforms"])]
         elif filter_type == "dream" and user_id:
             company_list = [c for c in company_list if c["is_dream"]]
 

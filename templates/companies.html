@@ -41,6 +41,8 @@
                             <option value="remote" {% if filter_type == 'remote' %}selected{% endif %}>Remote-Friendly</option>
                             <option value="top" {% if filter_type == 'top' %}selected{% endif %}>Top Employers (5+ Jobs)</option>
                             <option value="workday" {% if filter_type == 'workday' %}selected{% endif %}>Workday Enterprises (3,700+ Directory)</option>
+                            <option value="greenhouse" {% if filter_type == 'greenhouse' %}selected{% endif %}>Greenhouse Enterprises (5,500+ Directory)</option>
+                            <option value="bamboohr" {% if filter_type == 'bamboohr' %}selected{% endif %}>BambooHR Enterprises (6,200+ Directory)</option>
                             {% if current_user.is_authenticated %}
                                 <option value="dream" {% if filter_type == 'dream' %}selected{% endif %}>My Dream Companies</option>
                             {% endif %}
@@ -64,7 +66,13 @@
                 <small class="text-muted me-1 fs-8"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Quick Filter:</small>
                 <a href="{{ url_for('jobs.list_companies', filter='all') }}" class="badge {% if filter_type == 'all' %}bg-primary text-white{% else %}bg-light text-primary border{% endif %} text-decoration-none py-1 px-2">All</a>
                 <a href="{{ url_for('jobs.list_companies', filter='workday') }}" class="badge {% if filter_type == 'workday' %}bg-info text-white{% else %}bg-light text-info border{% endif %} text-decoration-none py-1 px-2">
-                    <i class="bi bi-briefcase-fill me-1"></i>Workday (3,700+ Directory)
+                    <i class="bi bi-briefcase-fill me-1"></i>Workday (3,700+)
+                </a>
+                <a href="{{ url_for('jobs.list_companies', filter='greenhouse') }}" class="badge {% if filter_type == 'greenhouse' %}bg-success text-white{% else %}bg-light text-success border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-diagram-3-fill me-1"></i>Greenhouse (5,500+)
+                </a>
+                <a href="{{ url_for('jobs.list_companies', filter='bamboohr') }}" class="badge {% if filter_type == 'bamboohr' %}bg-warning text-dark{% else %}bg-light text-dark border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-people-fill me-1"></i>BambooHR (6,200+)
                 </a>
                 <a href="{{ url_for('jobs.list_companies', filter='mnc') }}" class="badge {% if filter_type == 'mnc' %}bg-primary text-white{% else %}bg-light text-primary border{% endif %} text-decoration-none py-1 px-2">
                     <i class="bi bi-globe me-1"></i>Top MNCs

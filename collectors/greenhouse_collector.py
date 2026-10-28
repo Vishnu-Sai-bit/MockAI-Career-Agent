@@ -11,13 +11,27 @@ class GreenhouseCollector(BaseCollector):
         """
         Fetch public jobs from Greenhouse Job Board API:
         https://boards-api.greenhouse.io/v1/boards/{company}/jobs?content=true
+        Dynamically resolves company tokens across 5,500+ enterprise Greenhouse tenants.
         """
-        url = f"https://boards-api.greenhouse.io/v1/boards/{company_key}/jobs?content=true"
+        clean_key = (company_key or "").strip()
+        board_token = clean_key.lower()
+        company_display = clean_key.replace("-", " ").title()
+
+        try:
+            from services.greenhouse_directory_service import greenhouse_directory
+            matched = greenhouse_directory.get_company(clean_key)
+            if matched:
+                board_token = matched.get("board_token", board_token)
+                company_display = matched.get("company_name", company_display)
+        except Exception:
+            pass
+
+        url = f"https://boards-api.greenhouse.io/v1/boards/{board_token}/jobs?content=true"
         jobs: List[RawJobRecord] = []
         try:
             resp = self.session.get(url, timeout=self.timeout)
             if resp.status_code != 200:
-                logger.warning(f"Greenhouse API returned {resp.status_code} for company {company_key}")
+                logger.warning(f"Greenhouse API returned {resp.status_code} for company {clean_key} (token: {board_token})")
                 return jobs
 
             data = resp.json()
@@ -50,10 +64,10 @@ class GreenhouseCollector(BaseCollector):
 
                 job_record = RawJobRecord(
                     source_platform=self.platform_name,
-                    source_company_key=company_key,
+                    source_company_key=clean_key,
                     source_job_id=job_id,
                     title=title,
-                    company=company_key.replace("-", " ").title(),
+                    company=company_display,
                     department=dept_str,
                     location=location_name,
                     work_mode=work_mode,
@@ -67,7 +81,7 @@ class GreenhouseCollector(BaseCollector):
                 jobs.append(job_record)
 
         except Exception as e:
-            logger.error(f"Error fetching Greenhouse jobs for {company_key}: {e}")
+            logger.error(f"Error fetching Greenhouse jobs for {clean_key}: {e}")
 
         return jobs
 
@@ -76,7 +90,16 @@ class GreenhouseCollector(BaseCollector):
         Verify single Greenhouse posting via public single-job endpoint if available.
         """
         if company_key and job_id:
-            api_url = f"https://boards-api.greenhouse.io/v1/boards/{company_key}/jobs/{job_id}"
+            board_token = company_key.strip()
+            try:
+                from services.greenhouse_directory_service import greenhouse_directory
+                matched = greenhouse_directory.get_company(company_key)
+                if matched:
+                    board_token = matched.get("board_token", board_token)
+            except Exception:
+                pass
+
+            api_url = f"https://boards-api.greenhouse.io/v1/boards/{board_token}/jobs/{job_id}"
             try:
                 resp = self.session.get(api_url, timeout=self.timeout)
                 if resp.status_code == 200:
