@@ -20,14 +20,20 @@ class TheMuseCollector(BaseCollector):
     def fetch_jobs(self, company_key: str = "all", limit: int = 20, **kwargs) -> List[RawJobRecord]:
         """
         Fetches public jobs from The Muse API:
-        https://www.themuse.com/api/public/jobs?page=1
+        https://www.themuse.com/api/public/jobs?page=1&descending=true
+        Verifies live link availability to strictly reject dead / 404 / 'not found' listings.
         """
         page = kwargs.get("page", 1)
-        url = f"https://www.themuse.com/api/public/jobs?page={page}"
+        api_key = os.getenv("THEMUSE_API_KEY", "")
+        params = {"page": page, "descending": "true"}
+        if api_key:
+            params["api_key"] = api_key
+
+        url = "https://www.themuse.com/api/public/jobs"
         jobs: List[RawJobRecord] = []
 
         try:
-            resp = self.session.get(url, timeout=self.timeout)
+            resp = self.session.get(url, params=params, timeout=self.timeout)
             if resp.status_code != 200:
                 logger.warning(f"The Muse API returned {resp.status_code}")
                 return jobs
@@ -35,9 +41,23 @@ class TheMuseCollector(BaseCollector):
             data = resp.json()
             results = data.get("results", [])
 
-            for item in results[:limit]:
+            from utils.job_live_check import check_url_live
+
+            for item in results:
+                if len(jobs) >= limit:
+                    break
+
                 job_id = str(item.get("id", "")).strip()
                 if not job_id:
+                    continue
+
+                landing_page = item.get("refs", {}).get("landing_page", "").strip()
+                if not landing_page:
+                    continue
+
+                # Strictly verify link is live to prevent 404 / 'job not found' dead listings
+                is_live, _, _ = check_url_live(landing_page, timeout=3)
+                if not is_live:
                     continue
 
                 title = item.get("name", "").strip()
@@ -48,11 +68,7 @@ class TheMuseCollector(BaseCollector):
                 loc_names = [l.get("name") for l in locations if isinstance(l, dict) and l.get("name")]
                 location_str = ", ".join(loc_names) if loc_names else "United States"
 
-                work_mode = "remote" if any("flexible" in l.lower() or "remote" in l.lower() for l in loc_names) else "on-site"
-
-                landing_page = item.get("refs", {}).get("landing_page", "").strip()
-                if not landing_page:
-                    continue
+                work_mode = "remote" if any("flexible" in (l or "").lower() or "remote" in (l or "").lower() for l in loc_names) else "on-site"
 
                 raw_contents = item.get("contents", "")
                 plain_desc = BeautifulSoup(raw_contents, "html.parser").get_text(separator="\n").strip() if raw_contents else ""

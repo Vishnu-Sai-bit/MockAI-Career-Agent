@@ -65,7 +65,7 @@ class RecruiteeCollector(BaseCollector):
 
                 # URLs
                 careers_url = item.get("careers_url") or f"https://{company_slug}.recruitee.com/o/{slug}"
-                apply_url = f"{careers_url}/new" if "/o/" in careers_url else careers_url
+                apply_url = careers_url
 
                 # Clean description and requirements
                 desc_html = item.get("description", "") or ""
