@@ -125,3 +125,19 @@ def test_toggle_company_follow_api(comp_app):
     data_unfollow = resp_unfollow.get_json()
     assert data_unfollow["success"] is True
     assert data_unfollow["is_following"] is False
+
+
+def test_companies_route_mnc_filter_and_badge(comp_app):
+    client = comp_app.test_client()
+    resp = client.get("/companies?filter=mnc")
+    assert resp.status_code == 200
+    html = resp.get_data(as_text=True)
+    assert 'title="Stripe"' in html
+    assert 'title="Spotify"' in html
+    assert "MNC" in html
+
+    # Test /jobs?company_type=mnc
+    jobs_resp = client.get("/jobs?company_type=mnc")
+    assert jobs_resp.status_code == 200
+    jobs_html = jobs_resp.get_data(as_text=True)
+    assert "Top MNCs" in jobs_html

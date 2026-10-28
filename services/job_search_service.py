@@ -40,7 +40,9 @@ class JobSearchService:
 
         sort_by: str = "fresh",
 
-        only_relevant: bool = False
+        only_relevant: bool = False,
+
+        company_type: Optional[str] = None
 
     ) -> Dict[str, Any]:
 
@@ -121,6 +123,10 @@ class JobSearchService:
         if experience_level and experience_level.lower() != "all":
 
             query = query.filter(Job.experience_level == experience_level.lower())
+
+        if company_type and company_type.lower() == "mnc":
+            from services.company_service import MNC_KEYWORDS
+            query = query.filter(or_(*[Job.company.ilike(f"%{k}%") for k in MNC_KEYWORDS]))
 
         # Date posted filtering (24h, 1d, 3d, 7d, 14d, 30d)
 

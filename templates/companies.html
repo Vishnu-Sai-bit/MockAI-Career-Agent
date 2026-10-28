@@ -36,6 +36,7 @@
                         <span class="input-group-text bg-light"><i class="bi bi-funnel text-muted"></i></span>
                         <select name="filter" class="form-select" onchange="this.form.submit()">
                             <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All Companies ({{ total_companies }})</option>
+                            <option value="mnc" {% if filter_type == 'mnc' %}selected{% endif %}>Global MNCs</option>
                             <option value="india" {% if filter_type == 'india' %}selected{% endif %}>Hiring in India</option>
                             <option value="remote" {% if filter_type == 'remote' %}selected{% endif %}>Remote-Friendly</option>
                             <option value="top" {% if filter_type == 'top' %}selected{% endif %}>Top Employers (5+ Jobs)</option>
@@ -94,6 +95,11 @@
 
                             <!-- Badges -->
                             <div class="d-flex flex-wrap align-items-center gap-1 mb-2">
+                                {% if c.is_mnc %}
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle" title="Multinational Corporation">
+                                        <i class="bi bi-globe me-1"></i>MNC
+                                    </span>
+                                {% endif %}
                                 <span class="badge bg-primary-subtle text-primary fw-semibold">
                                     <i class="bi bi-briefcase me-1"></i>{{ c.total_jobs }} Open {{ 'Role' if c.total_jobs == 1 else 'Roles' }}
                                 </span>

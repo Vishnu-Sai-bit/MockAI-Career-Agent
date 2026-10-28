@@ -22,6 +22,16 @@ INDIA_KEYWORDS = [
     "delhi", "noida", "gurgaon", "gurugram", "chennai", "kolkata"
 ]
 
+MNC_KEYWORDS = {
+    "stripe", "databricks", "cloudflare", "gitlab", "coinbase", "elastic", "airbnb", 
+    "pinterest", "robinhood", "palantir", "figma", "reddit", "nvidia", "twilio", 
+    "spotify", "inmobi", "autodesk", "avery dennison", "wise", "adobe", "servicenow", 
+    "uber", "bank of america", "centene", "meta", "dell", "cognizant", "accenture", 
+    "openai", "anthropic", "perplexity", "discord", "instacart", "supabase", "linear", 
+    "bunq", "wikimedia", "brex", "groww", "google", "microsoft", "amazon", "apple", 
+    "salesforce", "cisco", "intel", "sap", "ibm", "samsara", "binance"
+}
+
 KNOWN_COMPANY_DOMAINS = {
     "stripe": "stripe.com",
     "gitlab": "gitlab.com",
@@ -136,6 +146,10 @@ class CompanyService:
             domain = resolve_company_domain(c_name, sample_url)
             is_dream = c_name.lower().strip() in dream_companies
 
+            # Check if organization qualifies as Multinational Corporation (MNC)
+            countries = {j.country.strip().lower() for j in jobs if j.country and j.country.strip()}
+            is_mnc = len(countries) >= 2 or len(jobs) >= 15 or any(k in c_name.lower() for k in MNC_KEYWORDS)
+
             # Top 3 role titles for preview
             sample_titles = [j.title for j in jobs[:3]]
 
@@ -144,6 +158,7 @@ class CompanyService:
                 "total_jobs": len(jobs),
                 "has_india": has_india,
                 "has_remote": has_remote,
+                "is_mnc": is_mnc,
                 "platforms": sorted(list(platforms)),
                 "primary_platform": sorted(list(platforms))[0] if platforms else "Direct",
                 "top_locations": sorted(list(locs))[:2],
@@ -158,7 +173,9 @@ class CompanyService:
             q_clean = search_query.strip().lower()
             company_list = [c for c in company_list if q_clean in c["name"].lower()]
 
-        if filter_type == "india":
+        if filter_type == "mnc":
+            company_list = [c for c in company_list if c["is_mnc"]]
+        elif filter_type == "india":
             company_list = [c for c in company_list if c["has_india"]]
         elif filter_type == "remote":
             company_list = [c for c in company_list if c["has_remote"]]

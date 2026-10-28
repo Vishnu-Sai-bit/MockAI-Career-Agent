@@ -23,7 +23,7 @@
     <!-- Compact Search & Collapsible Filters Bar -->
     <div class="card p-3 custom-card border-0 bg-white shadow-sm mb-4">
         <form method="GET" action="{{ url_for('jobs.list_jobs') }}" id="jobsSearchForm">
-            {% set active_filter_count = (1 if experience_level and experience_level != 'all' else 0) + (1 if work_mode and work_mode != 'all' else 0) + (1 if date_posted and date_posted != 'all' else 0) + (1 if platform and platform != 'all' else 0) + (1 if sort_by and sort_by != 'fresh' else 0) %}
+            {% set active_filter_count = (1 if experience_level and experience_level != 'all' else 0) + (1 if work_mode and work_mode != 'all' else 0) + (1 if date_posted and date_posted != 'all' else 0) + (1 if platform and platform != 'all' else 0) + (1 if sort_by and sort_by != 'fresh' else 0) + (1 if company_type and company_type != 'all' else 0) %}
 
             <!-- Primary Compact Search Row -->
             <div class="row g-2 align-items-center">
@@ -60,10 +60,36 @@
                 </div>
             </div>
 
+            <!-- Quick Explore Presets -->
+            <div class="d-flex flex-wrap align-items-center gap-1 mt-2 pt-2 border-top">
+                <small class="text-muted me-1 fs-8"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Quick Explore:</small>
+                <a href="{{ url_for('jobs.list_jobs', company_type='mnc') }}" class="badge {% if company_type == 'mnc' %}bg-primary text-white{% else %}bg-light text-primary border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-globe me-1"></i>Top MNCs
+                </a>
+                <a href="{{ url_for('jobs.list_jobs', location='India') }}" class="badge {% if location == 'India' %}bg-success text-white{% else %}bg-light text-success border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-geo-alt-fill me-1"></i>India Roles
+                </a>
+                <a href="{{ url_for('jobs.list_jobs', work_mode='remote') }}" class="badge {% if work_mode == 'remote' %}bg-info text-white{% else %}bg-light text-info border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-laptop me-1"></i>Remote
+                </a>
+                <a href="{{ url_for('jobs.list_jobs', q='Data Analyst') }}" class="badge bg-light text-dark border text-decoration-none py-1 px-2">
+                    <i class="bi bi-graph-up me-1"></i>Data Analyst
+                </a>
+                <a href="{{ url_for('jobs.list_jobs', q='Software Engineer') }}" class="badge bg-light text-dark border text-decoration-none py-1 px-2">
+                    <i class="bi bi-code-slash me-1"></i>Software Engineer
+                </a>
+            </div>
+
             <!-- Active Filter Quick Chips (Only visible when filters are applied) -->
             {% if active_filter_count > 0 or keyword or location %}
                 <div class="d-flex flex-wrap align-items-center gap-1 mt-2 pt-2 border-top">
                     <small class="text-muted me-1 fs-8"><i class="bi bi-check2-circle text-primary me-1"></i>Active:</small>
+                    {% if company_type and company_type != 'all' %}
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                            <i class="bi bi-globe me-1"></i>MNCs
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}" class="text-primary ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    {% endif %}
                     {% if keyword %}
                         <span class="badge bg-light text-dark border">
                             Keyword: {{ keyword }}
@@ -359,13 +385,13 @@
             <nav class="mt-4">
                 <ul class="pagination justify-content-center">
                     <li class="page-item {% if not results.has_prev %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('jobs.list_jobs', page=results.page - 1, q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}">Previous</a>
+                        <a class="page-link" href="{{ url_for('jobs.list_jobs', page=results.page - 1, q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, company_type=company_type) }}">Previous</a>
                     </li>
                     <li class="page-item active">
                         <span class="page-link">{{ results.page }} / {{ results.pages }}</span>
                     </li>
                     <li class="page-item {% if not results.has_next %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('jobs.list_jobs', page=results.page + 1, q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}">Next</a>
+                        <a class="page-link" href="{{ url_for('jobs.list_jobs', page=results.page + 1, q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, company_type=company_type) }}">Next</a>
                     </li>
                 </ul>
             </nav>
