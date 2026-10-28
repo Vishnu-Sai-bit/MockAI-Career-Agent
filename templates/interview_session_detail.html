@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Practice Session Review — {{ session.role_title }} at {{ session.company }}{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 960px;">
+    <!-- Breadcrumb & Nav -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb small mb-0">
+                <li class="breadcrumb-item"><a href="{{ url_for('dashboard.dashboard') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('interview.interview_hub') }}">Interview Prep</a></li>
+                <li class="breadcrumb-item active">Session #{{ session.id }} Review</li>
+            </ol>
+        </nav>
+        <div class="d-flex gap-2">
+            {% if session.job_id %}
+                <a href="{{ url_for('interview.start_interview', job_id=session.job_id) }}" class="btn btn-primary-custom btn-sm d-flex align-items-center gap-1">
+                    <i class="bi bi-arrow-repeat"></i> Practice Again
+                </a>
+            {% endif %}
+            <a href="{{ url_for('interview.interview_hub') }}" class="btn btn-outline-secondary btn-sm">
+                Interview Hub
+            </a>
+        </div>
+    </div>
+
+    <!-- Session Score Header -->
+    <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <span class="badge bg-primary-subtle text-primary mb-2">Practice Session Review</span>
+                <h4 class="fw-bold text-dark mb-1">{{ session.role_title }}</h4>
+                <div class="text-secondary small">
+                    <i class="bi bi-building me-1"></i>{{ session.company }} • 
+                    <i class="bi bi-calendar3 me-1"></i>{{ session.created_at.strftime('%b %d, %Y at %I:%M %p') }}
+                </div>
+            </div>
+            <div class="d-flex gap-3 text-center">
+                <div class="p-3 bg-light rounded-3 border">
+                    <div class="fs-3 fw-bold {% if session.overall_score >= 80 %}text-success{% elif session.overall_score >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                        {{ session.overall_score|round|int }}%
+                    </div>
+                    <small class="text-muted fw-semibold">Overall STAR</small>
+                </div>
+                <div class="p-3 bg-light rounded-3 border">
+                    <div class="fs-3 fw-bold text-primary">{{ session.delivery_score|round|int }}%</div>
+                    <small class="text-muted fw-semibold">Speech Delivery</small>
+                </div>
+                <div class="p-3 bg-light rounded-3 border">
+                    <div class="fs-3 fw-bold text-dark">{{ session.average_wpm|round|int }}</div>
+                    <small class="text-muted fw-semibold">Pace (WPM)</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Answers Review List -->
+    <div class="d-flex flex-column gap-4">
+        {% for ans in session.answers %}
+            <div class="card p-4 custom-card border-0 bg-white shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-secondary-subtle text-secondary small">{{ ans.question_type }}</span>
+                    <span class="badge {% if ans.overall_score >= 80 %}bg-success text-white{% elif ans.overall_score >= 60 %}bg-warning-subtle text-warning-emphasis{% else %}bg-danger-subtle text-danger{% endif %}">
+                        Score: {{ ans.overall_score|round|int }}/100
+                    </span>
+                </div>
+                <h5 class="fw-bold text-dark mb-3">Q{{ loop.index }}: {{ ans.question_text }}</h5>
+
+                <!-- Candidate Answer -->
+                <div class="p-3 rounded-3 bg-light border mb-3">
+                    <strong class="d-block small text-muted mb-1"><i class="bi bi-person-fill me-1"></i>Your Answer:</strong>
+                    <p class="mb-0 small text-dark" style="white-space: pre-wrap;">{{ ans.user_answer }}</p>
+                </div>
+
+                <!-- STAR Breakdown -->
+                {% if ans.star_breakdown %}
+                    <h6 class="fw-bold text-dark small mb-2"><i class="bi bi-star-fill text-warning me-1"></i>STAR Method Evaluation:</h6>
+                    <div class="row g-2 mb-3">
+                        {% for part, data in ans.star_breakdown.items() %}
+                            <div class="col-md-6">
+                                <div class="p-2 border rounded bg-body-tertiary small h-100">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <strong class="text-uppercase" style="font-size: 0.72rem;">{{ part }}</strong>
+                                        <span class="badge bg-white border text-dark">{{ data.score }}%</span>
+                                    </div>
+                                    <div class="text-secondary" style="font-size: 0.8rem;">{{ data.feedback }}</div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Strengths & Areas to Improve -->
+                <div class="row g-3 mb-3">
+                    {% if ans.strengths %}
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-3 bg-success-subtle border border-success-subtle h-100">
+                                <h6 class="fw-bold text-success small mb-2"><i class="bi bi-check-circle-fill me-1"></i>Key Strengths</h6>
+                                <ul class="small text-secondary mb-0 ps-3">
+                                    {% for s in ans.strengths %}
+                                        <li>{{ s }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% if ans.areas_for_improvement %}
+                        <div class="col-md-6">
+                            <div class="p-3 rounded-3 bg-warning-subtle border border-warning-subtle h-100">
+                                <h6 class="fw-bold text-warning-emphasis small mb-2"><i class="bi bi-exclamation-triangle-fill me-1"></i>Areas for Improvement</h6>
+                                <ul class="small text-secondary mb-0 ps-3">
+                                    {% for imp in ans.areas_for_improvement %}
+                                        <li>{{ imp }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Exemplar Answer -->
+                {% if ans.improved_exemplar_answer %}
+                    <div class="p-3 rounded-3 border bg-info-subtle border-info-subtle">
+                        <strong class="d-block small text-info-emphasis mb-1"><i class="bi bi-magic me-1"></i>Polished Exemplar STAR Answer:</strong>
+                        <p class="mb-0 small text-secondary" style="font-style: italic;">{{ ans.improved_exemplar_answer }}</p>
+                    </div>
+                {% endif %}
+
+                <!-- Follow-up Question If Asked -->
+                {% if ans.followup_question %}
+                    <div class="p-3 rounded-3 border bg-light mt-3">
+                        <strong class="d-block small text-primary mb-1"><i class="bi bi-arrow-return-right me-1"></i>Interviewer Follow-up Question:</strong>
+                        <p class="mb-0 small text-dark fw-semibold">"{{ ans.followup_question }}"</p>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

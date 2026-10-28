@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Interview Prep Cheat Sheet — {{ job.title }} at {{ job.company }}{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 960px;">
+    <!-- Action Bar (Hidden when printing) -->
+    <div class="d-flex justify-content-between align-items-center mb-4 d-print-none">
+        <a href="{{ url_for('interview.start_interview', job_id=job.id) }}" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
+            <i class="bi bi-arrow-left"></i> Back to Simulator
+        </a>
+        <div class="d-flex gap-2">
+            <button onclick="window.print()" class="btn btn-primary-custom btn-sm d-flex align-items-center gap-1">
+                <i class="bi bi-printer"></i> Print / Save as PDF
+            </button>
+            <a href="{{ url_for('interview.interview_hub') }}" class="btn btn-outline-custom btn-sm">
+                Interview Hub
+            </a>
+        </div>
+    </div>
+
+    <!-- Printable Cheat Sheet Card -->
+    <div class="card p-4 p-md-5 border-0 shadow-sm bg-white print-card">
+        <!-- Header -->
+        <div class="border-bottom pb-4 mb-4">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+                <div>
+                    <span class="badge bg-primary-subtle text-primary mb-2">Pre-Interview Briefing & Talking Points</span>
+                    <h2 class="fw-bold text-dark mb-1">{{ job.title }}</h2>
+                    <h5 class="text-secondary fw-semibold mb-2"><i class="bi bi-building me-1"></i>{{ job.company }}</h5>
+                    <div class="d-flex flex-wrap gap-2 text-muted small">
+                        <span><i class="bi bi-geo-alt me-1"></i>{{ job.location or 'Global / Remote' }}</span>
+                        <span>•</span>
+                        <span><i class="bi bi-briefcase me-1"></i>{{ job.work_mode|title }}</span>
+                        <span>•</span>
+                        <span><i class="bi bi-person-badge me-1"></i>{{ job.experience_level|title }}</span>
+                    </div>
+                </div>
+                <div class="text-end d-none d-sm-block">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle p-2">
+                        <i class="bi bi-shield-check me-1"></i>Verified Live Posting
+                    </span>
+                    <div class="small text-muted mt-2">Candidate: <strong>{{ profile.full_name if profile and profile.full_name else 'Candidate' }}</strong></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 15-Minute Pre-Interview Checklist -->
+        <div class="mb-4 p-3 rounded-3 bg-light border">
+            <h6 class="fw-bold text-dark mb-2"><i class="bi bi-clock-history text-primary me-2"></i>T-Minus 15 Minutes Checklist</h6>
+            <div class="row g-2 small">
+                {% for item in sheet.pre_interview_checklist %}
+                    <div class="col-md-6 d-flex align-items-start gap-2">
+                        <i class="bi bi-check-circle-fill text-success mt-1"></i>
+                        <span>{{ item }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Core Talking Points -->
+        <div class="mb-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-bullseye text-danger me-2"></i>Strategic Talking Points</h5>
+            <div class="list-group list-group-flush border rounded-3">
+                {% for pt in sheet.core_talking_points %}
+                    <div class="list-group-item d-flex align-items-center gap-2 py-2">
+                        <i class="bi bi-arrow-right-circle text-primary"></i>
+                        <span class="small fw-semibold text-secondary">{{ pt }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Prepared Questions & STAR Blueprints -->
+        <div class="mb-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-chat-quote-fill text-primary me-2"></i>High-Yield Questions & STAR Guides</h5>
+            <div class="d-flex flex-column gap-3">
+                {% for q in sheet.prepared_questions %}
+                    <div class="p-3 border rounded-3 bg-white">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge bg-secondary-subtle text-secondary small">{{ q.type }}</span>
+                            <span class="small text-muted fw-bold">Q{{ loop.index }}</span>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-2">{{ q.question }}</h6>
+                        <div class="row g-2 small text-secondary">
+                            {% if q.star_guide %}
+                                <div class="col-md-6">
+                                    <strong class="text-info d-block">Situation:</strong> {{ q.star_guide.situation }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong class="text-primary d-block">Task:</strong> {{ q.star_guide.task }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong class="text-success d-block">Action:</strong> {{ q.star_guide.action }}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong class="text-warning-emphasis d-block">Result:</strong> {{ q.star_guide.result }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Strategic Questions to Ask the Interviewer -->
+        <div class="mb-4">
+            <h5 class="fw-bold text-dark mb-3"><i class="bi bi-patch-question-fill text-success me-2"></i>Strategic Questions to Ask the Interviewer</h5>
+            <div class="d-flex flex-column gap-2">
+                {% for rq in sheet.questions_for_interviewer %}
+                    <div class="p-3 border rounded-3 bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge bg-info-subtle text-info border border-info-subtle small">{{ rq.category }}</span>
+                        </div>
+                        <p class="fw-bold text-dark mb-1 small">"{{ rq.question }}"</p>
+                        <small class="text-muted d-block"><i class="bi bi-info-circle me-1"></i><em>Why Ask:</em> {{ rq.why_ask }}</small>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-top pt-3 text-center text-muted small">
+            Generated by AI Job Agent • Built for candidate success at {{ job.company }}
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    body { background-color: #ffffff !important; }
+    .d-print-none, #appSidebar, #appTopbar, footer { display: none !important; }
+    .container { max-width: 100% !important; padding: 0 !important; }
+    .print-card { box-shadow: none !important; border: none !important; padding: 0 !important; }
+}
+</style>
+{% endblock %}

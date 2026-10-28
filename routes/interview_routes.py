@@ -1,8 +1,10 @@
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, flash
 from flask_login import login_required, current_user
+from extensions import db
 from models.job import Job
 from models.job_match import JobMatch, SavedJob
 from models.application import Application
+from models.interview import InterviewSession, InterviewAnswer
 from services.interview_simulator import InterviewSimulator
 from services.job_matcher import JobMatcher
 
@@ -43,12 +45,22 @@ def interview_hub():
     elif active_jobs:
         primary_job = active_jobs[0]
 
+    # Load user's past practice sessions & performance metrics
+    past_sessions = InterviewSession.query.filter_by(user_id=current_user.id).order_by(InterviewSession.created_at.desc()).limit(10).all()
+    avg_score = None
+    if past_sessions:
+        scores = [s.overall_score for s in past_sessions if s.overall_score and s.overall_score > 0]
+        if scores:
+            avg_score = round(sum(scores) / len(scores), 1)
+
     return render_template(
         "interview_hub.html",
         primary_job=primary_job,
         user_apps=user_apps,
         user_saved=user_saved,
-        active_jobs=active_jobs
+        active_jobs=active_jobs,
+        past_sessions=past_sessions,
+        avg_score=avg_score
     )
 
 @interview_bp.route("/<int:job_id>")
@@ -136,4 +148,98 @@ def evaluate_coding_challenge(job_id):
     assessment_svc = TechnicalAssessmentService()
     evaluation = assessment_svc.evaluate_submission(challenge, user_code)
     return jsonify({"success": True, "evaluation": evaluation})
+
+
+@interview_bp.route("/api/followup", methods=["POST"])
+@login_required
+def generate_followup():
+    """Generates an adaptive, probing follow-up question based on the candidate's answer."""
+    data = request.get_json() or {}
+    job_id = data.get("job_id")
+    question = data.get("question", "")
+    answer = data.get("answer", "")
+
+    if not job_id or not question or not answer:
+        return jsonify({"success": False, "error": "Missing question, answer or job ID"}), 400
+
+    job = Job.query.get_or_404(int(job_id))
+    followup = simulator.generate_followup_question(question, answer, job)
+    return jsonify({"success": True, "followup": followup})
+
+
+@interview_bp.route("/api/reverse-questions/<int:job_id>")
+@login_required
+def reverse_questions(job_id):
+    """Returns high-impact questions the candidate can ask the interviewer."""
+    job = Job.query.get_or_404(job_id)
+    profile = current_user.candidate_profile
+    questions = simulator.generate_questions_to_ask_interviewer(job, profile)
+    return jsonify({"success": True, "company": job.company, "role": job.title, "questions": questions})
+
+
+@interview_bp.route("/api/save-session", methods=["POST"])
+@login_required
+def save_interview_session():
+    """Persists a completed or evaluated interview session to the database."""
+    data = request.get_json() or {}
+    job_id = data.get("job_id")
+    overall_score = float(data.get("overall_score", 0))
+    delivery_score = float(data.get("delivery_score", 0))
+    average_wpm = float(data.get("average_wpm", 0))
+    answers_data = data.get("answers", [])
+
+    job = Job.query.get(int(job_id)) if job_id else None
+    company = job.company if job else data.get("company", "Target Company")
+    role_title = job.title if job else data.get("role_title", "Software Engineer")
+
+    session = InterviewSession(
+        user_id=current_user.id,
+        job_id=job.id if job else None,
+        company=company,
+        role_title=role_title,
+        overall_score=overall_score,
+        delivery_score=delivery_score,
+        average_wpm=average_wpm,
+        questions_count=len(answers_data)
+    )
+    db.session.add(session)
+    db.session.flush()
+
+    for item in answers_data:
+        ans = InterviewAnswer(
+            session_id=session.id,
+            question_text=item.get("question", ""),
+            question_type=item.get("type", "Behavioral / STAR"),
+            user_answer=item.get("answer", ""),
+            overall_score=float(item.get("score", 0)),
+            star_breakdown=item.get("star_breakdown", {}),
+            strengths=item.get("strengths", []),
+            areas_for_improvement=item.get("areas_for_improvement", []),
+            speech_analytics=item.get("speech_analytics", {}),
+            improved_exemplar_answer=item.get("improved_exemplar_answer"),
+            followup_question=item.get("followup_question")
+        )
+        db.session.add(ans)
+
+    db.session.commit()
+    return jsonify({"success": True, "session_id": session.id, "message": "Interview session saved successfully!"})
+
+
+@interview_bp.route("/cheat-sheet/<int:job_id>")
+@login_required
+def interview_cheat_sheet(job_id):
+    """Renders a clean printable/exportable interview cheat sheet."""
+    job = Job.query.get_or_404(job_id)
+    profile = current_user.candidate_profile
+    resume = current_user.get_active_resume()
+    sheet_data = simulator.generate_interview_cheat_sheet(job, profile)
+    return render_template("interview_cheat_sheet.html", job=job, profile=profile, resume=resume, sheet=sheet_data)
+
+
+@interview_bp.route("/session/<int:session_id>")
+@login_required
+def view_session(session_id):
+    """Reviews a past practice session and its evaluations."""
+    session = InterviewSession.query.filter_by(id=session_id, user_id=current_user.id).first_or_404()
+    return render_template("interview_session_detail.html", session=session)
 

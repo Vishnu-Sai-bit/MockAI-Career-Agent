@@ -5,6 +5,7 @@ from models.job import Job, VerificationLog
 from models.job_match import JobMatch, SavedJob
 from models.application import Application, ApplicationDocument
 from models.dream_company import DreamCompany
+from models.interview import InterviewSession, InterviewAnswer
 
 __all__ = [
     "User",
@@ -18,4 +19,6 @@ __all__ = [
     "Application",
     "ApplicationDocument",
     "DreamCompany",
+    "InterviewSession",
+    "InterviewAnswer",
 ]

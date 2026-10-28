@@ -88,6 +88,62 @@
     <div class="row g-4">
         <!-- Main: Target Roles for Practice -->
         <div class="col-lg-8">
+            <!-- Practice History & Performance Tracking -->
+            {% if past_sessions %}
+                <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+                        <div>
+                            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-clock-history text-success me-2"></i>Your Practice History & Score Progress</h6>
+                            <small class="text-secondary">Track your STAR mastery and speech delivery improvements across sessions.</small>
+                        </div>
+                        {% if avg_score %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle p-2">
+                                <i class="bi bi-graph-up-arrow me-1"></i>Avg Score: <strong>{{ avg_score }}%</strong>
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Target Role & Company</th>
+                                    <th>Date</th>
+                                    <th>Questions</th>
+                                    <th>STAR Score</th>
+                                    <th>Delivery</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for s in past_sessions %}
+                                    <tr>
+                                        <td>
+                                            <strong class="text-dark d-block">{{ s.role_title }}</strong>
+                                            <small class="text-muted"><i class="bi bi-building me-1"></i>{{ s.company }}</small>
+                                        </td>
+                                        <td class="text-secondary">{{ s.created_at.strftime('%b %d, %Y') }}</td>
+                                        <td><span class="badge bg-light text-dark border">{{ s.questions_count }} Qs</span></td>
+                                        <td>
+                                            <span class="badge {% if s.overall_score >= 80 %}bg-success text-white{% elif s.overall_score >= 60 %}bg-warning-subtle text-warning-emphasis{% else %}bg-danger-subtle text-danger{% endif %}">
+                                                {{ s.overall_score|round|int }}%
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info-subtle text-info border border-info-subtle">{{ s.delivery_score|round|int }}% ({{ s.average_wpm|round|int }} WPM)</span>
+                                        </td>
+                                        <td>
+                                            <a href="{{ url_for('interview.view_session', session_id=s.id) }}" class="btn btn-sm btn-outline-primary py-1 px-2">
+                                                Review Answers &rarr;
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% endif %}
+
             <!-- Active Applications Section -->
             {% if user_apps %}
                 <div class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">

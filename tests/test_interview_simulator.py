@@ -134,3 +134,92 @@ def test_interview_simulator_page_details(app_instance, client):
     assert "stopwatch-display" in html
     assert "switchJobModal" in html
     assert "Verified Live" in html
+
+def test_generate_followup_and_reverse_questions(app_instance):
+    with app_instance.app_context():
+        sim = InterviewSimulator()
+        job = Job.query.first()
+
+        # Followup question
+        fu = sim.generate_followup_question(
+            "Tell me about a high throughput architecture.",
+            "I used Redis and Kafka to process 10,000 requests per second with microservices.",
+            job
+        )
+        assert "followup_question" in fu
+        assert "interviewer_intent" in fu
+
+        # Reverse questions to ask interviewer
+        rqs = sim.generate_questions_to_ask_interviewer(job, None)
+        assert len(rqs) >= 3
+        assert "question" in rqs[0]
+        assert "why_ask" in rqs[0]
+
+        # Cheat sheet
+        cs = sim.generate_interview_cheat_sheet(job, None)
+        assert "pre_interview_checklist" in cs
+        assert "core_talking_points" in cs
+
+def test_followup_and_save_session_api(app_instance, client):
+    with app_instance.app_context():
+        u = User.query.first()
+        user_id = str(u.id) if u else "1"
+        job = Job.query.first()
+
+    with client.session_transaction() as sess:
+        sess["_user_id"] = user_id
+        sess["_fresh"] = True
+
+    # 1. Test followup API
+    resp = client.post("/interview/api/followup", json={
+        "job_id": job.id,
+        "question": "Tell me about a time you optimized a slow query.",
+        "answer": "I identified missing indices on a high-cardinality table in PostgreSQL, reducing query latency from 2400ms to 45ms."
+    })
+    assert resp.status_code == 200
+    data = resp.get_json()
+    assert data["success"] is True
+    assert "followup" in data
+    assert "followup_question" in data["followup"]
+
+    # 2. Test reverse questions API
+    resp_rq = client.get(f"/interview/api/reverse-questions/{job.id}")
+    assert resp_rq.status_code == 200
+    data_rq = resp_rq.get_json()
+    assert data_rq["success"] is True
+    assert len(data_rq["questions"]) >= 3
+
+    # 3. Test save session API
+    resp_save = client.post("/interview/api/save-session", json={
+        "job_id": job.id,
+        "overall_score": 85.5,
+        "delivery_score": 90.0,
+        "average_wpm": 138.0,
+        "answers": [
+            {
+                "question": "Tell me about a time you optimized a slow query.",
+                "type": "Technical Architecture",
+                "answer": "I added composite indices and rewritten joins.",
+                "score": 88.0,
+                "star_breakdown": {"situation": {"score": 85, "feedback": "Clear context"}},
+                "strengths": ["Clear metrics"],
+                "areas_for_improvement": ["Elaborate on trade-offs"],
+                "speech_analytics": {"delivery_score": 90, "estimated_wpm": 138}
+            }
+        ]
+    })
+    assert resp_save.status_code == 200
+    data_save = resp_save.get_json()
+    assert data_save["success"] is True
+    assert "session_id" in data_save
+    session_id = data_save["session_id"]
+
+    # 4. Test view saved session
+    resp_view = client.get(f"/interview/session/{session_id}")
+    assert resp_view.status_code == 200
+    assert "Practice Session Review" in resp_view.data.decode("utf-8")
+
+    # 5. Test cheat sheet endpoint
+    resp_cs = client.get(f"/interview/cheat-sheet/{job.id}")
+    assert resp_cs.status_code == 200
+    assert "Pre-Interview Briefing" in resp_cs.data.decode("utf-8")

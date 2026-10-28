@@ -229,3 +229,144 @@ Output MUST be a single valid JSON object adhering to this schema:
             "delivery_score": delivery_score
         }
 
+    def generate_followup_question(self, question: str, user_answer: str, job: Job) -> Dict[str, Any]:
+        """
+        Generates an adaptive, probing follow-up question based on the candidate's actual answer.
+        Simulates an experienced hiring manager digging deeper into trade-offs, architecture, or edge cases.
+        """
+        prompt = f"""You are a principal bar raiser and senior hiring manager interviewing for {job.title} at {job.company}.
+The candidate just answered the initial interview question. Formulate a challenging, realistic follow-up question that directly references and probes their specific answer.
+
+ORIGINAL QUESTION:
+"{question}"
+
+CANDIDATE'S ANSWER:
+"{user_answer}"
+
+Output MUST be a single valid JSON object:
+{{
+  "followup_question": "Challenging follow-up question probing a specific decision, metric, or failure mode they mentioned",
+  "interviewer_intent": "Why the interviewer is asking this (e.g. testing resilience under failure, understanding trade-offs)",
+  "suggested_focus": "Key technical point candidate should address in their response"
+}}
+"""
+        parsed = self.gemini.generate_json(prompt, timeout=8)
+        if isinstance(parsed, dict) and "followup_question" in parsed:
+            return parsed
+
+        # Fallback dynamic follow-up
+        answer_words = user_answer.lower().split()
+        if any(w in answer_words for w in ["database", "sql", "redis", "cache", "latency", "storage"]):
+            return {
+                "followup_question": "You mentioned performance and data handling in your answer. How did you handle consistency guarantees, cache invalidation, and failure modes when traffic spiked?",
+                "interviewer_intent": "Assessing system resilience, trade-off awareness, and disaster recovery planning.",
+                "suggested_focus": "Explain read/write consistency, timeout policies, circuit breakers, and fallback strategies."
+            }
+        elif any(w in answer_words for w in ["team", "conflict", "stakeholder", "deadline", "product"]):
+            return {
+                "followup_question": "You touched upon collaboration and timelines. If a senior peer or stakeholder fundamentally disagreed with your technical proposal, how did you resolve the deadlock without sacrificing delivery velocity?",
+                "interviewer_intent": "Evaluating conflict resolution, persuasion through data, and emotional intelligence.",
+                "suggested_focus": "Highlight objective proof-of-concept benchmarks, active listening, and customer-first alignment."
+            }
+        else:
+            return {
+                "followup_question": f"Looking back at your approach for that initiative, what is one major architectural trade-off or alternative you considered, and why was your chosen solution optimal for {job.company}'s scale?",
+                "interviewer_intent": "Probing technical depth, architectural reflection, and decision-making rigor.",
+                "suggested_focus": "Contrast your chosen path against at least one viable alternative and cite concrete trade-offs."
+            }
+
+    def generate_questions_to_ask_interviewer(self, job: Job, profile: Optional[CandidateProfile] = None) -> List[Dict[str, Any]]:
+        """
+        Generates high-impact, insightful questions for the candidate to ask the interviewer.
+        Shows genuine research, technical curiosity, and executive maturity.
+        """
+        prompt = f"""You are an elite interview coach preparing a candidate for an interview for {job.title} at {job.company}.
+Generate 5 strategic, high-impact questions the candidate should ask the interviewer at the end of the round.
+Avoid generic questions; tailor them specifically to {job.company}'s engineering scale, culture, and business domain.
+
+Format output as a valid JSON array of objects:
+[
+  {{
+    "id": 1,
+    "category": "Engineering Culture / Architecture & Scale / Product Roadmap / First 90 Days / Team Velocity",
+    "question": "The exact question to ask the interviewer",
+    "why_ask": "What this question signals to the interviewer and what valuable insight it reveals to the candidate"
+  }}
+]
+"""
+        parsed = self.gemini.generate_json(prompt, timeout=8)
+        if isinstance(parsed, dict):
+            for k in ["questions", "items", "data"]:
+                if isinstance(parsed.get(k), list):
+                    parsed = parsed[k]
+                    break
+        if isinstance(parsed, list) and len(parsed) >= 3:
+            return parsed
+
+        # Deterministic high-yield fallback
+        return [
+            {
+                "id": 1,
+                "category": "Architecture & Technical Debt",
+                "question": f"At {job.company}'s current trajectory, what is the single biggest architectural challenge or technical debt bottleneck your team is working to overcome this quarter?",
+                "why_ask": "Demonstrates that you think about long-term system maintainability and want to hit the ground running solving real pain points."
+            },
+            {
+                "id": 2,
+                "category": "Team Velocity & Culture",
+                "question": f"How does the team balance shipping customer-facing features rapidly with engineering excellence, testing rigor, and infrastructure refactoring?",
+                "why_ask": "Reveals whether engineering culture is sustainable and shows you care about high standards."
+            },
+            {
+                "id": 3,
+                "category": "First 90 Days Success Metrics",
+                "question": f"If I join as {job.title}, what does exceptional performance look like in my first 90 days, and what is one milestone that would make you say 'we made a fantastic hire'?",
+                "why_ask": "Demonstrates focus on tangible business outcomes and provides clear clarity on expectations."
+            },
+            {
+                "id": 4,
+                "category": "Engineering Autonomy & Decision Making",
+                "question": "How are architectural and toolchain decisions made across the team? Do individual engineers have autonomy to propose RFCs and drive tech adoption?",
+                "why_ask": "Signals technical leadership and an ownership mindset."
+            },
+            {
+                "id": 5,
+                "category": "Product Roadmap & Business Impact",
+                "question": f"What upcoming initiative or product capability at {job.company} are you personally most excited to see the engineering team ship over the next 12 months?",
+                "why_ask": "Ends the interview on a high, inspiring note and engages the interviewer's personal passion."
+            }
+        ]
+
+    def generate_interview_cheat_sheet(self, job: Job, profile: Optional[CandidateProfile] = None) -> Dict[str, Any]:
+        """
+        Assembles a comprehensive, 1-page interview prep cheat sheet for rapid pre-interview review.
+        """
+        candidate_skills = (profile.skills if profile and profile.skills else []) or []
+        skills_str = ", ".join(candidate_skills[:6]) if candidate_skills else "system design, problem solving"
+
+        questions = self.generate_interview_questions(job, profile)
+        reverse_questions = self.generate_questions_to_ask_interviewer(job, profile)
+
+        return {
+            "company": job.company,
+            "role_title": job.title,
+            "location": job.location or "Global / Remote",
+            "work_mode": job.work_mode,
+            "experience_level": job.experience_level,
+            "candidate_skills": candidate_skills,
+            "core_talking_points": [
+                f"Anchor technical examples around your experience with {skills_str}.",
+                "State measurable results in the first 30 seconds of every STAR story.",
+                "Use 'I architected / I delivered' rather than ambiguous team references.",
+                f"Reference {job.company}'s market leadership and specific industry challenges."
+            ],
+            "prepared_questions": questions,
+            "questions_for_interviewer": reverse_questions,
+            "pre_interview_checklist": [
+                "Test microphone, camera, and quiet environment 15 minutes before the call.",
+                "Have 2 quantified impact stories (latency, revenue, uptime, or users served) ready in mind.",
+                "Review the 3 strategic reverse-questions you plan to ask the interviewer.",
+                "Keep a clean glass of water and notepad within reach."
+            ]
+        }
+

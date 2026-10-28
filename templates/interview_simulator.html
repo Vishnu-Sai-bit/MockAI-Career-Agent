@@ -14,6 +14,12 @@
             </ol>
         </nav>
         <div class="d-flex flex-wrap gap-2">
+            <a href="{{ url_for('interview.interview_cheat_sheet', job_id=job.id) }}" target="_blank" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1">
+                <i class="bi bi-file-earmark-ruled"></i> <span>Prep Cheat Sheet</span>
+            </a>
+            <button type="button" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1" id="reverse-questions-btn" data-bs-toggle="modal" data-bs-target="#reverseQuestionsModal">
+                <i class="bi bi-patch-question-fill"></i> <span>Questions to Ask</span>
+            </button>
             <button type="button" class="btn btn-sm btn-outline-custom d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#switchJobModal">
                 <i class="bi bi-arrow-repeat"></i> <span>Switch Target Role</span>
             </button>
@@ -363,11 +369,38 @@
                     <p class="small text-body mb-0 fst-italic" id="eval-exemplar"></p>
                 </div>
 
-                <!-- Advance Next Question -->
-                <div class="d-flex justify-content-end">
-                    <button type="button" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" id="next-q-btn">
-                        <span>Next Question</span> <i class="bi bi-arrow-right"></i>
+                <!-- AI Probing Follow-Up Challenge -->
+                <div class="p-3 bg-light border rounded mb-3" id="followup-box">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="fw-bold text-dark small mb-0"><i class="bi bi-question-diamond-fill text-danger me-1"></i>Interviewer Follow-Up Challenge:</h6>
+                        <button type="button" class="btn btn-outline-danger btn-sm py-1 px-2 d-flex align-items-center gap-1" id="ask-followup-btn" style="font-size: 0.75rem;">
+                            <i class="bi bi-chat-dots-fill"></i> <span>Ask AI Follow-Up Question</span>
+                        </button>
+                    </div>
+                    <div id="followup-content" class="d-none">
+                        <div class="p-2 rounded bg-white border border-danger-subtle small mb-2 text-dark fw-semibold" id="followup-text"></div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted" id="followup-intent" style="font-size: 0.75rem;"></small>
+                            <button class="btn btn-sm btn-outline-secondary py-0 px-2" id="speak-followup-btn" style="font-size: 0.72rem;">
+                                <i class="bi bi-volume-up-fill me-1"></i>Listen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Session Save Alert Message -->
+                <div id="session-save-alert" class="alert alert-success d-none py-2 px-3 small mb-3"></div>
+
+                <!-- Session Bottom Bar: Save Session & Advance Next Question -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 pt-2 border-top">
+                    <button type="button" class="btn btn-success btn-sm d-flex align-items-center gap-1" id="save-session-btn">
+                        <i class="bi bi-cloud-check-fill"></i> <span>Save Practice Session</span>
                     </button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" id="next-q-btn">
+                            <span>Next Question</span> <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -470,6 +503,36 @@
             </div>
             <div class="modal-footer border-top">
                 <a href="{{ url_for('interview.interview_hub') }}" class="btn btn-sm btn-outline-secondary">Go to Interview Hub</a>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Questions to Ask the Interviewer Modal -->
+<div class="modal fade" id="reverseQuestionsModal" tabindex="-1" aria-labelledby="reverseQuestionsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content custom-card border-0">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="reverseQuestionsModalLabel">
+                    <i class="bi bi-patch-question-fill text-success me-2"></i>Strategic Questions to Ask {{ job.company }}
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-secondary small mb-3">
+                    Stand out as a top-tier candidate by asking high-leverage questions at the end of your interview:
+                </p>
+                <div id="reverse-questions-loader" class="text-center py-4">
+                    <div class="spinner-border text-success" role="status"></div>
+                    <div class="small text-muted mt-2">Loading company-specific reverse questions...</div>
+                </div>
+                <div id="reverse-questions-container" class="d-flex flex-column gap-3 d-none"></div>
+            </div>
+            <div class="modal-footer border-top">
+                <a href="{{ url_for('interview.interview_cheat_sheet', job_id=job.id) }}" target="_blank" class="btn btn-sm btn-outline-info">
+                    <i class="bi bi-printer me-1"></i>Open Printable Cheat Sheet
+                </a>
                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
@@ -833,6 +896,20 @@ document.getElementById('submit-answer-btn').addEventListener('click', function(
             document.getElementById('eval-exemplar').textContent = ev.improved_exemplar_answer || '';
             document.getElementById('eval-result-card').classList.remove('d-none');
             document.getElementById('eval-result-card').scrollIntoView({ behavior: 'smooth' });
+
+            // Store in evaluated session answers
+            evaluatedAnswers[currentIndex] = {
+                question: activeQuestionText,
+                type: questionsData[currentIndex].type || 'Behavioral / STAR',
+                answer: answer,
+                score: ev.overall_score || 0,
+                star_breakdown: ev.star_breakdown || {},
+                strengths: ev.strengths || [],
+                areas_for_improvement: ev.areas_for_improvement || [],
+                speech_analytics: ev.speech_analytics || {},
+                improved_exemplar_answer: ev.improved_exemplar_answer || '',
+                followup_question: null
+            };
         } else {
             alert('Evaluation failed: ' + (data.error || 'Server error'));
         }
@@ -842,6 +919,142 @@ document.getElementById('submit-answer-btn').addEventListener('click', function(
         btn.innerHTML = '<i class="bi bi-stars me-1"></i> Evaluate with STAR AI';
         alert('Connection error: ' + err);
     });
+});
+
+// Evaluated session answers store
+const evaluatedAnswers = {};
+
+// AI Probing Follow-Up Button
+let activeFollowupText = '';
+document.getElementById('ask-followup-btn').addEventListener('click', function() {
+    const btn = this;
+    const answerBox = document.getElementById('answer-box');
+    const answer = answerBox.value.trim();
+    if (!answer) {
+        alert('Please evaluate an answer first to generate a probing follow-up.');
+        return;
+    }
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Formulating Follow-Up...';
+
+    fetch("{{ url_for('interview.generate_followup') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            job_id: currentJobId,
+            question: activeQuestionText,
+            answer: answer
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-chat-dots-fill me-1"></i> New Follow-Up';
+        if (data.success && data.followup) {
+            const fu = data.followup;
+            activeFollowupText = fu.followup_question;
+            document.getElementById('followup-text').textContent = fu.followup_question;
+            document.getElementById('followup-intent').textContent = 'Interviewer Intent: ' + (fu.interviewer_intent || 'Probing technical rigor');
+            document.getElementById('followup-content').classList.remove('d-none');
+            if (evaluatedAnswers[currentIndex]) {
+                evaluatedAnswers[currentIndex].followup_question = fu.followup_question;
+            }
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-chat-dots-fill me-1"></i> Ask AI Follow-Up Question';
+        alert('Could not formulate follow-up: ' + err);
+    });
+});
+
+// Listen to Follow-Up via TTS
+document.getElementById('speak-followup-btn').addEventListener('click', function() {
+    if ('speechSynthesis' in window && activeFollowupText) {
+        window.speechSynthesis.cancel();
+        const ut = new SpeechSynthesisUtterance(activeFollowupText);
+        ut.rate = 0.95;
+        window.speechSynthesis.speak(ut);
+    }
+});
+
+// Save Session Button
+document.getElementById('save-session-btn').addEventListener('click', function() {
+    const btn = this;
+    const answersList = Object.values(evaluatedAnswers);
+    if (answersList.length === 0) {
+        alert('Please evaluate at least one answer before saving the practice session.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving Session...';
+
+    const sumScore = answersList.reduce((acc, a) => acc + (a.score || 0), 0);
+    const avgScore = sumScore / answersList.length;
+
+    const deliveryScores = answersList.map(a => a.speech_analytics && a.speech_analytics.delivery_score ? a.speech_analytics.delivery_score : 80);
+    const avgDelivery = deliveryScores.reduce((acc, d) => acc + d, 0) / deliveryScores.length;
+
+    const wpms = answersList.map(a => a.speech_analytics && a.speech_analytics.estimated_wpm ? a.speech_analytics.estimated_wpm : 130);
+    const avgWpm = wpms.reduce((acc, w) => acc + w, 0) / wpms.length;
+
+    fetch("{{ url_for('interview.save_interview_session') }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            job_id: currentJobId,
+            company: "{{ job.company }}",
+            role_title: "{{ job.title }}",
+            overall_score: avgScore,
+            delivery_score: avgDelivery,
+            average_wpm: avgWpm,
+            answers: answersList
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Session Saved!';
+        if (data.success) {
+            const alertBox = document.getElementById('session-save-alert');
+            alertBox.innerHTML = `<strong>Success!</strong> Practice session saved to your profile. <a href="/interview/session/${data.session_id}" class="alert-link fw-bold ms-1">View Full Session Review &rarr;</a>`;
+            alertBox.classList.remove('d-none');
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-cloud-check-fill me-1"></i> Save Practice Session';
+        alert('Could not save session: ' + err);
+    });
+});
+
+// Load Reverse Questions on Modal Open
+let reverseQuestionsLoaded = false;
+document.getElementById('reverseQuestionsModal').addEventListener('show.bs.modal', function() {
+    if (reverseQuestionsLoaded) return;
+    const loader = document.getElementById('reverse-questions-loader');
+    const container = document.getElementById('reverse-questions-container');
+
+    fetch("{{ url_for('interview.reverse_questions', job_id=job.id) }}")
+        .then(r => r.json())
+        .then(data => {
+            loader.classList.add('d-none');
+            container.classList.remove('d-none');
+            if (data.success && data.questions) {
+                container.innerHTML = data.questions.map(q => `
+                    <div class="p-3 border rounded bg-light">
+                        <span class="badge bg-success-subtle text-success border border-success-subtle mb-1">${q.category}</span>
+                        <div class="fw-bold text-dark mb-1 small">"${q.question}"</div>
+                        <small class="text-muted d-block"><i class="bi bi-lightbulb text-warning me-1"></i><em>Why ask:</em> ${q.why_ask}</small>
+                    </div>
+                `).join('');
+                reverseQuestionsLoaded = true;
+            }
+        })
+        .catch(err => {
+            loader.innerHTML = '<div class="text-danger small">Failed to load questions. Please try again.</div>';
+        });
 });
 </script>
 {% endblock %}
