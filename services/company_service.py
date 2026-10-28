@@ -52,7 +52,13 @@ KNOWN_COMPANY_DOMAINS = {
     "samsara": "samsara.com",
     "chainguard": "chainguard.dev",
     "deepgram": "deepgram.com",
-    "stackadapt": "stackadapt.com"
+    "stackadapt": "stackadapt.com",
+    "anthropic": "anthropic.com",
+    "perplexity": "perplexity.ai",
+    "wikimedia": "wikimedia.org",
+    "wise": "wise.com",
+    "brex": "brex.com",
+    "groww": "groww.in"
 }
 
 def resolve_company_domain(company_name: str, sample_url: str = "") -> str:
