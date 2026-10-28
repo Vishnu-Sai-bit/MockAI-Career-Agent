@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict, Any
 
-from sqlalchemy import or_, and_, desc, case
+from sqlalchemy import or_, and_, desc, case, func
 
 from extensions import db
 
@@ -626,76 +626,86 @@ class JobSearchService:
 
                     )
 
-            is_matched_case = case(
+            skill_tokens = [s.lower().strip() for s in candidate_skills_lower if len(s.strip()) >= 3]
+            skill_title_matches = [Job.title.ilike(f"%{st}%") for st in skill_tokens[:6]]
 
-                (JobMatch.match_score >= 60.0, 2),
+            if domain_fit is not None:
+                is_resume_related = case(
+                    (JobMatch.match_score >= 60.0, 3),
+                    (and_(domain_fit >= 2, priority_rank <= 6), 2),
+                    (or_(
+                        JobMatch.match_score >= 40.0,
+                        domain_fit >= 1
+                    ), 1),
+                    else_=0
+                )
+            else:
+                has_skill_title_match = or_(*skill_title_matches) if skill_title_matches else False
+                if cand_years <= 1.5:
+                    is_resume_related = case(
+                        (JobMatch.match_score >= 60.0, 3),
+                        (JobMatch.match_score >= 40.0, 2),
+                        (and_(is_fresher_entry, has_skill_title_match), 2),
+                        (is_fresher_entry, 1),
+                        else_=0
+                    )
+                elif cand_years < 5.0:
+                    is_resume_related = case(
+                        (JobMatch.match_score >= 60.0, 3),
+                        (JobMatch.match_score >= 40.0, 2),
+                        (and_(is_mid, has_skill_title_match), 2),
+                        (is_mid, 1),
+                        else_=0
+                    )
+                else:
+                    is_resume_related = case(
+                        (JobMatch.match_score >= 60.0, 3),
+                        (JobMatch.match_score >= 40.0, 2),
+                        (and_(Job.experience_level.in_(["senior", "lead"]), has_skill_title_match), 2),
+                        (Job.experience_level.in_(["senior", "lead"]), 1),
+                        else_=0
+                    )
 
-                (JobMatch.match_score.isnot(None), 1),
-
-                else_=0
-
-            )
+            freshness_date = func.coalesce(Job.published_at, Job.created_at)
 
             if sort_by == "salary":
-
                 query = query.order_by(
-
+                    desc(is_resume_related),
                     desc(is_india),
-
                     priority_rank.asc(),
-
                     desc(Job.salary_max),
-
                     desc(JobMatch.match_score),
-
-                    desc(Job.published_at),
-
+                    desc(freshness_date),
                     desc(Job.id)
-
                 )
-
             elif sort_by == "match":
-
                 query = query.order_by(
-
+                    desc(is_resume_related),
                     priority_rank.asc(),
-
                     desc(is_india),
-
                     desc(JobMatch.match_score),
-
-                    desc(Job.published_at),
-
+                    desc(freshness_date),
                     desc(Job.id)
-
                 )
-
             elif sort_by == "all_fresh":
-
                 query = query.order_by(
-
                     desc(is_india),
-
-                    desc(Job.published_at),
-
+                    desc(freshness_date),
                     desc(Job.id)
-
                 )
-
             else:
-                # Default (Recommended: India Jobs First, Priority/Exp Rank, Matched Roles First, Freshest Minutes/Hours/Days/Weeks):
+                # Default (Resume-related roles first, India first within tier, Experience fit rank, Fresh/updated postings first, then Remaining roles):
                 query = query.order_by(
+                    desc(is_resume_related),
                     desc(is_india),
                     priority_rank.asc(),
-                    desc(is_matched_case),
-                    desc(Job.published_at),
+                    desc(freshness_date),
                     desc(JobMatch.match_score),
                     desc(Job.id)
                 )
-
         else:
-
-            query = query.order_by(desc(is_india), desc(Job.published_at), desc(Job.id))
+            freshness_date = func.coalesce(Job.published_at, Job.created_at)
+            query = query.order_by(desc(is_india), desc(freshness_date), desc(Job.id))
 
         paginated = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -799,14 +809,27 @@ class JobSearchService:
 
             job_is_india = any(k in loc_text for k in ["india", "bengaluru", "bangalore", "hyderabad", "mumbai", "pune", "delhi", "noida", "gurgaon", "gurugram", "chennai", "kolkata", "ahmedabad", "jaipur", "kochi", "indore", "coimbatore"])
 
+            # Determine if this role is resume-related
+            is_job_resume_related = False
+            if active_resume:
+                if is_job_matched or (match_obj and match_obj.match_score and match_obj.match_score >= 40.0):
+                    is_job_resume_related = True
+                elif is_job_exp_fit:
+                    t_low = (job.title or '').lower()
+                    if candidate_target and candidate_target in t_low:
+                        is_job_resume_related = True
+                    elif is_data_domain and any(w in t_low for w in ["data", "analyst", "analytics", "bi", "sql", "insights", "machine learning", "python"]):
+                        is_job_resume_related = True
+                    elif any(st in t_low for st in [s.lower().strip() for s in candidate_skills_lower if len(s.strip()) >= 3][:6]):
+                        is_job_resume_related = True
+                    elif not candidate_target and not is_data_domain:
+                        is_job_resume_related = True
+
             results.append({
-
                 "job": job,
-
                 "match": match_obj,
-
                 "is_matched": is_job_matched,
-
+                "is_resume_related": is_job_resume_related,
                 "is_exp_fit": is_job_exp_fit,
 
                 "is_india": job_is_india,

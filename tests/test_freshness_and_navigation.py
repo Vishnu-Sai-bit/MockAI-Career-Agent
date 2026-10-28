@@ -454,3 +454,83 @@ def test_data_analyst_fresher_experience_progression_and_score_descending(app_wi
 
 
 
+
+
+def test_resume_related_first_with_fresh_and_india_then_remaining(app_with_db, test_user, test_source):
+    """
+    Verifies that:
+    1. Resume-related jobs appear FIRST.
+    2. Within resume-related jobs, India and freshly posted/updated jobs are prioritized.
+    3. Remaining (unmatched/unrelated) jobs appear AFTER all resume-related jobs,
+       and are also ordered by India and freshness.
+    """
+    now = datetime.now(timezone.utc)
+    test_user.candidate_profile.headline = "Data Analyst"
+    test_user.candidate_profile.experience_years = 1.0
+    resume = Resume(
+        user_id=test_user.id,
+        filename="da_candidate.pdf",
+        file_path="uploads/da_candidate.pdf",
+        file_type="pdf",
+        target_role="Data Analyst",
+        parsed_data={"experience_years": 1.0, "skills": ["Python", "SQL", "Tableau", "Data Analysis"], "headline": "Data Analyst"},
+        is_active=True
+    )
+    db.session.add(resume)
+    db.session.commit()
+
+    # Job A: Unrelated remaining job in India, but posted 5 minutes ago (very fresh)
+    job_unrelated_india_fresh = Job(
+        source_id=test_source.id, source_company_key="testco", title="Civil Site Engineer",
+        company="Infra Ltd", location="Bengaluru, Karnataka, India", country="India", city="Bengaluru",
+        experience_level="mid", source_platform="greenhouse", source_job_id="rel-1",
+        original_url="https://example.com/rel-1", apply_url="https://example.com/rel-1",
+        published_at=now - timedelta(minutes=5), status="active"
+    )
+    # Job B: Resume-related job in India, posted 2 hours ago
+    job_related_india_fresh = Job(
+        source_id=test_source.id, source_company_key="testco", title="Junior Data Analyst",
+        company="Data Corp", location="Bengaluru, India", country="India", city="Bengaluru",
+        experience_level="entry", source_platform="lever", source_job_id="rel-2",
+        original_url="https://example.com/rel-2", apply_url="https://example.com/rel-2",
+        published_at=now - timedelta(hours=2), status="active"
+    )
+    # Job C: Resume-related job in India, posted 1 day ago (older than Job B)
+    job_related_india_older = Job(
+        source_id=test_source.id, source_company_key="testco", title="Data Analyst, Associate",
+        company="Analytics India", location="Pune, India", country="India", city="Pune",
+        experience_level="entry", source_platform="ashby", source_job_id="rel-3",
+        original_url="https://example.com/rel-3", apply_url="https://example.com/rel-3",
+        published_at=now - timedelta(days=1), status="active"
+    )
+    # Job D: Unrelated remaining job Remote, posted 1 hour ago
+    job_unrelated_remote = Job(
+        source_id=test_source.id, source_company_key="testco", title="Executive Receptionist",
+        company="Global Admin", location="Remote", country="US",
+        experience_level="mid", source_platform="workable", source_job_id="rel-4",
+        original_url="https://example.com/rel-4", apply_url="https://example.com/rel-4",
+        published_at=now - timedelta(hours=1), status="active"
+    )
+    db.session.add_all([job_unrelated_india_fresh, job_related_india_fresh, job_related_india_older, job_unrelated_remote])
+    db.session.commit()
+
+    service = JobSearchService()
+    results = service.search_jobs(user=test_user, sort_by="fresh")
+    items = results["jobs"]
+
+    assert len(items) == 4
+    # 1. First Resume-Related role (India + Fresh 2h ago)
+    assert items[0]["job"].title == "Junior Data Analyst"
+    assert items[0]["is_resume_related"] is True
+
+    # 2. Second Resume-Related role (India + 1 day ago)
+    assert items[1]["job"].title == "Data Analyst, Associate"
+    assert items[1]["is_resume_related"] is True
+
+    # 3. Third: Remaining roles begin. India remaining role (5 mins ago) comes before Remote remaining role
+    assert items[2]["job"].title == "Civil Site Engineer"
+    assert items[2]["is_resume_related"] is False
+
+    # 4. Fourth: Remaining Remote role (1 hour ago)
+    assert items[3]["job"].title == "Executive Receptionist"
+    assert items[3]["is_resume_related"] is False

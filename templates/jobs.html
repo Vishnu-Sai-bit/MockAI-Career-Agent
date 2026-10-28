@@ -173,7 +173,7 @@
                     <div class="col-lg-2 col-md-4">
                         <label class="form-label small fw-semibold text-secondary">Sort By</label>
                         <select name="sort_by" class="form-select form-select-sm">
-                            <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>India First, Relevant First & Freshest (Minutes, Hours, Days, Weeks)</option>
+                            <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>Resume-Related & Relevant First (India & Freshest Postings)</option>
                             <option value="match" {% if sort_by == 'match' %}selected{% endif %}>Highest Relevance Score</option>
                             <option value="salary" {% if sort_by == 'salary' %}selected{% endif %}>Highest Salary</option>
                             <option value="all_fresh" {% if sort_by == 'all_fresh' %}selected{% endif %}>All Freshest First</option>
@@ -195,7 +195,12 @@
     <!-- Results Header -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
         <div>
-            <span class="text-muted small">Found <strong>{{ results.total }}</strong> verified postings</span>
+            <span class="text-muted small">
+                Found <strong>{{ results.total }}</strong> verified postings
+                {% if current_user.is_authenticated and current_user.get_active_resume() %}
+                    · <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-normal"><i class="bi bi-stars me-1"></i>Resume-Related & Fresh Roles First</span>
+                {% endif %}
+            </span>
         </div>
         <div class="d-flex align-items-center gap-2">
             {% if current_user.is_authenticated and current_user.get_active_resume() %}
@@ -256,6 +261,10 @@
                                     {% if item.is_matched and match and match.match_score >= 60 %}
                                         <span class="match-badge {% if match.match_score >= 80 %}match-high{% else %}match-mid{% endif %}">
                                             <i class="bi bi-shield-check"></i> {{ match.match_score|round(0)|int }}% Relevant
+                                        </span>
+                                    {% elif item.is_resume_related %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold">
+                                            <i class="bi bi-stars me-1"></i>Resume Match{% if match and match.match_score %} ({{ match.match_score|round(0)|int }}%){% endif %}
                                         </span>
                                     {% else %}
                                         <span class="badge bg-light text-secondary border">Remaining Role</span>
