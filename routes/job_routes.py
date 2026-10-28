@@ -240,6 +240,9 @@ def saved_jobs():
 def refresh_jobs():
     try:
         stats = run_job_refresh(limit_per_source=20)
+        from services.job_cleaner_service import JobCleanerService
+        JobCleanerService.purge_inactive_jobs()
+        JobCleanerService.purge_duplicate_jobs()
         active_resume = current_user.get_active_resume()
         if active_resume:
             from tasks.recompute_matches import recompute_user_matches
