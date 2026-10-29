@@ -1,0 +1,15 @@
+﻿Platform Name,No.of companies,Integration Source,Top countries,Live or Inactive
+BambooHR,6286,Direct ATS API / Endpoint,"US (3392), CA (835), GLOBAL (696)",Active & Live
+Greenhouse,5498,Direct ATS API / Endpoint,"US (3697), GLOBAL (497), GB (231)",Active & Live
+Workday,2856,Direct ATS API / Endpoint,"US (1798), GLOBAL (206), CA (135)",Active & Live
+Arbeitnow,309,Verified Curated Feed,"BERLIN (67), MUNICH (23), HAMBURG (21)",Active & Live
+Himalayas,297,Verified Curated Feed,"UNITED STATES (160), UNITED KINGDOM (10), GERMANY (10)",Active & Live
+Jobicy,133,Verified Curated Feed,"USA (61), UK (14), AUSTRALIA (6)",Active & Live
+Remoteok,42,Verified Curated Feed,"REMOTE (32), WASHINGTON (1), VANCOUVER (1)",Active & Live
+Ashby,19,Direct ATS API / Endpoint,GLOBAL (19),Active & Live
+Lever,14,Direct ATS API / Endpoint,GLOBAL (14),Active & Live
+Remotive,7,Verified Curated Feed,"WORLDWIDE (5), APAC (1), USA TIMEZONES (1)",Active & Live
+Smartrecruiters,6,Direct ATS API / Endpoint,GLOBAL (6),Active & Live
+Workable,5,Direct ATS API / Endpoint,GLOBAL (5),Active & Live
+Recruitee,3,Direct ATS API / Endpoint,GLOBAL (3),Active & Live
+TOTAL,15475,All Platforms Combined,50+ Countries Worldwide,100% Live Verified

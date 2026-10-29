@@ -38,9 +38,7 @@ PLATFORM_COMPANY_CATALOG = {
     ],
     "lever": [
         ("spotify", "Spotify"), ("palantir", "Palantir"), ("netflix", "Netflix"),
-        ("atlassian", "Atlassian"), ("postman", "Postman"), ("yelp", "Yelp"),
-        ("eventbrite", "Eventbrite"), ("udemy", "Udemy"), ("benchling", "Benchling"),
-        ("coupa", "Coupa"), ("twitch", "Twitch"), ("quora", "Quora"),
+        ("coupa", "Coupa"), ("atlassian", "Atlassian"), ("postman", "Postman"),
         ("kustomer", "Kustomer"), ("ironclad", "Ironclad")
     ],
     "ashby": [
@@ -58,12 +56,11 @@ PLATFORM_COMPANY_CATALOG = {
         ("nike", "Nike"), ("hp", "HP"), ("dell", "Dell"), ("accenture", "Accenture")
     ],
     "smartrecruiters": [
-        ("averydennison", "Avery Dennison"), ("visa", "Visa"), ("bosch", "Bosch"),
-        ("square", "Block (Square)"), ("ikea", "IKEA"), ("linkedin", "LinkedIn")
+        ("averydennison", "Avery Dennison"), ("sgs", "SGS"), ("bosch", "Bosch Group"),
+        ("cern", "CERN"), ("colliers", "Colliers")
     ],
     "workable": [
-        ("skroutz", "Skroutz"), ("deliveroo", "Deliveroo"), ("bolt", "Bolt"),
-        ("transfergo", "TransferGo"), ("taxfix", "Taxfix")
+        ("skroutz", "Skroutz"), ("blueground", "Blueground"), ("upstream", "Upstream")
     ],
     "recruitee": [
         ("bunq", "bunq"), ("mollie", "Mollie"), ("messagebird", "MessageBird")

@@ -18,9 +18,21 @@ SMARTRECRUITERS_COMPANIES = {
         "company_name": "CERN",
         "company_identifier": "CERN"
     },
+    "bosch": {
+        "company_name": "Bosch Group",
+        "company_identifier": "BoschGroup"
+    },
     "boschgroup": {
         "company_name": "Bosch Group",
         "company_identifier": "BoschGroup"
+    },
+    "sgs": {
+        "company_name": "SGS",
+        "company_identifier": "SGS"
+    },
+    "colliers": {
+        "company_name": "Colliers",
+        "company_identifier": "Colliers"
     },
     "square": {
         "company_name": "Square / Block",

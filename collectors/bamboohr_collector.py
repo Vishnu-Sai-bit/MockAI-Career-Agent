@@ -76,7 +76,7 @@ class BambooHRCollector(BaseCollector):
                 title_lower = title.lower()
 
                 job_url = f"https://{subdomain}.bamboohr.com/careers/{job_id}"
-                apply_url = f"https://{subdomain}.bamboohr.com/careers/{job_id}/apply"
+                apply_url = job_url
 
                 record = RawJobRecord(
                     source_platform=self.platform_name,

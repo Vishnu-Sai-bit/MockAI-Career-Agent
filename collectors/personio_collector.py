@@ -8,6 +8,11 @@ from bs4 import BeautifulSoup
 from collectors.base_collector import BaseCollector, RawJobRecord
 from utils.logging_config import logger
 
+PERSONIO_SLUG_MAP = {
+    "personio": "personio-gmbh",
+    "clark": "clark"
+}
+
 class PersonioCollector(BaseCollector):
     platform_name = "personio"
 
@@ -23,15 +28,20 @@ class PersonioCollector(BaseCollector):
         Fetches job postings from Personio public XML feed.
         Endpoint: https://{company_slug}.jobs.personio.de/xml
         """
-        company_slug = company_key.lower().strip()
+        raw_slug = company_key.lower().strip()
+        company_slug = PERSONIO_SLUG_MAP.get(raw_slug, raw_slug)
         endpoint = f"https://{company_slug}.jobs.personio.de/xml"
         jobs: List[RawJobRecord] = []
 
         try:
             resp = self.session.get(endpoint, timeout=self.timeout)
             if resp.status_code != 200:
-                logger.info(f"Personio XML feed returned status {resp.status_code} for {company_slug}")
-                return jobs
+                # Try fallback domain .jobs.personio.com
+                endpoint = f"https://{company_slug}.jobs.personio.com/xml"
+                resp = self.session.get(endpoint, timeout=self.timeout)
+                if resp.status_code != 200:
+                    logger.info(f"Personio XML feed returned status {resp.status_code} for {company_slug}")
+                    return jobs
 
             root = ET.fromstring(resp.content)
             # Standard Personio XML schema: <workzag-jobs><position>...

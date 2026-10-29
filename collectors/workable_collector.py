@@ -14,6 +14,14 @@ WORKABLE_COMPANIES = {
         "company_name": "Skroutz",
         "account_slug": "skroutz"
     },
+    "blueground": {
+        "company_name": "Blueground",
+        "account_slug": "blueground"
+    },
+    "upstream": {
+        "company_name": "Upstream",
+        "account_slug": "upstream"
+    },
     "taxjar": {
         "company_name": "TaxJar",
         "account_slug": "taxjar"
