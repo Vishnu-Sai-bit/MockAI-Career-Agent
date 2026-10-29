@@ -278,6 +278,7 @@ def refresh_jobs():
     
     return redirect(url_for("jobs.list_jobs"))
 
+
 @jobs_bp.route("/jobs/clean", methods=["GET", "POST"])
 def clean_jobs():
     """
@@ -298,6 +299,57 @@ def clean_jobs():
         "success"
     )
     return redirect(url_for("jobs.list_jobs"))
+
+
+@jobs_bp.route("/api/jobs/scrape-career-site", methods=["POST"])
+def api_scrape_career_site():
+    """
+    API endpoint: Scrapes an official company career site or URL on demand.
+    Returns JSON with scraped status, company name, jobs count, and redirect URL.
+    """
+    data = request.get_json(silent=True) or {}
+    url_or_company = (data.get("url_or_company") or request.form.get("url_or_company") or "").strip()
+    if not url_or_company:
+        return jsonify({"success": False, "error": "Please provide a valid company career page URL or company name."}), 400
+
+    from services.career_site_scraper_service import career_site_scraper
+    res = career_site_scraper.scrape_and_ingest(url_or_company)
+
+    if current_user.is_authenticated:
+        active_resume = current_user.get_active_resume()
+        if active_resume and res.get("jobs_added", 0) > 0:
+            from tasks.recompute_matches import recompute_user_matches
+            recompute_user_matches(current_user, active_resume)
+
+    status_code = 200 if res.get("success") else 400
+    return jsonify(res), status_code
+
+
+@jobs_bp.route("/jobs/scrape-career-site", methods=["POST"])
+def scrape_career_site_form():
+    """
+    Form submission fallback for scraping a career site.
+    """
+    url_or_company = request.form.get("url_or_company", "").strip()
+    if not url_or_company:
+        flash("Please enter a company career site URL or company name.", "warning")
+        return redirect(url_for("jobs.list_jobs"))
+
+    from services.career_site_scraper_service import career_site_scraper
+    res = career_site_scraper.scrape_and_ingest(url_or_company)
+
+    if current_user.is_authenticated:
+        active_resume = current_user.get_active_resume()
+        if active_resume and res.get("jobs_added", 0) > 0:
+            from tasks.recompute_matches import recompute_user_matches
+            recompute_user_matches(current_user, active_resume)
+
+    if res.get("success"):
+        flash(res.get("message", "Successfully scraped jobs from official career site!"), "success")
+        return redirect(url_for("jobs.list_jobs", q=res.get("company_name"), country="all"))
+    else:
+        flash(res.get("error", "Could not scrape jobs from the provided career site."), "danger")
+        return redirect(url_for("jobs.list_jobs"))
 
 @jobs_bp.route("/companies")
 def list_companies():
