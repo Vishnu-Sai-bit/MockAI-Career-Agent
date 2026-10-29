@@ -23,7 +23,7 @@
     <!-- Compact Search & Collapsible Filters Bar -->
     <div class="card p-3 custom-card border-0 bg-white shadow-sm mb-4">
         <form method="GET" action="{{ url_for('jobs.list_jobs') }}" id="jobsSearchForm">
-            {% set active_filter_count = (1 if experience_level and experience_level != 'all' else 0) + (1 if work_mode and work_mode != 'all' else 0) + (1 if date_posted and date_posted != 'all' else 0) + (1 if platform and platform != 'all' else 0) + (1 if sort_by and sort_by != 'fresh' else 0) + (1 if company_type and company_type != 'all' else 0) %}
+            {% set active_filter_count = (1 if experience_level and experience_level != 'all' else 0) + (1 if work_mode and work_mode != 'all' else 0) + (1 if date_posted and date_posted != 'all' else 0) + (1 if platform and platform != 'all' else 0) + (1 if sort_by and sort_by != 'fresh' else 0) + (1 if company_type and company_type != 'all' else 0) + (1 if country and country != 'all' else 0) %}
 
             <!-- Primary Compact Search Row -->
             <div class="row g-2 align-items-center">
@@ -63,23 +63,29 @@
             <!-- Quick Explore Presets -->
             <div class="d-flex flex-wrap align-items-center gap-1 mt-2 pt-2 border-top">
                 <small class="text-muted me-1 fs-8"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Quick Explore:</small>
+                <a href="{{ url_for('jobs.list_jobs', country='India') }}" class="badge {% if country == 'India' %}bg-success text-white{% else %}bg-light text-success border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-geo-alt-fill me-1"></i>India Roles
+                </a>
+                <a href="{{ url_for('jobs.list_jobs', country='United States') }}" class="badge {% if country in ['United States', 'US'] %}bg-primary text-white{% else %}bg-light text-primary border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-flag-fill me-1"></i>USA Roles
+                </a>
+                <a href="{{ url_for('jobs.list_jobs', country='United Kingdom') }}" class="badge {% if country in ['United Kingdom', 'UK'] %}bg-dark text-white{% else %}bg-light text-dark border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-buildings me-1"></i>UK Roles
+                </a>
+                <a href="{{ url_for('jobs.list_jobs', country='Germany') }}" class="badge {% if country in ['Germany', 'DE'] %}bg-warning text-dark{% else %}bg-light text-dark border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-globe-europe-africa me-1"></i>Germany
+                </a>
+                <a href="{{ url_for('jobs.list_jobs', country='Canada') }}" class="badge {% if country in ['Canada', 'CA'] %}bg-danger text-white{% else %}bg-light text-danger border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-compass me-1"></i>Canada
+                </a>
+                <a href="{{ url_for('jobs.list_jobs', country='Remote') }}" class="badge {% if country == 'Remote' %}bg-info text-white{% else %}bg-light text-info border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-laptop me-1"></i>Remote
+                </a>
                 <a href="{{ url_for('jobs.list_jobs', company_type='mnc') }}" class="badge {% if company_type == 'mnc' %}bg-primary text-white{% else %}bg-light text-primary border{% endif %} text-decoration-none py-1 px-2">
                     <i class="bi bi-globe me-1"></i>Top MNCs
                 </a>
-                <a href="{{ url_for('jobs.list_jobs', location='India') }}" class="badge {% if location == 'India' %}bg-success text-white{% else %}bg-light text-success border{% endif %} text-decoration-none py-1 px-2">
-                    <i class="bi bi-geo-alt-fill me-1"></i>India Roles
-                </a>
-                <a href="{{ url_for('jobs.list_jobs', work_mode='remote') }}" class="badge {% if work_mode == 'remote' %}bg-info text-white{% else %}bg-light text-info border{% endif %} text-decoration-none py-1 px-2">
-                    <i class="bi bi-laptop me-1"></i>Remote
-                </a>
                 <a href="{{ url_for('jobs.list_jobs', platform='workday') }}" class="badge {% if platform == 'workday' %}bg-secondary text-white{% else %}bg-light text-secondary border{% endif %} text-decoration-none py-1 px-2">
-                    <i class="bi bi-briefcase-fill me-1"></i>Workday Roles
-                </a>
-                <a href="{{ url_for('jobs.list_jobs', q='Data Analyst') }}" class="badge bg-light text-dark border text-decoration-none py-1 px-2">
-                    <i class="bi bi-graph-up me-1"></i>Data Analyst
-                </a>
-                <a href="{{ url_for('jobs.list_jobs', q='Software Engineer') }}" class="badge bg-light text-dark border text-decoration-none py-1 px-2">
-                    <i class="bi bi-code-slash me-1"></i>Software Engineer
+                    <i class="bi bi-briefcase-fill me-1"></i>Workday
                 </a>
             </div>
 
@@ -87,58 +93,64 @@
             {% if active_filter_count > 0 or keyword or location %}
                 <div class="d-flex flex-wrap align-items-center gap-1 mt-2 pt-2 border-top">
                     <small class="text-muted me-1 fs-8"><i class="bi bi-check2-circle text-primary me-1"></i>Active:</small>
+                    {% if country and country != 'all' %}
+                        <span class="badge bg-light text-dark border">
+                            <i class="bi bi-globe-americas text-primary me-1"></i>Country: {{ country }}
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, company_type=company_type) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                        </span>
+                    {% endif %}
                     {% if company_type and company_type != 'all' %}
                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
                             <i class="bi bi-globe me-1"></i>MNCs
-                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}" class="text-primary ms-1 text-decoration-none">&times;</a>
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, country=country, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}" class="text-primary ms-1 text-decoration-none">&times;</a>
                         </span>
                     {% endif %}
                     {% if keyword %}
                         <span class="badge bg-light text-dark border">
                             Keyword: {{ keyword }}
-                            <a href="{{ url_for('jobs.list_jobs', location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                            <a href="{{ url_for('jobs.list_jobs', location=location, country=country, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, company_type=company_type) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
                         </span>
                     {% endif %}
                     {% if location %}
                         <span class="badge bg-light text-dark border">
                             Location: {{ location }}
-                            <a href="{{ url_for('jobs.list_jobs', q=keyword, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, country=country, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, company_type=company_type) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
                         </span>
                     {% endif %}
                     {% if experience_level and experience_level != 'all' %}
                         <span class="badge bg-light text-dark border">
                             Exp: {{ experience_level|title }}
-                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, platform=platform, date_posted=date_posted, sort_by=sort_by) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, country=country, work_mode=work_mode, platform=platform, date_posted=date_posted, sort_by=sort_by, company_type=company_type) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
                         </span>
                     {% endif %}
                     {% if work_mode and work_mode != 'all' %}
                         <span class="badge bg-light text-dark border">
                             Mode: {{ work_mode|title }}
-                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, country=country, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, company_type=company_type) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
                         </span>
                     {% endif %}
                     {% if date_posted and date_posted != 'all' %}
                         <span class="badge bg-light text-dark border">
                             Posted: {{ date_posted }}
-                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, sort_by=sort_by) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, country=country, work_mode=work_mode, platform=platform, experience_level=experience_level, sort_by=sort_by, company_type=company_type) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
                         </span>
                     {% endif %}
                     {% if platform and platform != 'all' %}
                         <span class="badge bg-light text-dark border">
                             Platform: {{ platform|title }}
-                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, country=country, work_mode=work_mode, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, company_type=company_type) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
                         </span>
                     {% endif %}
                     {% if sort_by and sort_by != 'fresh' %}
                         <span class="badge bg-light text-dark border">
                             Sort: {{ sort_by|title }}
-                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, only_relevant='true' if only_relevant else 'false') }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, country=country, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, company_type=company_type, only_relevant='true' if only_relevant else 'false') }}" class="text-dark ms-1 text-decoration-none">&times;</a>
                         </span>
                     {% endif %}
                     {% if only_relevant %}
                         <span class="badge bg-primary text-white border">
                             <i class="bi bi-funnel-fill me-1"></i>Only Relevant Roles
-                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, only_relevant='false') }}" class="text-white ms-1 text-decoration-none">&times;</a>
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, country=country, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, company_type=company_type, only_relevant='false') }}" class="text-white ms-1 text-decoration-none">&times;</a>
                         </span>
                     {% endif %}
                     <a href="{{ url_for('jobs.list_jobs') }}" class="small text-danger ms-2 text-decoration-none">Clear all</a>
@@ -149,13 +161,29 @@
             <div class="collapse mt-3 pt-3 border-top" id="filtersSection">
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <span class="fw-bold small text-muted text-uppercase letter-spacing-1">
-                        <i class="bi bi-sliders me-1"></i> Filter By Experience, Work Mode, Platform & Time
+                        <i class="bi bi-sliders me-1"></i> Filter By Country, Experience, Work Mode, Platform & Time
                     </span>
                     <button type="button" class="btn btn-sm btn-link text-muted text-decoration-none p-0" data-bs-toggle="collapse" data-bs-target="#filtersSection">
                         <i class="bi bi-chevron-up me-1"></i> Hide Filters
                     </button>
                 </div>
                 <div class="row g-3">
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label small fw-semibold text-secondary">
+                            <i class="bi bi-globe-americas me-1 text-primary"></i>Country / Region
+                        </label>
+                        <select name="country" class="form-select form-select-sm">
+                            <option value="all" {% if country == 'all' or not country %}selected{% endif %}>All Countries & Regions</option>
+                            <option value="India" {% if country in ['India', 'IN'] %}selected{% endif %}>🇮🇳 India</option>
+                            <option value="United States" {% if country in ['United States', 'US', 'USA'] %}selected{% endif %}>🇺🇸 United States</option>
+                            <option value="United Kingdom" {% if country in ['United Kingdom', 'UK', 'GB'] %}selected{% endif %}>🇬🇧 United Kingdom</option>
+                            <option value="Canada" {% if country in ['Canada', 'CA'] %}selected{% endif %}>🇨🇦 Canada</option>
+                            <option value="Germany" {% if country in ['Germany', 'DE'] %}selected{% endif %}>🇩🇪 Germany</option>
+                            <option value="Australia" {% if country in ['Australia', 'AU'] %}selected{% endif %}>🇦🇺 Australia</option>
+                            <option value="Singapore" {% if country in ['Singapore', 'SG'] %}selected{% endif %}>🇸🇬 Singapore</option>
+                            <option value="Remote" {% if country in ['Remote', 'Worldwide'] %}selected{% endif %}>🌐 Remote / Worldwide</option>
+                        </select>
+                    </div>
                     <div class="col-lg-3 col-md-6">
                         <label class="form-label small fw-semibold text-secondary">Experience Level</label>
                         <select name="experience_level" class="form-select form-select-sm">
@@ -175,7 +203,7 @@
                             <option value="on-site" {% if work_mode == 'on-site' %}selected{% endif %}>On-site</option>
                         </select>
                     </div>
-                    <div class="col-lg-2 col-md-4">
+                    <div class="col-lg-3 col-md-6">
                         <label class="form-label small fw-semibold text-secondary">Date Posted</label>
                         <select name="date_posted" class="form-select form-select-sm">
                             <option value="all" {% if date_posted == 'all' or not date_posted %}selected{% endif %}>Any Time</option>
@@ -190,22 +218,31 @@
                             <option value="30d" {% if date_posted in ['30d', '1m'] %}selected{% endif %}>Past Month (30 Days)</option>
                         </select>
                     </div>
-                    <div class="col-lg-2 col-md-4">
+                </div>
+                <div class="row g-3 mt-1">
+                    <div class="col-lg-4 col-md-6">
                         <label class="form-label small fw-semibold text-secondary">Source Platform</label>
                         <select name="platform" class="form-select form-select-sm">
-                            <option value="all" {% if platform == 'all' %}selected{% endif %}>All</option>
+                            <option value="all" {% if platform == 'all' %}selected{% endif %}>All Platforms</option>
                             {% for p in available_platforms %}
                                 <option value="{{ p }}" {% if platform == p %}selected{% endif %}>{{ p|title }}</option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-lg-2 col-md-4">
+                    <div class="col-lg-5 col-md-6">
                         <label class="form-label small fw-semibold text-secondary">Sort By</label>
                         <select name="sort_by" class="form-select form-select-sm">
                             <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>Resume-Related & Relevant First (Highest Match Score & Freshly Posted)</option>
                             <option value="match" {% if sort_by == 'match' %}selected{% endif %}>Highest Relevance Score</option>
                             <option value="salary" {% if sort_by == 'salary' %}selected{% endif %}>Highest Salary</option>
                             <option value="all_fresh" {% if sort_by == 'all_fresh' %}selected{% endif %}>All Freshest First</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-3 col-md-12">
+                        <label class="form-label small fw-semibold text-secondary">Organization Type</label>
+                        <select name="company_type" class="form-select form-select-sm">
+                            <option value="all" {% if not company_type or company_type == 'all' %}selected{% endif %}>All Organizations</option>
+                            <option value="mnc" {% if company_type == 'mnc' %}selected{% endif %}>Global MNCs</option>
                         </select>
                     </div>
                 </div>
@@ -402,13 +439,13 @@
             <nav class="mt-4">
                 <ul class="pagination justify-content-center">
                     <li class="page-item {% if not results.has_prev %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('jobs.list_jobs', page=results.page - 1, q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, company_type=company_type) }}">Previous</a>
+                        <a class="page-link" href="{{ url_for('jobs.list_jobs', page=results.page - 1, q=keyword, location=location, country=country, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, company_type=company_type) }}">Previous</a>
                     </li>
                     <li class="page-item active">
                         <span class="page-link">{{ results.page }} / {{ results.pages }}</span>
                     </li>
                     <li class="page-item {% if not results.has_next %}disabled{% endif %}">
-                        <a class="page-link" href="{{ url_for('jobs.list_jobs', page=results.page + 1, q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, company_type=company_type) }}">Next</a>
+                        <a class="page-link" href="{{ url_for('jobs.list_jobs', page=results.page + 1, q=keyword, location=location, country=country, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, company_type=company_type) }}">Next</a>
                     </li>
                 </ul>
             </nav>

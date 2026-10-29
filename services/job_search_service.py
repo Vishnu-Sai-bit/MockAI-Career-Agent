@@ -42,7 +42,9 @@ class JobSearchService:
 
         only_relevant: bool = False,
 
-        company_type: Optional[str] = None
+        company_type: Optional[str] = None,
+
+        country: Optional[str] = None
 
     ) -> Dict[str, Any]:
 
@@ -176,6 +178,125 @@ class JobSearchService:
                 )
 
             )
+
+        if country and country.lower() != "all":
+            c_clean = country.strip()
+            c_low = c_clean.lower()
+            if c_low in ("india", "in"):
+                query = query.filter(
+                    or_(
+                        Job.country.ilike("%India%"),
+                        Job.country == "IN",
+                        Job.location.ilike("%India%"),
+                        Job.location.ilike("%Bengaluru%"),
+                        Job.location.ilike("%Bangalore%"),
+                        Job.location.ilike("%Hyderabad%"),
+                        Job.location.ilike("%Pune%"),
+                        Job.location.ilike("%Mumbai%"),
+                        Job.location.ilike("%Delhi%"),
+                        Job.location.ilike("%Noida%"),
+                        Job.location.ilike("%Gurgaon%"),
+                        Job.location.ilike("%Gurugram%"),
+                        Job.location.ilike("%Chennai%"),
+                        Job.location.ilike("%Kolkata%"),
+                    )
+                )
+            elif c_low in ("united states", "usa", "us"):
+                us_states = [
+                    "CA", "TX", "WA", "NY", "MA", "IL", "CO", "FL", "GA", "VA", "DC", "NC",
+                    "PA", "OH", "NJ", "MI", "MD", "OR", "UT", "AZ", "MN", "WI", "TN", "MO",
+                    "IN", "CT", "SC", "AL", "LA", "KY", "KS", "OK", "NV", "IA", "AR"
+                ]
+                query = query.filter(
+                    or_(
+                        Job.country.ilike("%United States%"),
+                        Job.country.ilike("%USA%"),
+                        Job.country == "US",
+                        Job.country.in_(us_states),
+                        Job.location.ilike("%United States%"),
+                        Job.location.ilike("%USA%"),
+                        Job.location.ilike("%, US%"),
+                        Job.location.ilike("%Remote - US%"),
+                        Job.location.ilike("%Remote - USA%"),
+                    )
+                )
+            elif c_low in ("united kingdom", "uk", "gb", "great britain"):
+                query = query.filter(
+                    or_(
+                        Job.country.ilike("%United Kingdom%"),
+                        Job.country.ilike("%UK%"),
+                        Job.country == "GB",
+                        Job.location.ilike("%United Kingdom%"),
+                        Job.location.ilike("%UK%"),
+                        Job.location.ilike("%London%"),
+                        Job.location.ilike("%Manchester%"),
+                        Job.location.ilike("%Edinburgh%"),
+                    )
+                )
+            elif c_low in ("canada", "ca"):
+                query = query.filter(
+                    or_(
+                        Job.country.ilike("%Canada%"),
+                        Job.location.ilike("%Canada%"),
+                        Job.location.ilike("%Toronto%"),
+                        Job.location.ilike("%Vancouver%"),
+                        Job.location.ilike("%Montreal%"),
+                        Job.location.ilike("%Ottawa%"),
+                    )
+                )
+            elif c_low in ("germany", "de", "deutschland"):
+                query = query.filter(
+                    or_(
+                        Job.country.ilike("%Germany%"),
+                        Job.country.ilike("%Deutschland%"),
+                        Job.country == "DE",
+                        Job.location.ilike("%Germany%"),
+                        Job.location.ilike("%Berlin%"),
+                        Job.location.ilike("%Munich%"),
+                        Job.location.ilike("%München%"),
+                        Job.location.ilike("%Frankfurt%"),
+                        Job.location.ilike("%Hamburg%"),
+                    )
+                )
+            elif c_low in ("australia", "au"):
+                query = query.filter(
+                    or_(
+                        Job.country.ilike("%Australia%"),
+                        Job.country == "AU",
+                        Job.location.ilike("%Australia%"),
+                        Job.location.ilike("%Sydney%"),
+                        Job.location.ilike("%Melbourne%"),
+                        Job.location.ilike("%Brisbane%"),
+                    )
+                )
+            elif c_low in ("singapore", "sg"):
+                query = query.filter(
+                    or_(
+                        Job.country.ilike("%Singapore%"),
+                        Job.country == "SG",
+                        Job.location.ilike("%Singapore%"),
+                    )
+                )
+            elif c_low in ("remote", "worldwide", "global", "anywhere"):
+                query = query.filter(
+                    or_(
+                        Job.work_mode == "remote",
+                        Job.country.ilike("%Remote%"),
+                        Job.location.ilike("%Remote%"),
+                        Job.location.ilike("%Worldwide%"),
+                        Job.location.ilike("%Global%"),
+                        Job.location.ilike("%Anywhere%"),
+                    )
+                )
+            else:
+                c_like = f"%{c_clean}%"
+                query = query.filter(
+                    or_(
+                        Job.country.ilike(c_like),
+                        Job.location.ilike(c_like),
+                        Job.city.ilike(c_like),
+                    )
+                )
 
         if work_mode and work_mode.lower() != "all":
 

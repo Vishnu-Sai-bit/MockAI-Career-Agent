@@ -36,9 +36,13 @@
                         <span class="input-group-text bg-light"><i class="bi bi-funnel text-muted"></i></span>
                         <select name="filter" class="form-select" onchange="this.form.submit()">
                             <option value="all" {% if filter_type == 'all' %}selected{% endif %}>All Companies ({{ total_companies }})</option>
+                            <option value="india" {% if filter_type == 'india' %}selected{% endif %}>🇮🇳 Hiring in India</option>
+                            <option value="us" {% if filter_type == 'us' %}selected{% endif %}>🇺🇸 Hiring in United States</option>
+                            <option value="uk" {% if filter_type == 'uk' %}selected{% endif %}>🇬🇧 Hiring in United Kingdom</option>
+                            <option value="germany" {% if filter_type == 'germany' %}selected{% endif %}>🇩🇪 Hiring in Germany</option>
+                            <option value="canada" {% if filter_type == 'canada' %}selected{% endif %}>🇨🇦 Hiring in Canada</option>
+                            <option value="remote" {% if filter_type == 'remote' %}selected{% endif %}>🌐 Remote-Friendly</option>
                             <option value="mnc" {% if filter_type == 'mnc' %}selected{% endif %}>Global MNCs</option>
-                            <option value="india" {% if filter_type == 'india' %}selected{% endif %}>Hiring in India</option>
-                            <option value="remote" {% if filter_type == 'remote' %}selected{% endif %}>Remote-Friendly</option>
                             <option value="top" {% if filter_type == 'top' %}selected{% endif %}>Top Employers (5+ Jobs)</option>
                             <option value="workday" {% if filter_type == 'workday' %}selected{% endif %}>Workday Enterprises (3,700+ Directory)</option>
                             <option value="greenhouse" {% if filter_type == 'greenhouse' %}selected{% endif %}>Greenhouse Enterprises (5,500+ Directory)</option>
@@ -78,7 +82,19 @@
                     <i class="bi bi-globe me-1"></i>Top MNCs
                 </a>
                 <a href="{{ url_for('jobs.list_companies', filter='india') }}" class="badge {% if filter_type == 'india' %}bg-success text-white{% else %}bg-light text-success border{% endif %} text-decoration-none py-1 px-2">
-                    <i class="bi bi-geo-alt-fill me-1"></i>India Hiring
+                    <i class="bi bi-geo-alt-fill me-1"></i>India
+                </a>
+                <a href="{{ url_for('jobs.list_companies', filter='us') }}" class="badge {% if filter_type == 'us' %}bg-primary text-white{% else %}bg-light text-primary border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-flag-fill me-1"></i>USA
+                </a>
+                <a href="{{ url_for('jobs.list_companies', filter='uk') }}" class="badge {% if filter_type == 'uk' %}bg-dark text-white{% else %}bg-light text-dark border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-buildings me-1"></i>UK
+                </a>
+                <a href="{{ url_for('jobs.list_companies', filter='germany') }}" class="badge {% if filter_type == 'germany' %}bg-warning text-dark{% else %}bg-light text-dark border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-globe-europe-africa me-1"></i>Germany
+                </a>
+                <a href="{{ url_for('jobs.list_companies', filter='canada') }}" class="badge {% if filter_type == 'canada' %}bg-danger text-white{% else %}bg-light text-danger border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-compass me-1"></i>Canada
                 </a>
                 <a href="{{ url_for('jobs.list_companies', filter='remote') }}" class="badge {% if filter_type == 'remote' %}bg-info text-white{% else %}bg-light text-info border{% endif %} text-decoration-none py-1 px-2">
                     <i class="bi bi-laptop me-1"></i>Remote

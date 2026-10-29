@@ -17,6 +17,7 @@ jobs_bp = Blueprint("jobs", __name__)
 def list_jobs():
     keyword = request.args.get("q", "").strip()
     location = request.args.get("location", "").strip()
+    country = request.args.get("country", "all").strip()
     work_mode = request.args.get("work_mode", "all")
     platform = request.args.get("platform", "all")
     exp_level = request.args.get("experience_level", "all")
@@ -53,7 +54,8 @@ def list_jobs():
         page=page,
         per_page=12,
         only_relevant=only_relevant,
-        company_type=company_type if company_type != "all" else None
+        company_type=company_type if company_type != "all" else None,
+        country=country if country != "all" else None
     )
 
     available_platforms = [s.platform for s in JobSource.query.filter_by(is_active=True).all()]
@@ -64,6 +66,7 @@ def list_jobs():
         results=search_data,
         keyword=keyword,
         location=location,
+        country=country,
         work_mode=work_mode,
         platform=platform,
         experience_level=exp_level,

@@ -17,6 +17,11 @@ COMMON_LEGAL_SUFFIXES = [
     r"\bco\b", r"\bag\b", r"\bholding\b", r"\bgroup\b", r"\btechnologies\b"
 ]
 
+US_STATES = {
+    "ca", "tx", "wa", "ny", "ma", "il", "co", "fl", "ga", "va", "dc", "nc",
+    "pa", "oh", "nj", "mi", "md", "or", "ut", "az", "mn", "wi", "tn", "mo"
+}
+
 INDIA_KEYWORDS = [
     "india", "bengaluru", "bangalore", "hyderabad", "mumbai", "pune",
     "delhi", "noida", "gurgaon", "gurugram", "chennai", "kolkata"
@@ -163,6 +168,10 @@ class CompanyService:
             locs = set()
             platforms = set()
             has_india = False
+            has_us = False
+            has_uk = False
+            has_germany = False
+            has_canada = False
             has_remote = False
             sample_url = ""
 
@@ -170,9 +179,18 @@ class CompanyService:
                 loc = (j.location or "").strip()
                 if loc:
                     locs.add(loc)
-                loc_low = f"{loc} {j.country or ''} {j.city or ''}".lower()
+                c_low = (j.country or "").lower().strip()
+                loc_low = f"{loc} {c_low} {j.city or ''}".lower()
                 if any(k in loc_low for k in INDIA_KEYWORDS):
                     has_india = True
+                if "united states" in loc_low or "usa" in loc_low or c_low in US_STATES or c_low == "us":
+                    has_us = True
+                if "united kingdom" in loc_low or "uk" in loc_low or "london" in loc_low or c_low == "gb":
+                    has_uk = True
+                if "germany" in loc_low or "berlin" in loc_low or "munich" in loc_low or c_low == "de":
+                    has_germany = True
+                if "canada" in loc_low or "toronto" in loc_low or "vancouver" in loc_low or "montreal" in loc_low:
+                    has_canada = True
                 if "remote" in loc_low or (j.work_mode or "").lower() == "remote":
                     has_remote = True
                 if j.source_platform:
@@ -194,6 +212,10 @@ class CompanyService:
                 "name": c_name,
                 "total_jobs": len(jobs),
                 "has_india": has_india,
+                "has_us": has_us,
+                "has_uk": has_uk,
+                "has_germany": has_germany,
+                "has_canada": has_canada,
                 "has_remote": has_remote,
                 "is_mnc": is_mnc,
                 "platforms": sorted(list(platforms)),
@@ -212,8 +234,16 @@ class CompanyService:
 
         if filter_type == "mnc":
             company_list = [c for c in company_list if c["is_mnc"]]
-        elif filter_type == "india":
+        elif filter_type in ("india", "in"):
             company_list = [c for c in company_list if c["has_india"]]
+        elif filter_type in ("us", "usa", "united states"):
+            company_list = [c for c in company_list if c["has_us"]]
+        elif filter_type in ("uk", "gb", "united kingdom"):
+            company_list = [c for c in company_list if c["has_uk"]]
+        elif filter_type in ("germany", "de"):
+            company_list = [c for c in company_list if c["has_germany"]]
+        elif filter_type in ("canada", "ca"):
+            company_list = [c for c in company_list if c["has_canada"]]
         elif filter_type == "remote":
             company_list = [c for c in company_list if c["has_remote"]]
         elif filter_type == "top":
