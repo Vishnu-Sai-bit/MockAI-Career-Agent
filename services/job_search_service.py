@@ -752,10 +752,10 @@ class JobSearchService:
             elif sort_by == "match":
                 query = query.order_by(
                     desc(is_resume_related),
-                    desc(func.coalesce(JobMatch.match_score, 0)),
                     priority_rank.asc(),
-                    desc(freshness_date),
                     desc(is_india),
+                    desc(func.coalesce(JobMatch.match_score, 0)),
+                    desc(freshness_date),
                     desc(Job.id)
                 )
             elif sort_by == "all_fresh":
@@ -765,11 +765,11 @@ class JobSearchService:
                     desc(Job.id)
                 )
             else:
-                # Default: Resume-related roles first, India within tier, Experience fit rank, Highest Match Score, Freshly posted jobs:
+                # Default: Resume-related roles first, Experience fit, India country first within tier, Highest Match Score, Freshly posted jobs:
                 query = query.order_by(
                     desc(is_resume_related),
-                    desc(is_india),
                     priority_rank.asc(),
+                    desc(is_india),
                     desc(func.coalesce(JobMatch.match_score, 0)),
                     desc(freshness_date),
                     desc(Job.id)
