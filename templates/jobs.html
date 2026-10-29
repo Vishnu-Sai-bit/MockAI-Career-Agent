@@ -63,8 +63,11 @@
             <!-- Quick Explore Presets -->
             <div class="d-flex flex-wrap align-items-center gap-1 mt-2 pt-2 border-top">
                 <small class="text-muted me-1 fs-8"><i class="bi bi-lightning-charge-fill text-warning me-1"></i>Quick Explore:</small>
-                <a href="{{ url_for('jobs.list_jobs', country='India') }}" class="badge {% if country == 'India' %}bg-success text-white{% else %}bg-light text-success border{% endif %} text-decoration-none py-1 px-2">
-                    <i class="bi bi-geo-alt-fill me-1"></i>India Roles
+                <a href="{{ url_for('jobs.list_jobs', country='India') }}" class="badge {% if country in ['India', 'IN'] or not country %}bg-success text-white{% else %}bg-light text-success border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-geo-alt-fill me-1"></i>India Roles (Default)
+                </a>
+                <a href="{{ url_for('jobs.list_jobs', country='all') }}" class="badge {% if country == 'all' %}bg-primary text-white{% else %}bg-light text-primary border{% endif %} text-decoration-none py-1 px-2">
+                    <i class="bi bi-globe me-1"></i>All Countries
                 </a>
                 <a href="{{ url_for('jobs.list_jobs', country='United States') }}" class="badge {% if country in ['United States', 'US'] %}bg-primary text-white{% else %}bg-light text-primary border{% endif %} text-decoration-none py-1 px-2">
                     <i class="bi bi-flag-fill me-1"></i>USA Roles
@@ -96,7 +99,7 @@
                     {% if country and country != 'all' %}
                         <span class="badge bg-light text-dark border">
                             <i class="bi bi-globe-americas text-primary me-1"></i>Country: {{ country }}
-                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, company_type=company_type) }}" class="text-dark ms-1 text-decoration-none">&times;</a>
+                            <a href="{{ url_for('jobs.list_jobs', q=keyword, location=location, country='all', work_mode=work_mode, platform=platform, experience_level=experience_level, date_posted=date_posted, sort_by=sort_by, company_type=company_type) }}" class="text-dark ms-1 text-decoration-none" title="Show all countries">&times;</a>
                         </span>
                     {% endif %}
                     {% if company_type and company_type != 'all' %}
@@ -173,8 +176,8 @@
                             <i class="bi bi-globe-americas me-1 text-primary"></i>Country / Region
                         </label>
                         <select name="country" class="form-select form-select-sm">
-                            <option value="all" {% if country == 'all' or not country %}selected{% endif %}>All Countries & Regions</option>
-                            <option value="India" {% if country in ['India', 'IN'] %}selected{% endif %}>🇮🇳 India</option>
+                            <option value="India" {% if country in ['India', 'IN'] or not country or country == 'India' %}selected{% endif %}>🇮🇳 India (Default)</option>
+                            <option value="all" {% if country == 'all' %}selected{% endif %}>All Countries & Regions</option>
                             <option value="United States" {% if country in ['United States', 'US', 'USA'] %}selected{% endif %}>🇺🇸 United States</option>
                             <option value="United Kingdom" {% if country in ['United Kingdom', 'UK', 'GB'] %}selected{% endif %}>🇬🇧 United Kingdom</option>
                             <option value="Canada" {% if country in ['Canada', 'CA'] %}selected{% endif %}>🇨🇦 Canada</option>

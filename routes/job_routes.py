@@ -17,7 +17,20 @@ jobs_bp = Blueprint("jobs", __name__)
 def list_jobs():
     keyword = request.args.get("q", "").strip()
     location = request.args.get("location", "").strip()
-    country = request.args.get("country", "all").strip()
+    country_arg = request.args.get("country")
+    if country_arg is not None:
+        country = country_arg.strip()
+        if not country:
+            country = "all"
+    else:
+        # Default to India; if authenticated candidate has explicitly set a foreign location in their profile, respect it
+        cand_loc = ""
+        if current_user.is_authenticated and current_user.candidate_profile:
+            cand_loc = (current_user.candidate_profile.location or "").lower()
+        if cand_loc and not any(k in cand_loc for k in ["india", "bengaluru", "bangalore", "hyderabad", "pune", "mumbai", "delhi", "noida", "chennai", "gurgaon", "kolkata"]):
+            country = "all"
+        else:
+            country = "India"
     work_mode = request.args.get("work_mode", "all")
     platform = request.args.get("platform", "all")
     exp_level = request.args.get("experience_level", "all")

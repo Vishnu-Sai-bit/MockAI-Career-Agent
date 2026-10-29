@@ -109,6 +109,15 @@ def test_country_filter_remote(app_and_ctx):
     assert "GitLab" in companies
     assert "Shopify" in companies
 
+def test_jobs_route_default_is_india(app_and_ctx):
+    client = app_and_ctx.test_client()
+    resp = client.get("/jobs")
+    assert resp.status_code == 200
+    html = resp.data.decode("utf-8")
+    assert "Swiggy" in html
+    assert "Stripe" not in html
+    assert "India (Default)" in html
+
 def test_jobs_route_country_param(app_and_ctx):
     client = app_and_ctx.test_client()
     resp = client.get("/jobs?country=India")
