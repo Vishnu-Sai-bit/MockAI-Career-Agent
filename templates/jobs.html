@@ -202,7 +202,7 @@
                     <div class="col-lg-2 col-md-4">
                         <label class="form-label small fw-semibold text-secondary">Sort By</label>
                         <select name="sort_by" class="form-select form-select-sm">
-                            <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>Resume-Related & Relevant First (India & Freshest Postings)</option>
+                            <option value="fresh" {% if sort_by == 'fresh' or not sort_by %}selected{% endif %}>Resume-Related & Relevant First (Highest Match Score & Freshly Posted)</option>
                             <option value="match" {% if sort_by == 'match' %}selected{% endif %}>Highest Relevance Score</option>
                             <option value="salary" {% if sort_by == 'salary' %}selected{% endif %}>Highest Salary</option>
                             <option value="all_fresh" {% if sort_by == 'all_fresh' %}selected{% endif %}>All Freshest First</option>
@@ -286,14 +286,22 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="text-end">
-                                    {% if item.is_matched and match and match.match_score >= 60 %}
-                                        <span class="match-badge {% if match.match_score >= 80 %}match-high{% else %}match-mid{% endif %}">
-                                            <i class="bi bi-shield-check"></i> {{ match.match_score|round(0)|int }}% Relevant
+                                <div class="text-end d-flex flex-column align-items-end gap-1">
+                                    {% if match and match.match_score and match.match_score >= 75 %}
+                                        <span class="match-badge match-high" title="Exceptional skill and profile match">
+                                            <i class="bi bi-star-fill text-warning me-1"></i>{{ match.match_score|round(0)|int }}% Match
+                                        </span>
+                                    {% elif match and match.match_score and match.match_score >= 55 %}
+                                        <span class="match-badge match-mid" title="Good skill alignment with your profile">
+                                            <i class="bi bi-shield-check me-1"></i>{{ match.match_score|round(0)|int }}% Match
+                                        </span>
+                                    {% elif match and match.match_score and match.match_score >= 35 %}
+                                        <span class="badge bg-info-subtle text-info border border-info-subtle fw-semibold" title="Relevant skills detected">
+                                            <i class="bi bi-lightning-charge me-1"></i>{{ match.match_score|round(0)|int }}% Match
                                         </span>
                                     {% elif item.is_resume_related %}
                                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle fw-semibold">
-                                            <i class="bi bi-stars me-1"></i>Resume Match{% if match and match.match_score %} ({{ match.match_score|round(0)|int }}%){% endif %}
+                                            <i class="bi bi-stars me-1"></i>Resume Match{% if match and match.match_score %} ({{ match.match_score|round(0)|int }}% Match){% endif %}
                                         </span>
                                     {% else %}
                                         <span class="badge bg-light text-secondary border">Remaining Role</span>
@@ -341,6 +349,11 @@
                                     </span>
                                 {% endif %}
                                 <span class="badge bg-secondary-subtle text-secondary">{{ job.source_platform|title }}</span>
+                                {% if item.is_fresh %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold" title="Freshly posted within the last 48 hours">
+                                        <i class="bi bi-fire text-danger me-1"></i>Freshly Posted
+                                    </span>
+                                {% endif %}
                                 <span class="badge bg-light text-muted border"><i class="bi bi-clock me-1"></i>{{ job.posted_relative_time }}</span>
                             </div>
 

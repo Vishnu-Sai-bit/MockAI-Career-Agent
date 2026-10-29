@@ -147,7 +147,7 @@
                                     </div>
                                     <div class="text-end">
                                         <span class="match-badge {% if match.match_score >= 80 %}match-high{% elif match.match_score >= 60 %}match-mid{% else %}match-low{% endif %}">
-                                            <i class="bi bi-shield-check"></i> {{ match.match_score|round(1) }}% Relevant
+                                            <i class="bi bi-shield-check me-1"></i>{{ match.match_score|round(0)|int }}% Match
                                         </span>
                                     </div>
                                 </div>

@@ -742,20 +742,20 @@ class JobSearchService:
             if sort_by == "salary":
                 query = query.order_by(
                     desc(is_resume_related),
+                    desc(Job.salary_max),
                     desc(is_india),
                     priority_rank.asc(),
-                    desc(Job.salary_max),
-                    desc(JobMatch.match_score),
+                    desc(func.coalesce(JobMatch.match_score, 0)),
                     desc(freshness_date),
                     desc(Job.id)
                 )
             elif sort_by == "match":
                 query = query.order_by(
                     desc(is_resume_related),
+                    desc(func.coalesce(JobMatch.match_score, 0)),
                     priority_rank.asc(),
-                    desc(is_india),
-                    desc(JobMatch.match_score),
                     desc(freshness_date),
+                    desc(is_india),
                     desc(Job.id)
                 )
             elif sort_by == "all_fresh":
@@ -765,13 +765,13 @@ class JobSearchService:
                     desc(Job.id)
                 )
             else:
-                # Default (Resume-related roles first, India first within tier, Experience fit rank, Fresh/updated postings first, then Remaining roles):
+                # Default: Resume-related roles first, India within tier, Experience fit rank, Highest Match Score, Freshly posted jobs:
                 query = query.order_by(
                     desc(is_resume_related),
                     desc(is_india),
                     priority_rank.asc(),
+                    desc(func.coalesce(JobMatch.match_score, 0)),
                     desc(freshness_date),
-                    desc(JobMatch.match_score),
                     desc(Job.id)
                 )
         else:
@@ -896,12 +896,24 @@ class JobSearchService:
                     elif not candidate_target and not is_data_domain:
                         is_job_resume_related = True
 
+            # Compute freshness flag (posted within 48h / 2 days)
+            pub_dt = job.published_at or job.created_at
+            is_job_fresh = False
+            if pub_dt:
+                now_utc = datetime.now(timezone.utc)
+                if pub_dt.tzinfo is None:
+                    pub_dt = pub_dt.replace(tzinfo=timezone.utc)
+                time_diff = (now_utc - pub_dt).total_seconds()
+                if 0 <= time_diff <= (86400 * 2):
+                    is_job_fresh = True
+
             results.append({
                 "job": job,
                 "match": match_obj,
                 "is_matched": is_job_matched,
                 "is_resume_related": is_job_resume_related,
                 "is_exp_fit": is_job_exp_fit,
+                "is_fresh": is_job_fresh,
 
                 "is_india": job_is_india,
 
