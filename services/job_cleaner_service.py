@@ -34,6 +34,10 @@ TITLE_CLOSURE_PHRASES = (
     "filled position",
     "job expired",
     "404",
+    "<insert",
+    "dream job",
+    "future opportunities",
+    "expression of interest",
 )
 
 def normalize_text(text: str) -> str:

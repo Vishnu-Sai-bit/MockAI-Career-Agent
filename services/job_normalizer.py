@@ -1,4 +1,5 @@
 import re
+import html
 from urllib.parse import urlparse, urlunparse, parse_qsl, urlencode
 from typing import Dict, Any, List
 from collectors.base_collector import RawJobRecord
@@ -12,12 +13,14 @@ class JobNormalizer:
         Transforms RawJobRecord into normalized dictionary suitable for the Job model.
         """
         title = self._clean_title(raw.title)
-        work_mode = self._detect_work_mode(raw.title, raw.location, raw.description, raw.work_mode)
+        company = self._clean_company(raw.company)
+        clean_desc = self._clean_description(raw.description, raw.raw_description)
+        work_mode = self._detect_work_mode(raw.title, raw.location, clean_desc, raw.work_mode)
         country, city = self._parse_location(raw.location)
         emp_type = self._normalize_employment_type(raw.employment_type)
-        exp_level = self._detect_experience_level(raw.title, raw.description, raw.experience_level)
+        exp_level = self._detect_experience_level(raw.title, clean_desc, raw.experience_level)
         
-        req_skills, pref_skills = self._extract_job_skills(raw.description, raw.required_skills)
+        req_skills, pref_skills = self._extract_job_skills(clean_desc, raw.required_skills)
         clean_orig_url = self._clean_url(raw.original_url)
         clean_apply_url = self._clean_url(raw.apply_url)
 
@@ -26,8 +29,8 @@ class JobNormalizer:
             "source_company_key": raw.source_company_key.lower(),
             "source_job_id": str(raw.source_job_id).strip(),
             "title": title,
-            "company": raw.company.strip(),
-            "department": raw.department.strip(),
+            "company": company,
+            "department": raw.department.strip() if raw.department else "",
             "location": raw.location.strip() or ("Remote" if work_mode == "remote" else "Unspecified"),
             "country": country,
             "city": city,
@@ -37,7 +40,7 @@ class JobNormalizer:
             "salary_min": raw.salary_min,
             "salary_max": raw.salary_max,
             "currency": raw.currency,
-            "description": raw.description.strip(),
+            "description": clean_desc,
             "raw_description": raw.raw_description,
             "required_skills": req_skills,
             "preferred_skills": pref_skills,
@@ -49,9 +52,33 @@ class JobNormalizer:
         }
 
     def _clean_title(self, title: str) -> str:
-        cleaned = re.sub(r"\((m/w/d|m/f/d|w/m/d)\)", "", title, flags=re.IGNORECASE)
+        if not title:
+            return ""
+        cleaned = re.sub(r"<[^>]+>", " ", title)
+        cleaned = html.unescape(cleaned)
+        cleaned = cleaned.replace("\ufffd", " ").replace("\xa0", " ")
+        cleaned = re.sub(r"\((m/w/d|m/f/d|w/m/d)\)", "", cleaned, flags=re.IGNORECASE)
         cleaned = re.sub(r"\[(remote|hybrid)\]", "", cleaned, flags=re.IGNORECASE)
         return " ".join(cleaned.split()).strip()
+
+    def _clean_company(self, company: str) -> str:
+        if not company:
+            return ""
+        cleaned = html.unescape(company)
+        cleaned = cleaned.replace("\ufffd", " ")
+        cleaned = re.sub(r"\s+[12]$", "", cleaned).strip()
+        return " ".join(cleaned.split()).strip()
+
+    def _clean_description(self, desc: str, raw_desc: str = None) -> str:
+        text = desc or raw_desc or ""
+        if not text:
+            return ""
+        cleaned = re.sub(r"<[^>]+>", " ", text)
+        cleaned = html.unescape(cleaned)
+        cleaned = cleaned.replace("\xa0", " ").replace("\ufffd", " ")
+        cleaned = re.sub(r"[ \t]+", " ", cleaned)
+        cleaned = re.sub(r"\n\s*\n+", "\n\n", cleaned)
+        return cleaned.strip()
 
     def _detect_work_mode(self, title: str, location: str, desc: str, fallback: str) -> str:
         combined = f"{title} {location} {desc[:500]}".lower()
