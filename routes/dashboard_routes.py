@@ -11,12 +11,52 @@ dashboard_bp = Blueprint("dashboard", __name__)
 
 @dashboard_bp.route("/")
 def index():
-    if current_user.is_authenticated:
+    if current_user.is_authenticated and not request.args.get("landing") and not request.args.get("home") and not request.args.get("preview"):
         return redirect(url_for("dashboard.dashboard"))
     
+    # Real database statistics
     total_jobs = Job.query.filter_by(status="active").count()
+    total_companies = db.session.query(Job.company).filter(Job.status == "active").distinct().count()
     total_sources = JobSource.query.filter_by(is_active=True).count()
-    return render_template("index.html", total_jobs=total_jobs, total_sources=total_sources)
+    total_remote_jobs = Job.query.filter(Job.status == "active", Job.work_mode == "remote").count()
+    total_india_jobs = Job.query.filter(Job.status == "active").filter(
+        Job.country.ilike("%India%") | Job.location.ilike("%India%") | Job.location.ilike("%Bengaluru%")
+    ).count()
+
+    # Dynamic featured hero job
+    featured_hero_job = Job.query.filter_by(status="active").filter(
+        Job.title.ilike("%Software%") | Job.title.ilike("%Engineer%") | Job.title.ilike("%Developer%")
+    ).order_by(Job.published_at.desc(), Job.created_at.desc()).first()
+    if not featured_hero_job:
+        featured_hero_job = Job.query.filter_by(status="active").order_by(Job.published_at.desc(), Job.created_at.desc()).first()
+
+    # Dynamic sample personalized jobs for hero visual
+    sample_matches = Job.query.filter_by(status="active").filter(
+        Job.company.in_(["SpaceX", "Openai", "Stripe", "Databricks", "Google", "Amazon", "Microsoft", "Anduril Industries"])
+    ).order_by(Job.published_at.desc(), Job.created_at.desc()).limit(3).all()
+    if len(sample_matches) < 3:
+        sample_matches = Job.query.filter_by(status="active").order_by(Job.published_at.desc(), Job.created_at.desc()).limit(3).all()
+
+    # 6 Recent verified job postings for the live jobs section
+    recent_jobs = Job.query.filter_by(status="active").order_by(Job.published_at.desc(), Job.created_at.desc()).limit(6).all()
+
+    # Top hiring companies with real open vacancy counts
+    top_companies_data = db.session.query(
+        Job.company, db.func.count(Job.id).label("openings")
+    ).filter(Job.status == "active").group_by(Job.company).order_by(db.desc("openings")).limit(8).all()
+
+    return render_template(
+        "index.html",
+        total_jobs=total_jobs,
+        total_companies=total_companies,
+        total_sources=total_sources,
+        total_remote_jobs=total_remote_jobs,
+        total_india_jobs=total_india_jobs,
+        featured_hero_job=featured_hero_job,
+        sample_matches=sample_matches,
+        recent_jobs=recent_jobs,
+        top_companies=top_companies_data
+    )
 
 
 @dashboard_bp.route("/dashboard")

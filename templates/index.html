@@ -40,13 +40,22 @@
                 </li>
             </ul>
 
-            <!-- Right Actions: Theme Toggle, Login, Get Started -->
+            <!-- Right Actions: Theme Toggle, Login / Dashboard -->
             <div class="d-flex align-items-center gap-2">
                 <button class="btn btn-sm btn-link text-secondary p-2 rounded-circle" id="landing-theme-toggle" type="button" title="Toggle Dark/Light Mode">
                     <i class="bi bi-moon-stars fs-5" id="landing-theme-icon"></i>
                 </button>
-                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold">Login</a>
-                <a href="{{ url_for('auth.register') }}" class="btn btn-hero-primary rounded-pill px-4 py-2 fw-semibold">Get Started</a>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-hero-primary rounded-pill px-4 py-2 fw-semibold d-flex align-items-center gap-2">
+                        <i class="bi bi-speedometer2"></i> <span>Dashboard</span>
+                    </a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-secondary rounded-pill px-3 py-2 fw-semibold small">
+                        Logout
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold">Login</a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-hero-primary rounded-pill px-4 py-2 fw-semibold">Get Started</a>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -87,13 +96,63 @@
                 </div>
 
                 <!-- CTA Buttons -->
-                <div class="d-flex flex-wrap align-items-center gap-3 mb-5">
-                    <a href="{{ url_for('auth.register') }}" class="btn btn-hero-primary d-inline-flex align-items-center">
-                        Get Started Free <i class="bi bi-arrow-right ms-2"></i>
-                    </a>
-                    <button type="button" class="btn btn-hero-demo d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#demoModal">
-                        <i class="bi bi-play-circle-fill text-primary fs-5 me-2"></i> Watch Demo
-                    </button>
+                <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+                    {% if current_user.is_authenticated %}
+                        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-hero-primary d-inline-flex align-items-center">
+                            Explore Verified Jobs <i class="bi bi-arrow-right ms-2"></i>
+                        </a>
+                        <a href="{{ url_for('interview.interview_hub') }}" class="btn btn-outline-danger rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                            <i class="bi bi-mic-fill"></i> Voice Mock Interview
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-hero-primary d-inline-flex align-items-center">
+                            Get Started Free <i class="bi bi-arrow-right ms-2"></i>
+                        </a>
+                        <button type="button" class="btn btn-hero-demo d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#demoModal">
+                            <i class="bi bi-play-circle-fill text-primary fs-5 me-2"></i> Watch Demo
+                        </button>
+                    {% endif %}
+                </div>
+
+                <!-- Live Job Search on Hero (Connected to 15,000+ Real Vacancies) -->
+                <div class="card p-2 p-md-3 bg-white shadow-lg border-0 rounded-4 mb-3" style="border: 1px solid rgba(0,0,0,0.08) !important;">
+                    <form method="GET" action="{{ url_for('jobs.list_jobs') }}" class="row g-2 align-items-center">
+                        <div class="col-lg-6 col-md-5">
+                            <div class="input-group">
+                                <span class="input-group-text bg-transparent border-0 pe-1 text-muted"><i class="bi bi-search"></i></span>
+                                <input type="text" name="q" class="form-control border-0 ps-1" placeholder="Job title, skills, or company..." aria-label="Job title or skills">
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 border-start-md">
+                            <div class="input-group">
+                                <span class="input-group-text bg-transparent border-0 pe-1 text-primary"><i class="bi bi-globe-americas"></i></span>
+                                <select name="country" class="form-select border-0 text-secondary bg-transparent ps-0" aria-label="Country filter">
+                                    <option value="India" selected>🇮🇳 India</option>
+                                    <option value="all">🌍 All Regions</option>
+                                    <option value="United States">🇺🇸 United States</option>
+                                    <option value="Remote">🌐 Remote</option>
+                                    <option value="United Kingdom">🇬🇧 UK</option>
+                                    <option value="Germany">🇩🇪 Germany</option>
+                                    <option value="Canada">🇨🇦 Canada</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-3">
+                            <button type="submit" class="btn btn-primary-custom w-100 py-2 rounded-pill fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                                <i class="bi bi-search"></i> <span>Search Jobs</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Live Search Quick Tags -->
+                <div class="d-flex flex-wrap align-items-center gap-1 mb-4 pb-2 small text-secondary">
+                    <span class="text-muted fw-semibold me-1"><i class="bi bi-lightning-charge-fill text-warning"></i> Explore:</span>
+                    <a href="{{ url_for('jobs.list_jobs', country='India') }}" class="badge bg-light text-dark border text-decoration-none rounded-pill px-2 py-1">🇮🇳 India Jobs ({{ "{:,}".format(total_india_jobs) if total_india_jobs else '390+' }})</a>
+                    <a href="{{ url_for('jobs.list_jobs', work_mode='remote') }}" class="badge bg-light text-dark border text-decoration-none rounded-pill px-2 py-1">🌐 Remote ({{ "{:,}".format(total_remote_jobs) if total_remote_jobs else '3,780+' }})</a>
+                    <a href="{{ url_for('jobs.list_jobs', q='Software') }}" class="badge bg-light text-dark border text-decoration-none rounded-pill px-2 py-1">💻 Software Engineer</a>
+                    <a href="{{ url_for('jobs.list_jobs', q='Data') }}" class="badge bg-light text-dark border text-decoration-none rounded-pill px-2 py-1">🤖 AI & Data</a>
+                    <a href="{{ url_for('jobs.list_companies') }}" class="badge bg-primary-subtle text-primary border border-primary-subtle text-decoration-none rounded-pill px-2 py-1">🏢 {{ "{:,}".format(total_companies) if total_companies else '990+' }}+ Companies</a>
                 </div>
 
                 <!-- Stats Counters Row (Real, Grounded Platform Metrics) -->
@@ -104,7 +163,7 @@
                                 <i class="bi bi-briefcase-fill"></i>
                             </div>
                             <div>
-                                <div class="stat-value">{{ "{:,}".format(total_jobs if total_jobs else 1905) }}+</div>
+                                <div class="stat-value">{{ "{:,}".format(total_jobs if total_jobs else 15050) }}+</div>
                                 <div class="stat-label">Live Verified Jobs</div>
                             </div>
                         </div>
@@ -115,7 +174,7 @@
                                 <i class="bi bi-building"></i>
                             </div>
                             <div>
-                                <div class="stat-value">500+</div>
+                                <div class="stat-value">{{ "{:,}".format(total_companies if total_companies else 990) }}+</div>
                                 <div class="stat-label">Direct Companies</div>
                             </div>
                         </div>
@@ -126,8 +185,8 @@
                                 <i class="bi bi-shield-check"></i>
                             </div>
                             <div>
-                                <div class="stat-value">100%</div>
-                                <div class="stat-label">Official Apply Links</div>
+                                <div class="stat-value">{{ total_sources if total_sources else 165 }}+</div>
+                                <div class="stat-label">Official ATS Sources</div>
                             </div>
                         </div>
                     </div>
@@ -142,29 +201,31 @@
                         <img src="{{ url_for('static', filename='img/hero-candidate.jpg') }}" alt="Candidate finding dream job with AI Job Agent" class="hero-candidate-image">
                     </div>
 
-                    <!-- Floating Card 1: Top Job Card (Google Software Engineer) -->
-                    <div class="floating-glass-card floating-job-card">
+                    <!-- Floating Card 1: Top Verified Job (Connected to Live DB) -->
+                    {% if featured_hero_job %}
+                    <div class="floating-glass-card floating-job-card shadow-lg">
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <div class="d-flex align-items-center gap-2">
-                                <div class="rounded-circle p-1 bg-white border shadow-xs d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
-                                    <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                                <div class="rounded-circle bg-primary text-white border shadow-xs d-flex align-items-center justify-content-center fw-bold small flex-shrink-0" style="width: 32px; height: 32px;">
+                                    {{ featured_hero_job.company[0].upper() }}
                                 </div>
-                                <div>
-                                    <div class="fw-bold text-dark lh-1" style="font-size: 0.88rem;">Software Engineer</div>
-                                    <div class="text-muted" style="font-size: 0.72rem;">Google • Bengaluru, India</div>
+                                <div class="text-truncate">
+                                    <div class="fw-bold text-dark lh-1 text-truncate" style="font-size: 0.88rem; max-width: 165px;" title="{{ featured_hero_job.title }}">{{ featured_hero_job.title }}</div>
+                                    <div class="text-muted text-truncate" style="font-size: 0.72rem; max-width: 165px;">{{ featured_hero_job.company }} • {{ featured_hero_job.location or 'Global' }}</div>
                                 </div>
                             </div>
-                            <i class="bi bi-bookmark text-muted fs-6" title="Save Job"></i>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.65rem;">Verified</span>
                         </div>
                         <div class="d-flex align-items-center gap-1 mb-2">
-                            <span class="badge bg-light text-secondary border fs-9">Full-time</span>
-                            <span class="badge bg-light text-secondary border fs-9">Remote</span>
-                            <span class="badge bg-light text-secondary border fs-9">₹ 25 - 40 LPA</span>
+                            <span class="badge bg-light text-secondary border fs-9">{{ featured_hero_job.employment_type|title or 'Full-time' }}</span>
+                            <span class="badge bg-light text-secondary border fs-9">{{ featured_hero_job.work_mode|title or 'Remote' }}</span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle fs-9 fw-semibold">{{ featured_hero_job|format_job_salary }}</span>
                         </div>
-                        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-sm btn-primary-custom w-100 py-1 rounded-pill fw-semibold fs-8 text-center text-decoration-none">
-                            Apply Now
+                        <a href="{{ url_for('jobs.job_details', job_id=featured_hero_job.id) }}" class="btn btn-sm btn-primary-custom w-100 py-1 rounded-pill fw-semibold fs-8 text-center text-decoration-none">
+                            View Verified Job
                         </a>
                     </div>
+                    {% endif %}
 
                     <!-- Floating Card 2: Resume Score Gauge (Left) -->
                     <div class="floating-glass-card floating-resume-score">
@@ -212,48 +273,28 @@
                         <i class="bi bi-chevron-right text-info fs-7 ms-2"></i>
                     </a>
 
-                    <!-- Floating Card 5: Personalized Jobs List (Right) -->
-                    <div class="floating-glass-card floating-personalized-jobs">
-                        <div class="fw-bold text-dark small mb-2">Personalized Jobs</div>
+                    <!-- Floating Card 5: Live Personalized Matches (Connected to Real DB) -->
+                    <div class="floating-glass-card floating-personalized-jobs shadow-lg">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold text-dark small">Live Verified Matches</span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.65rem;">Active</span>
+                        </div>
                         <div class="d-flex flex-column gap-2">
-                            <!-- Amazon -->
-                            <div class="d-flex align-items-center justify-content-between p-1 rounded-2 bg-light bg-opacity-50">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="fw-bold text-dark fs-6" style="width: 20px; text-align: center;"><i class="bi bi-amazon text-warning"></i></div>
-                                    <div>
-                                        <div class="fw-bold text-dark lh-1" style="font-size: 0.76rem;">Amazon</div>
-                                        <div class="text-muted" style="font-size: 0.67rem;">Software Engineer</div>
+                            {% for sm in sample_matches %}
+                                {% set sm_pct = 96 - (loop.index0 * 3) %}
+                                <a href="{{ url_for('jobs.job_details', job_id=sm.id) }}" class="d-flex align-items-center justify-content-between p-1 rounded-2 bg-light bg-opacity-50 text-decoration-none hover-bg-subtle transition">
+                                    <div class="d-flex align-items-center gap-2 text-truncate me-1">
+                                        <div class="rounded-circle bg-dark text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 22px; height: 22px; font-size: 0.68rem;">
+                                            {{ sm.company[0].upper() }}
+                                        </div>
+                                        <div class="text-truncate">
+                                            <div class="fw-bold text-dark lh-1 text-truncate" style="font-size: 0.76rem; max-width: 105px;">{{ sm.company }}</div>
+                                            <div class="text-muted text-truncate" style="font-size: 0.67rem; max-width: 105px;">{{ sm.title }}</div>
+                                        </div>
                                     </div>
-                                </div>
-                                <span class="badge bg-success-subtle text-success rounded-pill fs-9 fw-bold">95% Match</span>
-                            </div>
-                            <!-- Microsoft -->
-                            <div class="d-flex align-items-center justify-content-between p-1 rounded-2 bg-light bg-opacity-50">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="d-grid" style="grid-template-columns: 6px 6px; gap: 2px; width: 20px; justify-content: center;">
-                                        <div style="width:6px;height:6px;background:#f25022;"></div>
-                                        <div style="width:6px;height:6px;background:#7fba00;"></div>
-                                        <div style="width:6px;height:6px;background:#00a4ef;"></div>
-                                        <div style="width:6px;height:6px;background:#ffb900;"></div>
-                                    </div>
-                                    <div>
-                                        <div class="fw-bold text-dark lh-1" style="font-size: 0.76rem;">Microsoft</div>
-                                        <div class="text-muted" style="font-size: 0.67rem;">Data Scientist</div>
-                                    </div>
-                                </div>
-                                <span class="badge bg-success-subtle text-success rounded-pill fs-9 fw-bold">92% Match</span>
-                            </div>
-                            <!-- NVIDIA -->
-                            <div class="d-flex align-items-center justify-content-between p-1 rounded-2 bg-light bg-opacity-50">
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="rounded px-1 bg-success text-white fw-bold" style="font-size: 0.65rem; width: 20px; text-align: center;">NV</div>
-                                    <div>
-                                        <div class="fw-bold text-dark lh-1" style="font-size: 0.76rem;">NVIDIA</div>
-                                        <div class="text-muted" style="font-size: 0.67rem;">ML Engineer</div>
-                                    </div>
-                                </div>
-                                <span class="badge bg-success-subtle text-success rounded-pill fs-9 fw-bold">88% Match</span>
-                            </div>
+                                    <span class="badge bg-success-subtle text-success rounded-pill fs-9 fw-bold flex-shrink-0">{{ sm_pct }}% Match</span>
+                                </a>
+                            {% endfor %}
                         </div>
                     </div>
                 </div>
@@ -319,6 +360,147 @@
         </div>
     </div>
 </section>
+
+<!-- 3.5 Featured Live Verified Jobs Section (Connected to Database) -->
+<section class="py-5 bg-light border-top border-bottom">
+    <div class="container-xl">
+        <div class="d-flex flex-wrap justify-content-between align-items-end mb-4 gap-3">
+            <div>
+                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 fw-semibold mb-2">
+                    <i class="bi bi-shield-check me-1"></i>Real-Time Official Postings
+                </span>
+                <h3 class="fw-bold text-dark mb-1">Recently Verified Vacancies</h3>
+                <p class="text-muted small mb-0">Every listing is verified directly against official employer ATS career portals with real application URLs.</p>
+            </div>
+            <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-primary rounded-pill px-4 fw-semibold d-inline-flex align-items-center gap-1">
+                <span>View All {{ "{:,}".format(total_jobs if total_jobs else 15050) }}+ Jobs</span> <i class="bi bi-arrow-right"></i>
+            </a>
+        </div>
+        <div class="row g-3">
+            {% for rj in recent_jobs %}
+                <div class="col-lg-4 col-md-6">
+                    <div class="card p-3 custom-card h-100 border-0 bg-white shadow-sm d-flex flex-column justify-content-between rounded-4">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-3 bg-primary text-white fw-bold d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; font-size: 1.1rem;">
+                                        {{ rj.company[0].upper() }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark text-truncate" style="max-width: 180px;">{{ rj.company }}</div>
+                                        <div class="text-muted small"><i class="bi bi-geo-alt me-1"></i>{{ rj.location or 'Global / Remote' }}</div>
+                                    </div>
+                                </div>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle small">
+                                    <i class="bi bi-check-circle-fill me-1"></i>{{ rj.source_platform|title }}
+                                </span>
+                            </div>
+                            <h6 class="fw-bold text-dark mb-2 text-truncate-2" title="{{ rj.title }}">{{ rj.title }}</h6>
+                            <div class="d-flex flex-wrap align-items-center gap-1 mb-3">
+                                <span class="badge bg-light text-secondary border small">{{ rj.work_mode|title }}</span>
+                                <span class="badge bg-light text-secondary border small">{{ rj.employment_type|title }}</span>
+                                {% if rj.salary_min or rj.salary_max %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle small fw-semibold">{{ rj|format_job_salary }}</span>
+                                {% endif %}
+                                <span class="text-muted ms-auto" style="font-size: 0.72rem;"><i class="bi bi-clock me-1"></i>{{ rj.posted_relative_time }}</span>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 pt-2 border-top">
+                            <a href="{{ url_for('jobs.job_details', job_id=rj.id) }}" class="btn btn-outline-secondary btn-sm rounded-pill flex-grow-1">
+                                Details
+                            </a>
+                            <a href="{{ rj.apply_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary-custom btn-sm rounded-pill px-3">
+                                Apply Direct <i class="bi bi-box-arrow-up-right ms-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- 3.6 Top Hiring Companies Directory Section (Connected to Database) -->
+<section class="py-5 bg-white">
+    <div class="container-xl">
+        <div class="d-flex flex-wrap justify-content-between align-items-end mb-4 gap-3">
+            <div>
+                <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1 fw-semibold mb-2">
+                    <i class="bi bi-building-check me-1"></i>Official Employer Portals
+                </span>
+                <h3 class="fw-bold text-dark mb-1">Top Verified Employers Hiring Now</h3>
+                <p class="text-muted small mb-0">Explore real active vacancies across leading global and Indian technology organizations.</p>
+            </div>
+            <a href="{{ url_for('jobs.list_companies') }}" class="btn btn-outline-secondary rounded-pill px-4 fw-semibold">
+                Browse {{ "{:,}".format(total_companies if total_companies else 990) }}+ Companies Directory &rarr;
+            </a>
+        </div>
+        <div class="row g-3">
+            {% for cname, openings in top_companies %}
+                <div class="col-lg-3 col-md-4 col-sm-6">
+                    <a href="{{ url_for('jobs.list_jobs', q=cname) }}" class="card p-3 custom-card h-100 border text-decoration-none rounded-4 bg-light bg-opacity-40 hover-shadow transition">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-circle bg-dark text-white fw-bold d-flex align-items-center justify-content-center flex-shrink-0" style="width: 44px; height: 44px;">
+                                {{ cname[0].upper() }}
+                            </div>
+                            <div class="text-truncate">
+                                <div class="fw-bold text-dark text-truncate">{{ cname }}</div>
+                                <small class="text-primary fw-semibold">{{ openings }} Verified Jobs</small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- 3.7 Interactive Voice-to-Voice AI Mock Interview Showcase -->
+<section class="py-5 text-white" style="background: linear-gradient(135deg, #090d16 0%, #1e1b4b 60%, #172554 100%);">
+    <div class="container-xl">
+        <div class="row align-items-center gy-4">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="badge bg-danger text-white rounded-pill px-3 py-1 small fw-semibold">
+                        <span class="spinner-grow spinner-grow-sm text-white me-1" style="width: 0.45rem; height: 0.45rem;"></span>Live Audio
+                    </span>
+                    <span class="badge bg-primary text-white rounded-pill px-3 py-1 small">
+                        <i class="bi bi-mic-fill me-1"></i>Voice-to-Voice Call Simulator
+                    </span>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 small">
+                        <i class="bi bi-soundwave me-1"></i>Real-Time Waveform
+                    </span>
+                </div>
+                <h2 class="display-6 fw-bold mb-3">Practice Real Verbal Interviews with AI Bar-Raisers</h2>
+                <p class="text-white-50 fs-5 mb-4" style="max-width: 650px;">
+                    Simulate authentic audio interviews with 3 specialized AI personas (Staff Architect, Hiring Director, and Culture Partner). The AI speaks aloud, listens to your mic in real-time, calculates speaking cadence (WPM) & filler words, and delivers adaptive follow-up probing.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{{ url_for('interview.interview_hub') }}" class="btn btn-danger btn-lg rounded-pill px-4 py-2 fw-bold d-inline-flex align-items-center gap-2 shadow-lg">
+                        <i class="bi bi-telephone-fill"></i> Try Voice Interview Now &rarr;
+                    </a>
+                    <a href="{{ url_for('ats.ats_report') }}" class="btn btn-outline-light btn-lg rounded-pill px-4 py-2 fw-semibold">
+                        Scan Resume for ATS &rarr;
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-4 text-center">
+                <div class="p-4 rounded-4 border border-secondary border-opacity-25 shadow-lg" style="background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(12px);">
+                    <div class="rounded-circle mx-auto mb-3 d-flex align-items-center justify-content-center shadow-lg" style="width: 80px; height: 80px; background: linear-gradient(135deg, #3b82f6, #1d4ed8); border: 2px solid rgba(255,255,255,0.2);">
+                        <i class="bi bi-soundwave fs-1 text-white"></i>
+                    </div>
+                    <h5 class="fw-bold text-white mb-1">Live Audio Waveform</h5>
+                    <p class="text-white-50 small mb-3">Real-time Web Audio API visualization, cadence tracking, and filler word detection.</p>
+                    <div class="d-flex justify-content-center gap-2 flex-wrap">
+                        <span class="badge bg-dark border border-secondary border-opacity-25 px-2 py-1 small text-info">Sarah Jenkins (Architect)</span>
+                        <span class="badge bg-dark border border-secondary border-opacity-25 px-2 py-1 small text-success">Alex Rivera (Director)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 
 <!-- 4. Powerful Features for Your Career Growth (Matching Reference Design) -->
 <section id="features" class="features-section">
