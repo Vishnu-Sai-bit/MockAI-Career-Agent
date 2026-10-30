@@ -15,9 +15,16 @@ cover_service = CoverLetterService()
 @applications_bp.route("")
 @login_required
 def list_applications():
+    from models.job_match import SavedJob
     grouped = app_service.get_applications_grouped_by_status(current_user.id)
     all_apps = current_user.applications.order_by(Application.updated_at.desc()).all()
-    return render_template("applications.html", grouped=grouped, all_applications=all_apps)
+    saved_entries = current_user.saved_jobs.order_by(SavedJob.saved_at.desc()).all()
+    return render_template(
+        "applications.html",
+        grouped=grouped,
+        all_applications=all_apps,
+        saved_jobs=saved_entries
+    )
 
 
 @applications_bp.route("/prepare/<int:job_id>")

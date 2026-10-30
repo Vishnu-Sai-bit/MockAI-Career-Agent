@@ -237,8 +237,11 @@ def toggle_save_job(job_id):
 @jobs_bp.route("/saved-jobs")
 @login_required
 def saved_jobs():
+    from models.application import Application
     saved_entries = current_user.saved_jobs.order_by(SavedJob.saved_at.desc()).all()
     active_resume = current_user.get_active_resume()
+    
+    app_map = {app.job_id: app for app in current_user.applications.all()}
     
     items = []
     for s in saved_entries:
@@ -249,7 +252,12 @@ def saved_jobs():
                 resume_id=active_resume.id,
                 job_id=s.job.id
             ).first()
-        items.append({"saved": s, "job": s.job, "match": match})
+        items.append({
+            "saved": s,
+            "job": s.job,
+            "match": match,
+            "application": app_map.get(s.job.id)
+        })
 
     return render_template("saved_jobs.html", items=items)
 

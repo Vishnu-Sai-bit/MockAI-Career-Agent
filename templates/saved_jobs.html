@@ -1,60 +1,256 @@
 {% extends "base.html" %}
 
-{% block title %}Saved Jobs — AI Job Agent{% endblock %}
+{% block title %}Saved Jobs & Wishlist — AI Job Agent{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="container-fluid px-lg-4 py-4">
+    <!-- Header Section -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <h3 class="fw-bold mb-1"><i class="bi bi-bookmark-star-fill text-warning me-2"></i>Saved Opportunities</h3>
-            <p class="text-muted small mb-0">Positions you bookmarked for later review or application preparation.</p>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-warning text-dark px-2 py-1"><i class="bi bi-bookmark-star-fill me-1"></i> Wishlist</span>
+                <h3 class="fw-bold mb-0">Saved Jobs</h3>
+            </div>
+            <p class="text-muted small mb-0">Curate roles for future consideration. When ready, tailor your application or track them in your active pipeline.</p>
         </div>
-        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-custom">Browse More Jobs</a>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-custom btn-sm">
+                <i class="bi bi-search me-1"></i> Browse More Jobs
+            </a>
+            <a href="{{ url_for('applications.list_applications') }}" class="btn btn-primary-custom btn-sm">
+                <i class="bi bi-kanban me-1"></i> Open Application Tracker
+            </a>
+        </div>
     </div>
 
     {% if items %}
-        <div class="row g-3">
+        <!-- Summary KPI Row -->
+        {% set high_match_count = namespace(value=0) %}
+        {% set tracked_count = namespace(value=0) %}
+        {% for it in items %}
+            {% if it.match and it.match.match_score and it.match.match_score >= 75 %}
+                {% set high_match_count.value = high_match_count.value + 1 %}
+            {% endif %}
+            {% if it.application %}
+                {% set tracked_count.value = tracked_count.value + 1 %}
+            {% endif %}
+        {% endfor %}
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-3 col-6">
+                <div class="card p-3 border-0 bg-white shadow-sm rounded-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-3 bg-warning-subtle text-warning d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                            <i class="bi bi-bookmark-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted fs-8 fw-semibold text-uppercase">Total Saved</div>
+                            <div class="fs-4 fw-bold text-dark">{{ items|length }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card p-3 border-0 bg-white shadow-sm rounded-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-3 bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                            <i class="bi bi-star-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted fs-8 fw-semibold text-uppercase">High Match (75%+)</div>
+                            <div class="fs-4 fw-bold text-dark">{{ high_match_count.value }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card p-3 border-0 bg-white shadow-sm rounded-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-3 bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                            <i class="bi bi-kanban-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted fs-8 fw-semibold text-uppercase">In Pipeline</div>
+                            <div class="fs-4 fw-bold text-dark" id="kpi-tracked-count">{{ tracked_count.value }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="card p-3 border-0 bg-white shadow-sm rounded-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-3 bg-info-subtle text-info d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                            <i class="bi bi-send-check-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted fs-8 fw-semibold text-uppercase">Ready to Apply</div>
+                            <div class="fs-4 fw-bold text-dark" id="kpi-ready-count">{{ items|length - tracked_count.value }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter & Search Toolbar -->
+        <div class="card p-3 border-0 bg-white shadow-sm rounded-3 mb-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="input-group input-group-sm" style="max-width: 380px;">
+                    <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="savedSearchInput" class="form-control bg-light border-start-0" placeholder="Filter saved jobs by title, company, or city...">
+                </div>
+
+                <div class="d-flex flex-wrap gap-2" id="filterPills">
+                    <button class="btn btn-sm btn-dark filter-pill active" data-filter="all">
+                        All Saved ({{ items|length }})
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary filter-pill" data-filter="ready">
+                        Ready to Apply ({{ items|length - tracked_count.value }})
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary filter-pill" data-filter="tracked">
+                        In Pipeline ({{ tracked_count.value }})
+                    </button>
+                    {% if high_match_count.value > 0 %}
+                        <button class="btn btn-sm btn-outline-secondary filter-pill" data-filter="high-match">
+                            High Match ({{ high_match_count.value }})
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Saved Job Cards Grid -->
+        <div class="row g-3" id="savedJobsGrid">
             {% for it in items %}
                 {% set job = it.job %}
                 {% set match = it.match %}
-                <div class="col-lg-6">
-                    <div class="card p-4 custom-card border-0 bg-white shadow-sm h-100 job-card d-flex flex-column justify-content-between">
+                {% set app = it.application %}
+                {% set is_high = match and match.match_score and match.match_score >= 75 %}
+
+                <div class="col-lg-6 saved-card-wrapper"
+                     data-title="{{ job.title|lower }}"
+                     data-company="{{ job.company|lower }}"
+                     data-location="{{ (job.location or '')|lower }}"
+                     data-tracked="{% if app %}true{% else %}false{% endif %}"
+                     data-high="{% if is_high %}true{% else %}false{% endif %}">
+                    <div class="card p-4 custom-card border-0 bg-white shadow-sm h-100 job-card d-flex flex-column justify-content-between" id="saved-card-{{ job.id }}">
                         <div>
+                            <!-- Top row: Avatar + Title + Match Badge -->
                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                <div>
-                                    <h5 class="fw-bold mb-1">
-                                        <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="text-dark text-decoration-none">{{ job.title }}</a>
-                                    </h5>
-                                    <div class="text-muted small">
-                                        <strong>{{ job.company }}</strong> · 
-                                        <span><i class="bi bi-geo-alt"></i> {{ job.location }}</span>
+                                <div class="d-flex align-items-start gap-2">
+                                    <div class="company-logo-box rounded-3 border bg-light d-flex align-items-center justify-content-center flex-shrink-0 mt-1" style="width: 42px; height: 42px;">
+                                        <img src="https://www.google.com/s2/favicons?domain={{ job.company|lower|replace(' ', '') }}.com&sz=64" alt="{{ job.company }}" class="company-logo-img rounded-2" style="width: 26px; height: 26px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="company-logo-fallback fw-bold text-primary align-items-center justify-content-center" style="display: none; width: 100%; height: 100%; font-size: 0.8rem;">
+                                            {{ job.company[:2].upper() }}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-1">
+                                            <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="text-dark text-decoration-none">{{ job.title }}</a>
+                                        </h5>
+                                        <div class="text-muted small d-flex align-items-center gap-1 flex-wrap">
+                                            <a href="{{ url_for('jobs.list_jobs', q=job.company) }}" class="text-decoration-none text-body fw-bold">
+                                                {{ job.company }}
+                                            </a>
+                                            <span class="mx-1">·</span>
+                                            <span><i class="bi bi-geo-alt"></i> {{ job.location or 'Location Not Specified' }}</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="text-end">
-                                    {% if match %}
-                                        <span class="match-badge {% if match.match_score >= 80 %}match-high{% elif match.match_score >= 60 %}match-mid{% else %}match-low{% endif %}">
-                                            {{ match.match_score|round(0)|int }}% Relevant
+
+                                <div class="text-end d-flex flex-column align-items-end gap-1">
+                                    {% if match and match.match_score and match.match_score >= 75 %}
+                                        <span class="match-badge match-high" title="High ATS alignment">
+                                            <i class="bi bi-star-fill text-warning me-1"></i>{{ match.match_score|round(0)|int }}% Match
+                                        </span>
+                                    {% elif match and match.match_score and match.match_score >= 55 %}
+                                        <span class="match-badge match-mid">
+                                            <i class="bi bi-shield-check me-1"></i>{{ match.match_score|round(0)|int }}% Match
+                                        </span>
+                                    {% elif match and match.match_score %}
+                                        <span class="badge bg-secondary-subtle text-secondary border">
+                                            {{ match.match_score|round(0)|int }}% Match
                                         </span>
                                     {% endif %}
                                 </div>
                             </div>
 
-                            <div class="d-flex flex-wrap gap-1 mb-2">
-                                <span class="badge bg-light text-dark border">{{ job.work_mode|title }}</span>
-                                <span class="badge bg-secondary-subtle text-secondary">{{ job.source_platform|title }}</span>
+                            <!-- Badges row: Mode, Platform, Salary, Pipeline status -->
+                            <div class="d-flex flex-wrap align-items-center gap-1 mb-2">
+                                <span class="badge bg-light text-dark border">{{ (job.work_mode or 'Onsite')|title }}</span>
+                                <span class="badge bg-secondary-subtle text-secondary">{{ (job.source_platform or 'Official')|title }}</span>
+                                {% if job.salary_min or job.salary_max %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                        <i class="bi bi-cash-stack me-1"></i>
+                                        {% if job.salary_min and job.salary_max %}
+                                            ₹{{ "{:,.0f}".format(job.salary_min) }} – ₹{{ "{:,.0f}".format(job.salary_max) }}
+                                        {% elif job.salary_min %}
+                                            ₹{{ "{:,.0f}".format(job.salary_min) }}+
+                                        {% else %}
+                                            Up to ₹{{ "{:,.0f}".format(job.salary_max) }}
+                                        {% endif %}
+                                    </span>
+                                {% endif %}
+
+                                <!-- Pipeline tracker indicator -->
+                                <span class="tracker-status-indicator" id="tracker-indicator-{{ job.id }}">
+                                    {% if app %}
+                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                            <i class="bi bi-kanban me-1"></i> In Pipeline: {{ app.status|title }}
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-light text-muted border">
+                                            <i class="bi bi-bookmark me-1"></i> Wishlist Only
+                                        </span>
+                                    {% endif %}
+                                </span>
                             </div>
 
-                            <p class="text-muted small mb-3 text-truncate-2">{{ job.description[:180] }}...</p>
+                            <!-- Description Snippet -->
+                            <p class="text-muted small mb-3 text-truncate-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                {{ job.description[:220]|striptags }}...
+                            </p>
+
+                            <!-- Skills list -->
+                            {% if job.required_skills %}
+                                <div class="d-flex flex-wrap gap-1 mb-3">
+                                    {% for sk in job.required_skills[:4] %}
+                                        <span class="skill-pill">{{ sk }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
 
-                        <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-auto">
-                            <button class="btn btn-sm btn-outline-danger btn-save-job" data-job-id="{{ job.id }}">
-                                <i class="bi bi-trash me-1"></i> Remove
-                            </button>
-                            <div class="d-flex gap-2">
-                                <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="btn btn-sm btn-outline-custom">View Details</a>
-                                <a href="{{ url_for('jobs.safe_apply_redirect', job_id=job.id) }}" target="_blank" class="btn btn-sm btn-primary-custom">
-                                    Apply Now <i class="bi bi-box-arrow-up-right ms-1"></i>
+                        <!-- Card Action Buttons -->
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-auto flex-wrap gap-2">
+                            <div>
+                                <button class="btn btn-sm btn-outline-danger btn-save-job" data-job-id="{{ job.id }}" title="Remove from wishlist">
+                                    <i class="bi bi-trash me-1"></i> Remove
+                                </button>
+                            </div>
+
+                            <div class="d-flex gap-2 align-items-center flex-wrap">
+                                <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="btn btn-sm btn-outline-custom">
+                                    Details
+                                </a>
+
+                                <span id="tracker-action-{{ job.id }}">
+                                    {% if not app %}
+                                        <button class="btn btn-sm btn-outline-primary btn-track-job" data-job-id="{{ job.id }}" title="Add to Application Tracker pipeline">
+                                            <i class="bi bi-kanban me-1"></i> Track in Pipeline
+                                        </button>
+                                    {% else %}
+                                        <a href="{{ url_for('applications.list_applications') }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-kanban me-1"></i> View in Tracker
+                                        </a>
+                                    {% endif %}
+                                </span>
+
+                                <a href="{{ url_for('applications.prepare_application', job_id=job.id) }}" class="btn btn-sm btn-info text-white" title="Generate Tailored Resume & Cover Letter">
+                                    <i class="bi bi-magic me-1"></i> Prepare
+                                </a>
+
+                                <a href="{{ url_for('jobs.safe_apply_redirect', job_id=job.id) }}" target="_blank" class="btn btn-sm btn-primary-custom" title="Apply directly on employer careers portal">
+                                    Apply <i class="bi bi-box-arrow-up-right ms-1"></i>
                                 </a>
                             </div>
                         </div>
@@ -62,13 +258,22 @@
                 </div>
             {% endfor %}
         </div>
+
+        <div id="noSearchResults" class="card p-5 text-center custom-card border-0 bg-white shadow-sm mt-3" style="display: none;">
+            <i class="bi bi-funnel text-muted display-4 mb-3"></i>
+            <h5 class="fw-bold">No saved jobs match this filter</h5>
+            <p class="text-muted small mb-0">Try clearing your search query or selecting "All Saved".</p>
+        </div>
+
     {% else %}
         <div class="card p-5 text-center custom-card border-0 bg-white shadow-sm">
-            <i class="bi bi-bookmark text-muted display-4 mb-3"></i>
-            <h5 class="fw-bold">No saved jobs yet</h5>
-            <p class="text-muted small mb-3">When discovering jobs, click the bookmark icon to save them here for quick access.</p>
+            <i class="bi bi-bookmark-star text-muted display-4 mb-3"></i>
+            <h5 class="fw-bold">Your Saved Wishlist is empty</h5>
+            <p class="text-muted small mb-3">When discovering jobs, click the bookmark icon to save roles here for later review and application preparation.</p>
             <div>
-                <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary-custom btn-sm">Discover Jobs</a>
+                <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary-custom btn-sm">
+                    <i class="bi bi-search me-1"></i> Discover Jobs
+                </a>
             </div>
         </div>
     {% endif %}
@@ -77,4 +282,125 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/jobs.js') }}"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    // 1. Client-side Search & Pill Filter for Saved Jobs
+    const searchInput = document.getElementById("savedSearchInput");
+    const filterPills = document.querySelectorAll(".filter-pill");
+    const cards = document.querySelectorAll(".saved-card-wrapper");
+    const noResults = document.getElementById("noSearchResults");
+
+    let currentFilter = "all";
+    let searchQuery = "";
+
+    function applyFilters() {
+        let visibleCount = 0;
+        cards.forEach(card => {
+            const title = card.getAttribute("data-title") || "";
+            const company = card.getAttribute("data-company") || "";
+            const location = card.getAttribute("data-location") || "";
+            const isTracked = card.getAttribute("data-tracked") === "true";
+            const isHigh = card.getAttribute("data-high") === "true";
+
+            const matchesSearch = !searchQuery || 
+                title.includes(searchQuery) || 
+                company.includes(searchQuery) || 
+                location.includes(searchQuery);
+
+            let matchesPill = true;
+            if (currentFilter === "ready") matchesPill = !isTracked;
+            else if (currentFilter === "tracked") matchesPill = isTracked;
+            else if (currentFilter === "high-match") matchesPill = isHigh;
+
+            if (matchesSearch && matchesPill) {
+                card.style.display = "";
+                visibleCount++;
+            } else {
+                card.style.display = "none";
+            }
+        });
+
+        if (noResults) {
+            noResults.style.display = (visibleCount === 0 && cards.length > 0) ? "" : "none";
+        }
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener("input", function () {
+            searchQuery = this.value.toLowerCase().trim();
+            applyFilters();
+        });
+    }
+
+    filterPills.forEach(pill => {
+        pill.addEventListener("click", function () {
+            filterPills.forEach(p => {
+                p.classList.remove("btn-dark", "active");
+                p.classList.add("btn-outline-secondary");
+            });
+            this.classList.remove("btn-outline-secondary");
+            this.classList.add("btn-dark", "active");
+            currentFilter = this.getAttribute("data-filter");
+            applyFilters();
+        });
+    });
+
+    // 2. 1-Click Track in Pipeline Button
+    document.querySelectorAll(".btn-track-job").forEach(button => {
+        button.addEventListener("click", function (e) {
+            e.preventDefault();
+            const jobId = this.getAttribute("data-job-id");
+            if (!jobId) return;
+
+            this.disabled = true;
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Tracking...';
+
+            fetch("/applications/api/create", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ job_id: parseInt(jobId), status: "applied" })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Update indicator badge
+                    const indicator = document.getElementById(`tracker-indicator-${jobId}`);
+                    if (indicator) {
+                        indicator.innerHTML = '<span class="badge bg-primary-subtle text-primary border border-primary-subtle"><i class="bi bi-kanban me-1"></i> In Pipeline: Applied</span>';
+                    }
+
+                    // Update action button
+                    const actionContainer = document.getElementById(`tracker-action-${jobId}`);
+                    if (actionContainer) {
+                        actionContainer.innerHTML = '<a href="{{ url_for("applications.list_applications") }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-kanban me-1"></i> View in Tracker</a>';
+                    }
+
+                    // Update wrapper attribute
+                    const wrapper = button.closest(".saved-card-wrapper");
+                    if (wrapper) wrapper.setAttribute("data-tracked", "true");
+
+                    // Update KPI counters
+                    const trackedKpi = document.getElementById("kpi-tracked-count");
+                    const readyKpi = document.getElementById("kpi-ready-count");
+                    if (trackedKpi && readyKpi) {
+                        const curTracked = parseInt(trackedKpi.textContent) || 0;
+                        const curReady = parseInt(readyKpi.textContent) || 0;
+                        trackedKpi.textContent = curTracked + 1;
+                        readyKpi.textContent = Math.max(0, curReady - 1);
+                    }
+                } else {
+                    alert(data.error || "Failed to add to tracker.");
+                    this.disabled = false;
+                    this.innerHTML = '<i class="bi bi-kanban me-1"></i> Track in Pipeline';
+                }
+            })
+            .catch(err => {
+                console.error("Error adding to tracker:", err);
+                this.disabled = false;
+                this.innerHTML = '<i class="bi bi-kanban me-1"></i> Track in Pipeline';
+            });
+        });
+    });
+});
+</script>
 {% endblock %}

@@ -4,67 +4,239 @@
 
 {% block content %}
 <div class="container-fluid px-lg-4 py-4">
+    <!-- Header Section -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-3">
         <div>
-            <h3 class="fw-bold mb-1"><i class="bi bi-kanban-fill text-primary me-2"></i>Application Tracker</h3>
-            <p class="text-muted small mb-0">Track your interview stages, notes, and deadlines across all applied positions.</p>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary px-2 py-1"><i class="bi bi-kanban-fill me-1"></i> Active Pipeline</span>
+                <h3 class="fw-bold mb-0">Application Tracker</h3>
+            </div>
+            <p class="text-muted small mb-0">Track your recruitment pipeline across preparation, active submissions, interviews, and offers.</p>
         </div>
-        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary-custom btn-sm">Find More Jobs to Apply</a>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('jobs.saved_jobs') }}" class="btn btn-outline-warning text-dark btn-sm">
+                <i class="bi bi-bookmark-fill text-warning me-1"></i> Saved Wishlist ({{ saved_jobs|length }})
+            </a>
+            <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-primary-custom btn-sm">
+                <i class="bi bi-search me-1"></i> Find More Jobs
+            </a>
+        </div>
     </div>
 
-    <!-- Kanban Stages Pipeline -->
+    <!-- Pipeline KPI Summary Strip -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-2 col-6">
+            <div class="card p-3 border-0 bg-white shadow-sm rounded-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-2 bg-primary-subtle text-primary p-2">
+                        <i class="bi bi-briefcase-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted fs-8 fw-semibold text-uppercase">Total Active</div>
+                        <div class="fs-4 fw-bold text-dark" id="kpi-total-apps">{{ all_applications|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card p-3 border-0 bg-white shadow-sm rounded-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-2 bg-info-subtle text-info p-2">
+                        <i class="bi bi-file-earmark-text-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted fs-8 fw-semibold text-uppercase">Prepared</div>
+                        <div class="fs-4 fw-bold text-dark" id="kpi-prep-count">{{ grouped.get('prepared', [])|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card p-3 border-0 bg-white shadow-sm rounded-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-2 bg-primary-subtle text-primary p-2">
+                        <i class="bi bi-send-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted fs-8 fw-semibold text-uppercase">Applied</div>
+                        <div class="fs-4 fw-bold text-dark" id="kpi-applied-count">{{ grouped.get('applied', [])|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card p-3 border-0 bg-white shadow-sm rounded-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-2 bg-warning-subtle text-warning p-2">
+                        <i class="bi bi-chat-dots-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted fs-8 fw-semibold text-uppercase">Interviewing</div>
+                        <div class="fs-4 fw-bold text-dark" id="kpi-interview-count">{{ grouped.get('interviewing', [])|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card p-3 border-0 bg-white shadow-sm rounded-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-2 bg-success-subtle text-success p-2">
+                        <i class="bi bi-trophy-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted fs-8 fw-semibold text-uppercase">Offers</div>
+                        <div class="fs-4 fw-bold text-dark" id="kpi-offer-count">{{ grouped.get('offer', [])|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-6">
+            <div class="card p-3 border-0 bg-white shadow-sm rounded-3">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-2 bg-secondary-subtle text-secondary p-2">
+                        <i class="bi bi-archive-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <div class="text-muted fs-8 fw-semibold text-uppercase">Closed</div>
+                        <div class="fs-4 fw-bold text-dark" id="kpi-rejected-count">{{ grouped.get('rejected', [])|length }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Jobs Wishlist Drawer / Bridge Banner -->
+    {% if saved_jobs %}
+        <div class="card border-0 bg-white shadow-sm rounded-3 mb-4 overflow-hidden">
+            <div class="p-3 bg-light-subtle d-flex flex-wrap justify-content-between align-items-center border-bottom gap-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-warning text-dark"><i class="bi bi-bookmark-star-fill"></i> Wishlist</span>
+                    <strong class="text-dark small">Bookmarked Opportunities ({{ saved_jobs|length }} Saved)</strong>
+                    <span class="text-muted fs-8 d-none d-md-inline">— Ready to apply? Move them directly into your pipeline.</span>
+                </div>
+                <div class="d-flex gap-2 align-items-center">
+                    <button class="btn btn-sm btn-outline-secondary py-1 px-2 fs-8" type="button" data-bs-toggle="collapse" data-bs-target="#wishlistDrawer" aria-expanded="false">
+                        <i class="bi bi-chevron-down me-1"></i> Toggle Wishlist Quick-Add
+                    </button>
+                    <a href="{{ url_for('jobs.saved_jobs') }}" class="btn btn-sm btn-link text-decoration-none py-0 fs-8">
+                        View All Saved <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+
+            <div class="collapse show p-3" id="wishlistDrawer">
+                <div class="d-flex gap-3 overflow-auto pb-2" style="scrollbar-width: thin;">
+                    {% for s in saved_jobs[:8] %}
+                        {% set s_job = s.job %}
+                        <div class="card border p-3 flex-shrink-0 bg-white rounded-3 shadow-none" style="width: 280px;" id="wishlist-item-{{ s_job.id }}">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <h6 class="fw-bold mb-0 text-dark small text-truncate" style="max-width: 200px;">
+                                    <a href="{{ url_for('jobs.job_details', job_id=s_job.id) }}" class="text-decoration-none text-dark">{{ s_job.title }}</a>
+                                </h6>
+                            </div>
+                            <div class="text-muted fs-8 mb-2 text-truncate">
+                                <strong>{{ s_job.company }}</strong> · {{ s_job.location or 'Remote/Any' }}
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-auto">
+                                <a href="{{ url_for('applications.prepare_application', job_id=s_job.id) }}" class="btn btn-sm btn-outline-info py-0 px-2 fs-8" title="Tailor Resume & Cover Letter">
+                                    <i class="bi bi-magic"></i> Prep
+                                </a>
+                                <button class="btn btn-sm btn-primary-custom py-0 px-2 fs-8 btn-quick-add-pipeline" data-job-id="{{ s_job.id }}">
+                                    <i class="bi bi-plus-circle me-1"></i> Mark Applied
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- If any legacy/test applications have 'saved' status, show a clean backlog alert -->
+    {% if grouped.get('saved') %}
+        <div class="alert alert-warning-subtle border border-warning-subtle rounded-3 d-flex flex-wrap justify-content-between align-items-center p-3 mb-4">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+                <div>
+                    <strong class="text-dark">Pre-Application Backlog ({{ grouped.get('saved')|length }} Roles)</strong>
+                    <div class="small text-muted">You have applications marked in saved state. Move them to Prepared or Applied to activate tracking.</div>
+                </div>
+            </div>
+            <div class="d-flex gap-2 mt-2 mt-md-0">
+                {% for b_app in grouped.get('saved') %}
+                    <span class="badge bg-white text-dark border p-2 d-inline-flex align-items-center gap-2">
+                        <span>{{ b_app.job.title[:20] }}... ({{ b_app.job.company }})</span>
+                        <button class="btn btn-xs btn-outline-primary py-0 px-1 select-app-quick-promote" data-app-id="{{ b_app.id }}" data-target-status="applied">
+                            → Applied
+                        </button>
+                    </span>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Kanban Stages Pipeline (Active Funnel) -->
     <div class="kanban-board">
         {% set stages = [
-            ('saved', 'Saved', 'secondary'),
-            ('prepared', 'Prepared', 'info'),
+            ('prepared', 'Prepared / Drafting', 'info'),
             ('applied', 'Applied', 'primary'),
             ('interviewing', 'Interviewing', 'warning'),
             ('offer', 'Offer Received', 'success'),
-            ('rejected', 'Rejected', 'dark')
+            ('rejected', 'Closed / Rejected', 'dark')
         ] %}
 
         {% for key, label, badge_color in stages %}
             {% set column_apps = grouped.get(key, []) %}
             <div class="kanban-column" data-stage="{{ key }}">
                 <div class="kanban-header">
-                    <span>{{ label }}</span>
-                    <span class="badge bg-{{ badge_color }} rounded-pill column-count-badge">{{ column_apps|length }}</span>
+                    <span class="fw-bold">{{ label }}</span>
+                    <span class="badge bg-{{ badge_color }} rounded-pill column-count-badge" id="badge-count-{{ key }}">{{ column_apps|length }}</span>
                 </div>
 
-                <div class="d-flex flex-column gap-2 kanban-drop-zone" style="min-height: 120px;">
+                <div class="d-flex flex-column gap-2 kanban-drop-zone" style="min-height: 140px;">
                     {% for app in column_apps %}
                         {% set job = app.job %}
-                        <div class="kanban-card" draggable="true" data-app-id="{{ app.id }}" style="cursor: grab;">
+                        <div class="kanban-card" draggable="true" data-app-id="{{ app.id }}" id="kanban-card-{{ app.id }}" style="cursor: grab;">
                             <div class="d-flex justify-content-between align-items-start mb-1">
                                 <h6 class="fw-bold mb-0 text-dark small">
                                     <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="text-decoration-none text-dark">{{ job.title }}</a>
                                 </h6>
                             </div>
                             <div class="text-muted fs-8 mb-2">
-                                <strong>{{ job.company }}</strong> · {{ job.location }}
+                                <strong>{{ job.company }}</strong> · {{ job.location or 'Location Not Specified' }}
                             </div>
 
-                            <!-- Integration vs Manual Indicator -->
-                            <div class="mb-2">
+                            <!-- Verification Indicator -->
+                            <div class="mb-2 d-flex align-items-center gap-1 flex-wrap">
                                 {% if app.is_integration_verified %}
                                     <span class="badge bg-success-subtle text-success fs-9 border"><i class="bi bi-check-circle"></i> API Confirmed</span>
                                 {% else %}
                                     <span class="badge bg-light text-muted fs-9 border">Manually Recorded</span>
                                 {% endif %}
+                                <span class="badge bg-secondary-subtle text-secondary fs-9">{{ (job.source_platform or 'Official')|title }}</span>
                             </div>
 
-                            <!-- Stage Changer -->
+                            <!-- Next Action Indicator -->
+                            {% if app.next_action_description or app.next_action_at %}
+                                <div class="p-1 px-2 mb-2 bg-light rounded-2 border fs-9 text-muted d-flex align-items-center gap-1">
+                                    <i class="bi bi-alarm text-primary"></i>
+                                    <span class="text-truncate">{{ app.next_action_description or 'Next step scheduled' }}</span>
+                                </div>
+                            {% endif %}
+
+                            <!-- Stage Changer Dropdown -->
                             <div class="mb-2">
-                                <label class="fs-8 text-muted d-block mb-1">Stage:</label>
-                                <select class="form-select form-select-sm select-app-status" data-app-id="{{ app.id }}">
+                                <label class="fs-9 text-muted d-block mb-1">Move Stage:</label>
+                                <select class="form-select form-select-sm select-app-status py-1 fs-8" data-app-id="{{ app.id }}">
                                     {% for s_key, s_label, _ in stages %}
                                         <option value="{{ s_key }}" {% if app.status == s_key %}selected{% endif %}>{{ s_label }}</option>
                                     {% endfor %}
+                                    <option value="saved" {% if app.status == 'saved' %}selected{% endif %}>Move to Wishlist (Saved)</option>
                                 </select>
                             </div>
 
                             <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                                <small class="text-muted fs-8">{{ app.updated_at.strftime('%b %d') }}</small>
+                                <small class="text-muted fs-9">Updated {{ app.updated_at.strftime('%b %d') }}</small>
                                 <div class="d-flex gap-1">
                                     <button class="btn btn-sm btn-outline-info py-0 px-2 fs-8 btn-outreach" data-app-id="{{ app.id }}" title="Recruiter Discovery & Follow-up Emails">
                                         <i class="bi bi-person-lines-fill"></i> Outreach
@@ -72,7 +244,7 @@
                                     <button class="btn btn-sm btn-outline-secondary py-0 px-2 fs-8 btn-cal" data-app-id="{{ app.id }}" title="Add to Calendar (.ics / Google)">
                                         <i class="bi bi-calendar-plus"></i>
                                     </button>
-                                    <a href="{{ url_for('jobs.safe_apply_redirect', job_id=job.id) }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2 fs-8">
+                                    <a href="{{ url_for('jobs.safe_apply_redirect', job_id=job.id) }}" target="_blank" class="btn btn-sm btn-outline-primary py-0 px-2 fs-8" title="Open verified careers application">
                                         Apply <i class="bi bi-box-arrow-up-right"></i>
                                     </a>
                                 </div>
@@ -81,7 +253,8 @@
                     {% endfor %}
 
                     {% if not column_apps %}
-                        <div class="text-center py-4 text-muted fs-8">
+                        <div class="text-center py-4 text-muted fs-8 column-empty-placeholder">
+                            <i class="bi bi-inbox d-block fs-5 text-muted mb-1 opacity-50"></i>
                             No applications in this stage
                         </div>
                     {% endif %}
@@ -215,6 +388,7 @@
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 <script>
+// Clipboard Copy handler
 document.querySelectorAll('.copy-btn').forEach(btn => {
     btn.addEventListener('click', function() {
         const targetId = this.getAttribute('data-target');
@@ -234,6 +408,7 @@ document.querySelectorAll('.copy-btn').forEach(btn => {
     });
 });
 
+// Outreach & Calendar Modals
 const outreachModalEl = document.getElementById('outreachModal');
 const outreachModal = new bootstrap.Modal(outreachModalEl);
 
@@ -261,7 +436,6 @@ function loadOutreachData(appId, openCalTab) {
         if (firstTabBtn) bootstrap.Tab.getOrCreateInstance(firstTabBtn).show();
     }
 
-    // Fetch outreach data
     fetch(`/applications/outreach/${appId}`)
         .then(r => r.json())
         .then(data => {
@@ -269,7 +443,6 @@ function loadOutreachData(appId, openCalTab) {
                 document.getElementById('outreachModalTitle').textContent = `${data.job_title} at ${data.company}`;
                 document.getElementById('outreachModalSubtitle').textContent = `Outreach Personas & Strategic Follow-ups`;
 
-                // Populate personas
                 const list = document.getElementById('personas-list');
                 list.innerHTML = (data.personas.search_targets || []).map(p => `
                     <a href="${p.linkedin_search_url}" target="_blank" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
@@ -281,12 +454,10 @@ function loadOutreachData(appId, openCalTab) {
                     </a>
                 `).join('');
 
-                // Populate LinkedIn
                 document.getElementById('linkedin-note-box').value = data.templates.linkedin_note || '';
                 document.getElementById('inmail-subject-box').value = data.templates.inmail_subject || '';
                 document.getElementById('inmail-body-box').value = data.templates.inmail_body || '';
 
-                // Populate Follow-ups
                 if (data.followups) {
                     document.getElementById('fu7d-subj').value = data.followups['7day'].subject || '';
                     document.getElementById('fu7d-body').value = data.followups['7day'].body || '';
@@ -298,7 +469,6 @@ function loadOutreachData(appId, openCalTab) {
             }
         });
 
-    // Fetch Calendar Data
     fetch(`/applications/calendar/${appId}`)
         .then(r => r.json())
         .then(data => {
@@ -312,65 +482,146 @@ function loadOutreachData(appId, openCalTab) {
         });
 }
 
+// Quick Add from Wishlist to Pipeline
+document.querySelectorAll('.btn-quick-add-pipeline').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const jobId = this.getAttribute('data-job-id');
+        if (!jobId) return;
+
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+
+        fetch('/applications/api/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ job_id: parseInt(jobId), status: 'applied' })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                // Reload or update view smoothly
+                window.location.reload();
+            } else {
+                alert(data.error || 'Failed to move to pipeline.');
+                this.disabled = false;
+                this.innerHTML = '<i class="bi bi-plus-circle me-1"></i> Mark Applied';
+            }
+        })
+        .catch(err => {
+            console.error('Error adding to pipeline:', err);
+            this.disabled = false;
+            this.innerHTML = '<i class="bi bi-plus-circle me-1"></i> Mark Applied';
+        });
+    });
+});
+
+// Quick Promote from Backlog
+document.querySelectorAll('.select-app-quick-promote').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const appId = this.getAttribute('data-app-id');
+        const targetStatus = this.getAttribute('data-target-status');
+        if (!appId || !targetStatus) return;
+
+        fetch('/applications/api/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ application_id: parseInt(appId), status: targetStatus })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            }
+        });
+    });
+});
+
+// Select dropdown status change
+document.querySelectorAll('.select-app-status').forEach(select => {
+    select.addEventListener('change', function() {
+        const appId = this.getAttribute('data-app-id');
+        const targetStage = this.value;
+
+        fetch('/applications/api/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ application_id: appId, status: targetStage })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            }
+        });
+    });
+});
+
 // Drag & Drop Functionality for Kanban Pipeline
 let draggedCard = null;
 
-document.querySelectorAll('.kanban-card').forEach(card => {
-    card.addEventListener('dragstart', function(e) {
-        draggedCard = this;
-        e.dataTransfer.setData('text/plain', this.getAttribute('data-app-id'));
-        this.style.opacity = '0.4';
+function setupDragAndDrop() {
+    document.querySelectorAll('.kanban-card').forEach(card => {
+        card.addEventListener('dragstart', function(e) {
+            draggedCard = this;
+            e.dataTransfer.setData('text/plain', this.getAttribute('data-app-id'));
+            this.style.opacity = '0.4';
+        });
+        card.addEventListener('dragend', function() {
+            this.style.opacity = '1';
+            draggedCard = null;
+        });
     });
-    card.addEventListener('dragend', function() {
-        this.style.opacity = '1';
-        draggedCard = null;
-    });
-});
 
-document.querySelectorAll('.kanban-column').forEach(column => {
-    column.addEventListener('dragover', function(e) {
-        e.preventDefault();
-        this.classList.add('border-primary');
-    });
-    column.addEventListener('dragleave', function() {
-        this.classList.remove('border-primary');
-    });
-    column.addEventListener('drop', function(e) {
-        e.preventDefault();
-        this.classList.remove('border-primary');
-        const appId = e.dataTransfer.getData('text/plain');
-        const targetStage = this.getAttribute('data-stage');
+    document.querySelectorAll('.kanban-column').forEach(column => {
+        column.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('border-primary');
+        });
+        column.addEventListener('dragleave', function() {
+            this.classList.remove('border-primary');
+        });
+        column.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('border-primary');
+            const appId = e.dataTransfer.getData('text/plain');
+            const targetStage = this.getAttribute('data-stage');
 
-        if (appId && targetStage && draggedCard) {
-            const dropZone = this.querySelector('.kanban-drop-zone');
-            if (dropZone) {
-                dropZone.appendChild(draggedCard);
-                // Update dropdown select inside card
-                const select = draggedCard.querySelector('.select-app-status');
-                if (select) select.value = targetStage;
-            }
+            if (appId && targetStage && draggedCard) {
+                const dropZone = this.querySelector('.kanban-drop-zone');
+                if (dropZone) {
+                    // Remove empty placeholder if present
+                    const emptyPl = dropZone.querySelector('.column-empty-placeholder');
+                    if (emptyPl) emptyPl.remove();
 
-            // Sync with backend API
-            fetch('/applications/api/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    application_id: appId,
-                    status: targetStage
+                    dropZone.appendChild(draggedCard);
+                    const select = draggedCard.querySelector('.select-app-status');
+                    if (select) select.value = targetStage;
+                }
+
+                // Sync with backend API
+                fetch('/applications/api/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        application_id: appId,
+                        status: targetStage
+                    })
                 })
-            })
-            .then(res => res.json())
-            .then(data => {
-                // Update column badge counts
-                document.querySelectorAll('.kanban-column').forEach(col => {
-                    const badge = col.querySelector('.column-count-badge');
-                    const cards = col.querySelectorAll('.kanban-card');
-                    if (badge) badge.textContent = cards.length;
-                });
-            })
-            .catch(err => console.error('Kanban drag error:', err));
-        }
+                .then(res => res.json())
+                .then(data => {
+                    // Update column badge counts
+                    document.querySelectorAll('.kanban-column').forEach(col => {
+                        const badge = col.querySelector('.column-count-badge');
+                        const cards = col.querySelectorAll('.kanban-card');
+                        if (badge) badge.textContent = cards.length;
+                    });
+                })
+                .catch(err => console.error('Kanban drag error:', err));
+            }
+        });
     });
-});
+}
+
+setupDragAndDrop();
 </script>
 {% endblock %}
