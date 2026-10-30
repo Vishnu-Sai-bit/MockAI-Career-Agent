@@ -17,12 +17,19 @@ def utc_now():
     return datetime.now(timezone.utc)
 
 DEFAULT_SOURCES = [
+    {"platform": "workday", "company_key": "accenture", "name": "Accenture Careers (Workday CXS)"},
+    {"platform": "workday", "company_key": "cisco", "name": "Cisco Systems (Workday)"},
     {"platform": "workday", "company_key": "nvidia", "name": "NVIDIA (Workday)"},
     {"platform": "workday", "company_key": "adobe", "name": "Adobe (Workday)"},
     {"platform": "workday", "company_key": "autodesk", "name": "Autodesk (Workday)"},
+    {"platform": "greenhouse", "company_key": "swiggy", "name": "Swiggy (Greenhouse)"},
     {"platform": "greenhouse", "company_key": "gitlab", "name": "GitLab (Greenhouse)"},
     {"platform": "greenhouse", "company_key": "stripe", "name": "Stripe (Greenhouse)"},
+    {"platform": "lever", "company_key": "paytm", "name": "Paytm (Lever)"},
     {"platform": "lever", "company_key": "spotify", "name": "Spotify (Lever)"},
+    {"platform": "ashby", "company_key": "tekion", "name": "Tekion (Ashby)"},
+    {"platform": "ashby", "company_key": "sarvam", "name": "Sarvam AI (Ashby)"},
+    {"platform": "ashby", "company_key": "composio", "name": "Composio (Ashby)"},
     {"platform": "ashby", "company_key": "linear", "name": "Linear (Ashby)"},
     {"platform": "smartrecruiters", "company_key": "averydennison", "name": "Avery Dennison (SmartRecruiters)"},
     {"platform": "workable", "company_key": "skroutz", "name": "Skroutz (Workable)"},
@@ -142,7 +149,7 @@ def run_job_refresh(limit_per_source: int = 25) -> Dict[str, Any]:
 
                 # Reconcile ATS feeds: if company-specific ATS source returned open vacancies,
                 # any previously stored active jobs for this company not in the list are closed!
-                if source.platform in ("greenhouse", "lever", "ashby", "workable", "recruitee", "smartrecruiters") and raw_records:
+                if source.platform in ("greenhouse", "lever", "ashby", "workable", "recruitee", "smartrecruiters", "workday", "bamboohr") and raw_records:
                     fetched_ids = {str(r.source_job_id) for r in raw_records if r.source_job_id}
                     if fetched_ids:
                         stale_active_jobs = Job.query.filter(
