@@ -223,3 +223,70 @@ def test_followup_and_save_session_api(app_instance, client):
     resp_cs = client.get(f"/interview/cheat-sheet/{job.id}")
     assert resp_cs.status_code == 200
     assert "Pre-Interview Briefing" in resp_cs.data.decode("utf-8")
+
+
+def test_voice_to_voice_interactive_simulator_apis(app_instance, client):
+    with app_instance.app_context():
+        u = User.query.first()
+        user_id = str(u.id) if u else "1"
+        job = Job.query.first()
+
+    with client.session_transaction() as sess:
+        sess["_user_id"] = user_id
+        sess["_fresh"] = True
+
+    # 1. Personas endpoint
+    resp_p = client.get("/interview/api/personas")
+    assert resp_p.status_code == 200
+    data_p = resp_p.get_json()
+    assert data_p["success"] is True
+    assert "technical_lead" in data_p["personas"]
+    assert "hiring_manager" in data_p["personas"]
+    assert "culture_lead" in data_p["personas"]
+    assert data_p["personas"]["technical_lead"]["name"] == "Sarah Jenkins"
+
+    # 2. Voice session init endpoint
+    resp_init = client.post("/interview/api/voice-session-init", json={
+        "job_id": job.id,
+        "persona": "technical_lead"
+    })
+    assert resp_init.status_code == 200
+    data_init = resp_init.get_json()
+    assert data_init["success"] is True
+    assert "greeting" in data_init
+    assert "Sarah Jenkins" in data_init["greeting"]
+    assert "persona" in data_init
+
+    # 3. Voice turn endpoint (evaluation + spoken reaction + followup)
+    resp_turn = client.post("/interview/api/voice-turn", json={
+        "job_id": job.id,
+        "question": "Tell me about a high scale system you designed.",
+        "answer": "Basically, we had a major challenge with database lag. I architected a Redis distributed cache with Kafka queues, um, reducing query response times by 40%.",
+        "duration_seconds": 32.5,
+        "persona": "technical_lead"
+    })
+    assert resp_turn.status_code == 200
+    data_turn = resp_turn.get_json()
+    assert data_turn["success"] is True
+    assert "evaluation" in data_turn
+    assert "spoken_reaction" in data_turn
+    assert "followup_question" in data_turn
+    assert "speech_analytics" in data_turn
+    assert data_turn["speech_analytics"]["total_filler_words"] >= 2  # 'basically', 'um'
+
+    # 4. Check UI elements in simulator and hub
+    resp_sim = client.get(f"/interview/{job.id}")
+    assert resp_sim.status_code == 200
+    sim_html = resp_sim.data.decode("utf-8")
+    assert "Voice-to-Voice Interactive Mock Interview" in sim_html
+    assert "voiceCallModal" in sim_html
+    assert "voiceVisualizerCanvas" in sim_html
+    assert "voice-hud-wpm" in sim_html
+    assert "call-done-btn" in sim_html
+
+    resp_hub = client.get("/interview/hub")
+    assert resp_hub.status_code == 200
+    hub_html = resp_hub.data.decode("utf-8")
+    assert "Voice-to-Voice Interactive Mock Interview Simulator" in hub_html
+    assert "Live Bi-Directional Audio" in hub_html
+

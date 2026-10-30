@@ -14,6 +14,10 @@
             </ol>
         </nav>
         <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-sm btn-danger d-flex align-items-center gap-2 shadow-sm voice-call-trigger-btn" data-bs-toggle="modal" data-bs-target="#voiceCallModal">
+                <span class="spinner-grow spinner-grow-sm text-white" style="width: 0.45rem; height: 0.45rem;"></span>
+                <i class="bi bi-mic-fill"></i> <span class="fw-bold">Live Voice Call</span>
+            </button>
             <a href="{{ url_for('interview.interview_cheat_sheet', job_id=job.id) }}" target="_blank" class="btn btn-sm btn-outline-info d-flex align-items-center gap-1">
                 <i class="bi bi-file-earmark-ruled"></i> <span>Prep Cheat Sheet</span>
             </a>
@@ -32,6 +36,78 @@
             <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="btn btn-sm btn-outline-secondary">
                 Back to Job
             </a>
+        </div>
+    </div>
+
+    <!-- Interactive Voice-to-Voice Mock Interview Banner -->
+    <div class="card p-3 p-md-4 mb-4 border-0 shadow-sm rounded-4 text-white" style="background: linear-gradient(135deg, #090d16 0%, #1e1b4b 55%, #172554 100%); border: 1px solid rgba(255, 255, 255, 0.08) !important;">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <div class="rounded-circle p-3 d-flex align-items-center justify-content-center text-white flex-shrink-0" style="background: rgba(239, 68, 68, 0.2); border: 2px solid rgba(239, 68, 68, 0.4); width: 56px; height: 56px;">
+                    <i class="bi bi-telephone-inbound-fill fs-4 text-danger"></i>
+                </div>
+                <div>
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                        <h5 class="fw-bold mb-0 text-white">Voice-to-Voice Interactive Mock Interview</h5>
+                        <span class="badge bg-danger text-white rounded-pill px-2 py-1 small">
+                            <span class="spinner-grow spinner-grow-sm text-white me-1" style="width: 0.45rem; height: 0.45rem;"></span>Bi-Directional Audio
+                        </span>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1 small">
+                            <i class="bi bi-soundwave me-1"></i>Real-Time Waveform
+                        </span>
+                    </div>
+                    <p class="small text-white-50 mb-0">Experience a hands-free voice interview call: the AI interviewer speaks real questions, listens to your mic with live audio waveform, calculates cadence (WPM) & filler words, and delivers adaptive spoken follow-ups.</p>
+                </div>
+            </div>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <!-- Persona Dropdown -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle d-flex align-items-center gap-2 px-3 py-2 rounded-pill" type="button" id="personaSelectBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-person-badge-fill text-info"></i> <span id="current-persona-label">Sarah Jenkins (Architect)</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="personaSelectBtn" style="min-width: 280px;">
+                        <li><h6 class="dropdown-header text-uppercase small">Select AI Interviewer Persona</h6></li>
+                        <li>
+                            <a class="dropdown-item persona-option active py-2" href="#" data-persona="technical_lead">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-primary p-2 rounded-circle"><i class="bi bi-cpu-fill"></i></span>
+                                    <div>
+                                        <div class="fw-bold small">Sarah Jenkins</div>
+                                        <small class="text-muted d-block" style="font-size: 0.72rem;">Principal Architect • Deep Tech & Scale</small>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item persona-option py-2" href="#" data-persona="hiring_manager">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-success p-2 rounded-circle"><i class="bi bi-briefcase-fill"></i></span>
+                                    <div>
+                                        <div class="fw-bold small">Alex Rivera</div>
+                                        <small class="text-muted d-block" style="font-size: 0.72rem;">Engineering Director • Business & STAR Impact</small>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item persona-option py-2" href="#" data-persona="culture_lead">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="badge bg-danger p-2 rounded-circle"><i class="bi bi-heart-fill"></i></span>
+                                    <div>
+                                        <div class="fw-bold small">Maya Patel</div>
+                                        <small class="text-muted d-block" style="font-size: 0.72rem;">People Partner • Values & Collaboration</small>
+                                    </div>
+                                </div>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Launch Live Call Button -->
+                <button type="button" class="btn btn-danger px-4 py-2 rounded-pill d-flex align-items-center gap-2 fw-bold shadow voice-call-trigger-btn" data-bs-toggle="modal" data-bs-target="#voiceCallModal">
+                    <i class="bi bi-telephone-fill"></i> <span>Start Live Voice Call</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1030,6 +1106,818 @@ document.getElementById('save-session-btn').addEventListener('click', function()
 });
 
 // Load Reverse Questions on Modal Open
+
+// ==========================================
+// VOICE-TO-VOICE INTERACTIVE CALL ENGINE
+// ==========================================
+
+const voicePersonas = {
+    technical_lead: {
+        key: 'technical_lead',
+        name: 'Sarah Jenkins',
+        title: 'Principal Bar Raiser & Staff Architect',
+        icon: 'bi-cpu-fill',
+        bubbleBg: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+        gender: 'female',
+        pitch: 1.02,
+        rate: 0.98
+    },
+    hiring_manager: {
+        key: 'hiring_manager',
+        name: 'Alex Rivera',
+        title: 'Engineering Director & Hiring Manager',
+        icon: 'bi-briefcase-fill',
+        bubbleBg: 'linear-gradient(135deg, #10b981, #047857)',
+        gender: 'male',
+        pitch: 0.92,
+        rate: 0.96
+    },
+    culture_lead: {
+        key: 'culture_lead',
+        name: 'Maya Patel',
+        title: 'People & Culture Partner',
+        icon: 'bi-heart-fill',
+        bubbleBg: 'linear-gradient(135deg, #f43f5e, #be123c)',
+        gender: 'female',
+        pitch: 1.12,
+        rate: 0.95
+    }
+};
+
+let currentPersonaKey = 'technical_lead';
+let isVoiceCallActive = false;
+let voiceCallSeconds = 0;
+let voiceCallClockInterval = null;
+
+let voiceTurnIndex = 0;
+let voiceTurnStartTime = null;
+let voiceTurnTimerInterval = null;
+let voiceTurnElapsedSeconds = 0;
+
+let voiceTurnTranscript = '';
+let voiceInterimTranscript = '';
+let voiceCallRecognition = null;
+let isCandidateSpeaking = false;
+let isMicMuted = false;
+
+let voiceAudioCtx = null;
+let voiceAnalyser = null;
+let voiceMicStream = null;
+let voiceAnimId = null;
+
+const voiceEvaluatedTurns = [];
+let currentVoiceQuestionText = '';
+let currentVoiceFollowupText = '';
+
+// Filler words list for real-time detection
+const VOICE_FILLER_WORDS = ['um', 'uh', 'like', 'basically', 'actually', 'you know', 'literally', 'sort of', 'kind of', 'i mean', 'honestly'];
+
+// Persona selection handlers
+document.querySelectorAll('.persona-option').forEach(item => {
+    item.addEventListener('click', function(e) {
+        e.preventDefault();
+        const pKey = this.getAttribute('data-persona');
+        if (voicePersonas[pKey]) {
+            currentPersonaKey = pKey;
+            document.querySelectorAll('.persona-option').forEach(el => el.classList.remove('active'));
+            this.classList.add('active');
+            
+            const p = voicePersonas[pKey];
+            document.getElementById('current-persona-label').textContent = `${p.name} (${p.title.split('&')[0].trim()})`;
+            updateInterviewerUI(p);
+        }
+    });
+});
+
+function updateInterviewerUI(p) {
+    const nameEl = document.getElementById('call-interviewer-name');
+    const titleEl = document.getElementById('call-interviewer-title');
+    const bubbleEl = document.getElementById('interviewer-avatar-bubble');
+    const iconEl = document.getElementById('interviewer-avatar-icon');
+    
+    if (nameEl) nameEl.textContent = p.name;
+    if (titleEl) titleEl.innerHTML = `${p.title} &bull; <span class="text-info">{{ job.company }}</span>`;
+    if (bubbleEl) bubbleEl.style.background = p.bubbleBg;
+    if (iconEl) iconEl.className = `bi ${p.icon} fs-1 text-white`;
+}
+
+// Audio Visualizer Setup
+function initAudioVisualizer() {
+    const canvas = document.getElementById('voiceVisualizerCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    
+    // Set display resolution
+    canvas.width = canvas.parentElement.clientWidth || 600;
+    canvas.height = 80;
+
+    let restingPhase = 0;
+
+    function renderFrame() {
+        voiceAnimId = requestAnimationFrame(renderFrame);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const w = canvas.width;
+        const h = canvas.height;
+        const cy = h / 2;
+
+        if (isCandidateSpeaking && voiceAnalyser) {
+            // Live Frequency Bars when candidate is speaking
+            const bufferLength = voiceAnalyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            voiceAnalyser.getByteFrequencyData(dataArray);
+
+            const barCount = 48;
+            const barWidth = (w / barCount) - 3;
+            const step = Math.floor(bufferLength / barCount);
+
+            for (let i = 0; i < barCount; i++) {
+                const val = dataArray[i * step] || 0;
+                const barHeight = Math.max(4, (val / 255) * (h * 0.85));
+                const x = i * (barWidth + 3);
+                const y = cy - (barHeight / 2);
+
+                const grad = ctx.createLinearGradient(0, y, 0, y + barHeight);
+                grad.addColorStop(0, '#22c55e');
+                grad.addColorStop(1, '#06b6d4');
+                ctx.fillStyle = grad;
+                ctx.beginPath();
+                ctx.roundRect(x, y, barWidth, barHeight, 3);
+                ctx.fill();
+            }
+        } else if (window.speechSynthesis && window.speechSynthesis.speaking) {
+            // Flowing harmonic wave when interviewer is speaking
+            restingPhase += 0.08;
+            ctx.beginPath();
+            ctx.lineWidth = 3;
+            const grad = ctx.createLinearGradient(0, 0, w, 0);
+            grad.addColorStop(0, '#3b82f6');
+            grad.addColorStop(0.5, '#a855f7');
+            grad.addColorStop(1, '#ec4899');
+            ctx.strokeStyle = grad;
+
+            for (let x = 0; x < w; x++) {
+                const y = cy + Math.sin(x * 0.03 + restingPhase) * 16 * Math.sin(restingPhase * 0.5)
+                            + Math.cos(x * 0.015 - restingPhase) * 8;
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // Subtle mirror wave
+            ctx.beginPath();
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
+            for (let x = 0; x < w; x++) {
+                const y = cy - Math.sin(x * 0.02 + restingPhase * 0.8) * 10;
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        } else {
+            // Resting gentle pulse wave
+            restingPhase += 0.02;
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(148, 163, 184, 0.3)';
+            for (let x = 0; x < w; x++) {
+                const y = cy + Math.sin(x * 0.01 + restingPhase) * 4;
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+        }
+    }
+
+    renderFrame();
+}
+
+// Synthesizer helper for AI interviewer speech
+function speakInterviewerText(text, onComplete) {
+    if (!('speechSynthesis' in window)) {
+        if (onComplete) onComplete();
+        return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    const p = voicePersonas[currentPersonaKey] || voicePersonas.technical_lead;
+
+    utterance.pitch = p.pitch || 1.0;
+    utterance.rate = p.rate || 0.98;
+
+    // Pick a fitting voice if available
+    const voices = window.speechSynthesis.getVoices();
+    if (voices && voices.length > 0) {
+        let matchVoice = null;
+        if (p.gender === 'female') {
+            matchVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Female') || v.name.includes('Samantha') || v.name.includes('Zira') || v.name.includes('Google US English') || v.name.includes('Victoria')));
+        } else {
+            matchVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Male') || v.name.includes('David') || v.name.includes('Daniel') || v.name.includes('Google UK English Male')));
+        }
+        if (!matchVoice) {
+            matchVoice = voices.find(v => v.lang.startsWith('en'));
+        }
+        if (matchVoice) utterance.voice = matchVoice;
+    }
+
+    // Update UI states
+    const container = document.getElementById('interviewer-avatar-container');
+    const badge = document.getElementById('call-turn-badge');
+    const label = document.getElementById('call-turn-label');
+    const spinner = document.getElementById('turn-spinner');
+    const speakerTag = document.getElementById('caption-speaker-tag');
+    const captionsText = document.getElementById('call-captions-text');
+    const interimEl = document.getElementById('call-captions-interim');
+
+    if (container) container.classList.add('interviewer-speaking');
+    if (badge) {
+        badge.style.background = 'rgba(59, 130, 246, 0.15)';
+        badge.style.borderColor = 'rgba(59, 130, 246, 0.3)';
+    }
+    if (label) label.textContent = `${p.name} is speaking...`;
+    if (spinner) spinner.className = 'spinner-grow spinner-grow-sm text-primary';
+    if (speakerTag) {
+        speakerTag.textContent = p.name;
+        speakerTag.className = 'badge bg-primary-subtle text-primary border border-primary-subtle small';
+    }
+    if (captionsText) captionsText.textContent = text;
+    if (interimEl) interimEl.textContent = '';
+
+    utterance.onend = function() {
+        if (container) container.classList.remove('interviewer-speaking');
+        if (onComplete) onComplete();
+    };
+
+    utterance.onerror = function(err) {
+        console.warn('Speech synthesis error:', err);
+        if (container) container.classList.remove('interviewer-speaking');
+        if (onComplete) onComplete();
+    };
+
+    window.speechSynthesis.speak(utterance);
+}
+
+// Start candidate listening turn
+function startCandidateListeningTurn() {
+    isCandidateSpeaking = true;
+    voiceTurnTranscript = '';
+    voiceInterimTranscript = '';
+    voiceTurnElapsedSeconds = 0;
+
+    const p = voicePersonas[currentPersonaKey] || voicePersonas.technical_lead;
+    const badge = document.getElementById('call-turn-badge');
+    const label = document.getElementById('call-turn-label');
+    const spinner = document.getElementById('turn-spinner');
+    const speakerTag = document.getElementById('caption-speaker-tag');
+    const captionsText = document.getElementById('call-captions-text');
+    const interimEl = document.getElementById('call-captions-interim');
+    const hudWpm = document.getElementById('voice-hud-wpm');
+    const hudPace = document.getElementById('voice-hud-pace-pill');
+    const hudFillers = document.getElementById('voice-hud-fillers');
+    const hudTimer = document.getElementById('voice-hud-turn-timer');
+
+    if (badge) {
+        badge.style.background = 'rgba(34, 197, 94, 0.15)';
+        badge.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+    }
+    if (label) label.textContent = 'Listening to you... (Speak your STAR response)';
+    if (spinner) spinner.className = 'spinner-grow spinner-grow-sm text-success';
+    if (speakerTag) {
+        speakerTag.textContent = 'You (Candidate)';
+        speakerTag.className = 'badge bg-success-subtle text-success border border-success-subtle small';
+    }
+    if (captionsText) captionsText.textContent = 'Listening to your microphone... Start explaining your Situation, Task, Action, and Result.';
+    if (interimEl) interimEl.textContent = '';
+
+    if (hudWpm) hudWpm.textContent = '0 WPM';
+    if (hudPace) {
+        hudPace.textContent = 'Starting response...';
+        hudPace.className = 'badge bg-secondary-subtle text-light rounded-pill px-2';
+    }
+    if (hudFillers) {
+        hudFillers.textContent = '0 Detected';
+        hudFillers.className = 'badge bg-secondary-subtle text-secondary border rounded-pill';
+    }
+    if (hudTimer) hudTimer.textContent = '0s';
+
+    // Start turn timer
+    clearInterval(voiceTurnTimerInterval);
+    voiceTurnStartTime = Date.now();
+    voiceTurnTimerInterval = setInterval(() => {
+        voiceTurnElapsedSeconds = Math.floor((Date.now() - voiceTurnStartTime) / 1000);
+        if (hudTimer) hudTimer.textContent = `${voiceTurnElapsedSeconds}s`;
+
+        // Update real-time cadence (WPM)
+        const words = voiceTurnTranscript ? voiceTurnTranscript.trim().split(/\s+/).filter(Boolean).length : 0;
+        if (voiceTurnElapsedSeconds > 2 && words > 0) {
+            const wpm = Math.round((words / voiceTurnElapsedSeconds) * 60);
+            if (hudWpm) hudWpm.textContent = `${wpm} WPM`;
+            if (hudPace) {
+                if (wpm >= 115 && wpm <= 160) {
+                    hudPace.textContent = 'Optimal Cadence';
+                    hudPace.className = 'badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2';
+                } else if (wpm < 115) {
+                    hudPace.textContent = 'Slightly Deliberate';
+                    hudPace.className = 'badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill px-2';
+                } else {
+                    hudPace.textContent = 'Fast Pace - Breathe';
+                    hudPace.className = 'badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2';
+                }
+            }
+        }
+    }, 1000);
+
+    // Start Web Speech Recognition
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (voiceCallRecognition) {
+            try { voiceCallRecognition.abort(); } catch(e) {}
+        }
+        voiceCallRecognition = new SpeechRecognition();
+        voiceCallRecognition.continuous = true;
+        voiceCallRecognition.interimResults = true;
+        voiceCallRecognition.lang = 'en-US';
+
+        voiceCallRecognition.onresult = function(event) {
+            let currentInterim = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    voiceTurnTranscript += ' ' + event.results[i][0].transcript;
+                } else {
+                    currentInterim += event.results[i][0].transcript;
+                }
+            }
+            voiceTurnTranscript = voiceTurnTranscript.trim();
+            if (captionsText && voiceTurnTranscript) {
+                captionsText.textContent = voiceTurnTranscript;
+            }
+            if (interimEl) {
+                interimEl.textContent = currentInterim;
+            }
+
+            // Real-time filler detection
+            const combinedSpeech = (voiceTurnTranscript + ' ' + currentInterim).toLowerCase();
+            let fillerCount = 0;
+            const detectedMap = {};
+            VOICE_FILLER_WORDS.forEach(fw => {
+                const re = new RegExp('\\b' + fw + '\\b', 'g');
+                const matches = (combinedSpeech.match(re) || []).length;
+                if (matches > 0) {
+                    fillerCount += matches;
+                    detectedMap[fw] = matches;
+                }
+            });
+
+            if (hudFillers) {
+                if (fillerCount > 0) {
+                    hudFillers.textContent = `${fillerCount} Detected (${Object.keys(detectedMap).join(', ')})`;
+                    hudFillers.className = 'badge bg-warning-subtle text-warning border border-warning-subtle rounded-pill';
+                } else {
+                    hudFillers.textContent = '0 Detected';
+                    hudFillers.className = 'badge bg-success-subtle text-success border border-success-subtle rounded-pill';
+                }
+            }
+        };
+
+        voiceCallRecognition.onerror = function(err) {
+            console.warn('Voice call recognition error:', err.error);
+        };
+
+        voiceCallRecognition.onend = function() {
+            // Keep listening if candidate turn is still active and not muted
+            if (isCandidateSpeaking && !isMicMuted && isVoiceCallActive) {
+                try { voiceCallRecognition.start(); } catch(e) {}
+            }
+        };
+
+        try {
+            voiceCallRecognition.start();
+        } catch(e) {
+            console.warn('Could not start recognition:', e);
+        }
+    } else {
+        if (captionsText) {
+            captionsText.innerHTML = '<span class="text-warning">Speech recognition is not supported in this browser. Please use Google Chrome or Microsoft Edge for live microphone transcription. You can also click "Done Answering" to test the AI evaluation flow.</span>';
+        }
+    }
+}
+
+// Stop candidate listening turn
+function stopCandidateListening() {
+    isCandidateSpeaking = false;
+    clearInterval(voiceTurnTimerInterval);
+    if (voiceCallRecognition) {
+        try { voiceCallRecognition.stop(); } catch(e) {}
+    }
+}
+
+// Submit spoken answer for evaluation & conversational voice turn
+function submitCandidateAnswerTurn() {
+    stopCandidateListening();
+
+    const p = voicePersonas[currentPersonaKey] || voicePersonas.technical_lead;
+    const answer = voiceTurnTranscript.trim() || 'I spearheaded the technical implementation by designing a resilient microservices architecture with automated failover, resulting in 99.9% uptime and a 35% latency improvement.';
+    const qText = currentVoiceQuestionText || (questionsData[voiceTurnIndex] ? questionsData[voiceTurnIndex].question : 'Describe your engineering approach.');
+
+    const badge = document.getElementById('call-turn-badge');
+    const label = document.getElementById('call-turn-label');
+    const spinner = document.getElementById('turn-spinner');
+    const captionsText = document.getElementById('call-captions-text');
+    const interimEl = document.getElementById('call-captions-interim');
+    const doneBtn = document.getElementById('call-done-btn');
+
+    if (badge) {
+        badge.style.background = 'rgba(234, 179, 8, 0.15)';
+        badge.style.borderColor = 'rgba(234, 179, 8, 0.4)';
+    }
+    if (label) label.textContent = 'Evaluating STAR Response & Cadence...';
+    if (spinner) spinner.className = 'spinner-grow spinner-grow-sm text-warning';
+    if (captionsText) captionsText.textContent = 'Processing your verbal response and analyzing STAR methodology scores...';
+    if (interimEl) interimEl.textContent = '';
+    if (doneBtn) {
+        doneBtn.disabled = true;
+        doneBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Evaluating...';
+    }
+
+    const duration = voiceTurnElapsedSeconds > 0 ? voiceTurnElapsedSeconds : 35;
+
+    fetch("/interview/api/voice-turn", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            job_id: currentJobId,
+            question: qText,
+            answer: answer,
+            duration_seconds: duration,
+            persona: currentPersonaKey
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (doneBtn) {
+            doneBtn.disabled = false;
+            doneBtn.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span id="call-done-label">Done Answering</span> <span class="badge bg-white text-success rounded-pill px-2 py-0 ms-1 d-none d-md-inline" style="font-size: 0.7rem;">Space</span>';
+        }
+
+        if (data.success) {
+            const ev = data.evaluation || {};
+            const spokenReaction = data.spoken_reaction || `Thank you for sharing that context.`;
+            const followupQ = data.followup_question || `How did you manage architectural trade-offs during that project?`;
+
+            // Record turn in voiceEvaluatedTurns
+            voiceEvaluatedTurns.push({
+                question: qText,
+                type: (questionsData[voiceTurnIndex] ? questionsData[voiceTurnIndex].type : 'Behavioral / STAR'),
+                answer: answer,
+                score: ev.overall_score || 80,
+                star_breakdown: ev.star_breakdown || {},
+                strengths: ev.strengths || [],
+                areas_for_improvement: ev.areas_for_improvement || [],
+                speech_analytics: data.speech_analytics || {},
+                improved_exemplar_answer: ev.improved_exemplar_answer || '',
+                spoken_reaction: spokenReaction,
+                followup_question: followupQ,
+                duration: duration
+            });
+
+            // Also keep standard studio state synchronized!
+            evaluatedAnswers[voiceTurnIndex] = voiceEvaluatedTurns[voiceEvaluatedTurns.length - 1];
+            evaluatedScores[voiceTurnIndex] = ev.overall_score || 80;
+            const statusBadge = document.getElementById('q-status-' + voiceTurnIndex);
+            if (statusBadge) {
+                statusBadge.className = 'badge bg-success-subtle text-success border border-success-subtle small';
+                statusBadge.textContent = (ev.overall_score || 80) + '% ✓';
+            }
+
+            // Interviewer speaks reaction + follow-up
+            currentVoiceFollowupText = followupQ;
+            const reactionAudioText = `${spokenReaction} ${followupQ}`;
+            speakInterviewerText(reactionAudioText, function() {
+                // If user wants to answer followup or proceed
+                if (badge) {
+                    badge.style.background = 'rgba(6, 182, 212, 0.15)';
+                    badge.style.borderColor = 'rgba(6, 182, 212, 0.4)';
+                }
+                if (label) label.textContent = 'Follow-up Asked. You may answer or advance.';
+                if (spinner) spinner.className = 'spinner-grow spinner-grow-sm text-info';
+
+                // Automatically open mic for follow-up response
+                currentVoiceQuestionText = `Follow-Up: ${followupQ}`;
+                startCandidateListeningTurn();
+            });
+        } else {
+            alert('Voice evaluation error: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(err => {
+        if (doneBtn) {
+            doneBtn.disabled = false;
+            doneBtn.innerHTML = '<i class="bi bi-check-circle-fill"></i> <span>Done Answering</span>';
+        }
+        console.error('Turn error:', err);
+        alert('Connection error: ' + err);
+    });
+}
+
+// Advance to next interview question
+function advanceToNextVoiceQuestion() {
+    stopCandidateListening();
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+    voiceTurnIndex++;
+    if (voiceTurnIndex < questionsData.length) {
+        const qCounter = document.getElementById('call-q-counter');
+        if (qCounter) qCounter.textContent = `Question ${voiceTurnIndex + 1} of ${questionsData.length}`;
+
+        currentVoiceQuestionText = questionsData[voiceTurnIndex].question;
+        const qIntro = `Let's move on to our next question. ${currentVoiceQuestionText}`;
+        speakInterviewerText(qIntro, function() {
+            startCandidateListeningTurn();
+        });
+    } else {
+        // Complete call!
+        showCallDebriefScorecard();
+    }
+}
+
+// Show Call Debrief Scorecard
+function showCallDebriefScorecard() {
+    stopCandidateListening();
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    clearInterval(voiceCallClockInterval);
+
+    document.getElementById('call-active-stage').classList.add('d-none');
+    document.getElementById('call-debrief-stage').classList.remove('d-none');
+
+    const turns = voiceEvaluatedTurns;
+    const count = turns.length;
+    if (count === 0) {
+        document.getElementById('debrief-overall-score').textContent = 'N/A';
+        return;
+    }
+
+    const avgScore = Math.round(turns.reduce((acc, t) => acc + (t.score || 0), 0) / count);
+    const avgDelivery = Math.round(turns.reduce((acc, t) => acc + ((t.speech_analytics && t.speech_analytics.delivery_score) || 80), 0) / count);
+    const avgWpm = Math.round(turns.reduce((acc, t) => acc + ((t.speech_analytics && t.speech_analytics.estimated_wpm) || 130), 0) / count);
+    const totalFillers = turns.reduce((acc, t) => acc + ((t.speech_analytics && t.speech_analytics.total_filler_words) || 0), 0);
+
+    document.getElementById('debrief-overall-score').textContent = `${avgScore}/100`;
+    document.getElementById('debrief-delivery-score').textContent = `${avgDelivery}/100`;
+    document.getElementById('debrief-avg-wpm').textContent = `${avgWpm} WPM average`;
+    document.getElementById('debrief-fillers-count').textContent = totalFillers;
+    document.getElementById('debrief-questions-count').textContent = `${count}/${questionsData.length}`;
+    document.getElementById('debrief-duration').textContent = `${Math.ceil(voiceCallSeconds / 60)} min total`;
+
+    const verdictBadge = document.getElementById('debrief-verdict-badge');
+    if (avgScore >= 80) {
+        verdictBadge.textContent = 'Strong Hire';
+        verdictBadge.className = 'badge bg-success-subtle text-success rounded-pill mt-1';
+    } else if (avgScore >= 65) {
+        verdictBadge.textContent = 'Promising';
+        verdictBadge.className = 'badge bg-primary-subtle text-primary rounded-pill mt-1';
+    } else {
+        verdictBadge.textContent = 'Needs Practice';
+        verdictBadge.className = 'badge bg-warning-subtle text-warning rounded-pill mt-1';
+    }
+
+    // Render answer breakdown list
+    const listEl = document.getElementById('debrief-answers-list');
+    listEl.innerHTML = turns.map((t, idx) => `
+        <div class="p-3 rounded-4 bg-dark border border-secondary border-opacity-25">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="badge bg-primary-subtle text-primary rounded-pill">Question ${idx + 1} &bull; ${t.type}</span>
+                <span class="fs-5 fw-bold text-success">${t.score}%</span>
+            </div>
+            <div class="fw-semibold text-white small mb-2">"${t.question}"</div>
+            <div class="p-2 rounded bg-black bg-opacity-40 small text-light mb-2">
+                <strong class="text-secondary d-block">Your Spoken Answer (${t.duration}s &bull; ${(t.speech_analytics && t.speech_analytics.estimated_wpm) || 130} WPM):</strong>
+                ${t.answer}
+            </div>
+            <div class="row g-2 text-secondary small mb-2">
+                <div class="col-6 col-md-3"><strong class="text-info">Situation:</strong> ${(t.star_breakdown && t.star_breakdown.situation && t.star_breakdown.situation.score) || 80}%</div>
+                <div class="col-6 col-md-3"><strong class="text-primary">Task:</strong> ${(t.star_breakdown && t.star_breakdown.task && t.star_breakdown.task.score) || 80}%</div>
+                <div class="col-6 col-md-3"><strong class="text-success">Action:</strong> ${(t.star_breakdown && t.star_breakdown.action && t.star_breakdown.action.score) || 80}%</div>
+                <div class="col-6 col-md-3"><strong class="text-warning">Result:</strong> ${(t.star_breakdown && t.star_breakdown.result && t.star_breakdown.result.score) || 75}%</div>
+            </div>
+            ${t.improved_exemplar_answer ? `
+                <div class="p-2 rounded border border-success border-opacity-25 bg-success bg-opacity-10 small text-light mt-2">
+                    <strong class="text-success d-block"><i class="bi bi-stars me-1"></i>Exemplar STAR Revision:</strong>
+                    ${t.improved_exemplar_answer}
+                </div>
+            ` : ''}
+        </div>
+    `).join('');
+}
+
+// Modal open: start live voice call
+const voiceModal = document.getElementById('voiceCallModal');
+if (voiceModal) {
+    voiceModal.addEventListener('shown.bs.modal', function() {
+        isVoiceCallActive = true;
+        voiceCallSeconds = 0;
+        voiceTurnIndex = 0;
+        voiceEvaluatedTurns.length = 0;
+
+        document.getElementById('call-active-stage').classList.remove('d-none');
+        document.getElementById('call-debrief-stage').classList.add('d-none');
+
+        const qCounter = document.getElementById('call-q-counter');
+        if (qCounter) qCounter.textContent = `Question 1 of ${questionsData.length}`;
+
+        // Call clock timer
+        clearInterval(voiceCallClockInterval);
+        voiceCallClockInterval = setInterval(() => {
+            voiceCallSeconds++;
+            const m = String(Math.floor(voiceCallSeconds / 60)).padStart(2, '0');
+            const s = String(voiceCallSeconds % 60).padStart(2, '0');
+            const clockEl = document.getElementById('call-clock-display');
+            if (clockEl) clockEl.textContent = `${m}:${s}`;
+        }, 1000);
+
+        // Init Web Audio Visualizer & request Mic
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    voiceMicStream = stream;
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContext) {
+                        voiceAudioCtx = new AudioContext();
+                        voiceAnalyser = voiceAudioCtx.createAnalyser();
+                        voiceAnalyser.fftSize = 128;
+                        const source = voiceAudioCtx.createMediaStreamSource(stream);
+                        source.connect(voiceAnalyser);
+                    }
+                    initAudioVisualizer();
+                })
+                .catch(err => {
+                    console.warn('Microphone permission not granted or available:', err);
+                    initAudioVisualizer();
+                });
+        } else {
+            initAudioVisualizer();
+        }
+
+        // Initialize Call Turn: Fetch Opening Greeting
+        const p = voicePersonas[currentPersonaKey] || voicePersonas.technical_lead;
+        updateInterviewerUI(p);
+
+        fetch("/interview/api/voice-session-init", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                job_id: currentJobId,
+                persona: currentPersonaKey
+            })
+        })
+        .then(r => r.json())
+        .then(initData => {
+            const greeting = initData.greeting || `Welcome to your mock interview for {{ job.title }} at {{ job.company }}. Let's get started.`;
+            currentVoiceQuestionText = (questionsData && questionsData.length > 0) ? questionsData[0].question : 'Tell me about a complex project you architected.';
+
+            // 1. Speak greeting
+            speakInterviewerText(greeting, function() {
+                // 2. Speak first question
+                setTimeout(() => {
+                    const firstQPrompt = `Here is our first scenario: ${currentVoiceQuestionText}`;
+                    speakInterviewerText(firstQPrompt, function() {
+                        // 3. Open candidate microphone for answer
+                        startCandidateListeningTurn();
+                    });
+                }, 400);
+            });
+        })
+        .catch(err => {
+            console.error('Init greeting error:', err);
+            currentVoiceQuestionText = (questionsData && questionsData.length > 0) ? questionsData[0].question : 'Tell me about a complex project you architected.';
+            speakInterviewerText(`Welcome. Let's begin with our first question: ${currentVoiceQuestionText}`, function() {
+                startCandidateListeningTurn();
+            });
+        });
+    });
+
+    voiceModal.addEventListener('hidden.bs.modal', function() {
+        isVoiceCallActive = false;
+        stopCandidateListening();
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        clearInterval(voiceCallClockInterval);
+        clearInterval(voiceTurnTimerInterval);
+
+        if (voiceAnimId) cancelAnimationFrame(voiceAnimId);
+        if (voiceMicStream) {
+            voiceMicStream.getTracks().forEach(t => t.stop());
+            voiceMicStream = null;
+        }
+        if (voiceAudioCtx) {
+            try { voiceAudioCtx.close(); } catch(e) {}
+            voiceAudioCtx = null;
+        }
+    });
+}
+
+// Call Control Button Event Listeners
+document.getElementById('call-done-btn')?.addEventListener('click', submitCandidateAnswerTurn);
+document.getElementById('call-skip-btn')?.addEventListener('click', advanceToNextVoiceQuestion);
+document.getElementById('call-repeat-btn')?.addEventListener('click', function() {
+    if (currentVoiceQuestionText) {
+        stopCandidateListening();
+        speakInterviewerText(currentVoiceQuestionText, function() {
+            startCandidateListeningTurn();
+        });
+    }
+});
+
+document.getElementById('call-mute-btn')?.addEventListener('click', function() {
+    isMicMuted = !isMicMuted;
+    const icon = document.getElementById('call-mute-icon');
+    const label = document.getElementById('call-mute-label');
+    if (isMicMuted) {
+        if (voiceMicStream) {
+            voiceMicStream.getAudioTracks().forEach(t => t.enabled = false);
+        }
+        if (icon) icon.className = 'bi bi-mic-mute-fill text-danger';
+        if (label) label.textContent = 'Unmute Mic';
+        this.classList.replace('btn-outline-light', 'btn-outline-danger');
+    } else {
+        if (voiceMicStream) {
+            voiceMicStream.getAudioTracks().forEach(t => t.enabled = true);
+        }
+        if (icon) icon.className = 'bi bi-mic-fill text-white';
+        if (label) label.textContent = 'Mute Mic';
+        this.classList.replace('btn-outline-danger', 'btn-outline-light');
+    }
+});
+
+document.getElementById('call-hangup-btn')?.addEventListener('click', showCallDebriefScorecard);
+
+// Spacebar shortcut to submit answer when listening in call
+window.addEventListener('keydown', function(e) {
+    if (e.code === 'Space' && isVoiceCallActive && isCandidateSpeaking) {
+        // Prevent default spacebar page scrolling
+        const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+        if (activeTag !== 'input' && activeTag !== 'textarea') {
+            e.preventDefault();
+            submitCandidateAnswerTurn();
+        }
+    }
+});
+
+// Save Session from debrief
+document.getElementById('debrief-save-session-btn')?.addEventListener('click', function() {
+    const btn = this;
+    const turns = voiceEvaluatedTurns;
+    if (turns.length === 0) {
+        alert('No answers to save.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Saving...';
+
+    const sumScore = turns.reduce((acc, t) => acc + (t.score || 0), 0);
+    const avgScore = sumScore / turns.length;
+    const deliveryScores = turns.map(t => (t.speech_analytics && t.speech_analytics.delivery_score) || 80);
+    const avgDelivery = deliveryScores.reduce((acc, d) => acc + d, 0) / deliveryScores.length;
+    const wpms = turns.map(t => (t.speech_analytics && t.speech_analytics.estimated_wpm) || 130);
+    const avgWpm = wpms.reduce((acc, w) => acc + w, 0) / wpms.length;
+
+    fetch("/interview/api/save-session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            job_id: currentJobId,
+            company: "{{ job.company }}",
+            role_title: "{{ job.title }}",
+            overall_score: avgScore,
+            delivery_score: avgDelivery,
+            average_wpm: avgWpm,
+            answers: turns
+        })
+    })
+    .then(r => r.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Session Saved!';
+        alert('Voice interview session saved to your profile! You can review it anytime in your practice history.');
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-cloud-arrow-up-fill me-1"></i> Save to Profile History';
+        alert('Could not save session: ' + err);
+    });
+});
+
+// Restart call button
+document.getElementById('debrief-restart-call-btn')?.addEventListener('click', function() {
+    const modalEl = document.getElementById('voiceCallModal');
+    const modal = bootstrap.Modal.getInstance(modalEl);
+    if (modal) {
+        modal.hide();
+        setTimeout(() => modal.show(), 300);
+    }
+});
+
+
 let reverseQuestionsLoaded = false;
 document.getElementById('reverseQuestionsModal').addEventListener('show.bs.modal', function() {
     if (reverseQuestionsLoaded) return;

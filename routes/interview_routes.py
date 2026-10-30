@@ -53,6 +53,7 @@ def interview_hub():
         if scores:
             avg_score = round(sum(scores) / len(scores), 1)
 
+    personas = simulator.get_interviewer_personas()
     return render_template(
         "interview_hub.html",
         primary_job=primary_job,
@@ -60,7 +61,8 @@ def interview_hub():
         user_saved=user_saved,
         active_jobs=active_jobs,
         past_sessions=past_sessions,
-        avg_score=avg_score
+        avg_score=avg_score,
+        personas=personas
     )
 
 @interview_bp.route("/<int:job_id>")
@@ -93,6 +95,8 @@ def start_interview(job_id):
     user_saved = SavedJob.query.filter_by(user_id=current_user.id).order_by(SavedJob.saved_at.desc()).limit(8).all()
     other_jobs = Job.query.filter(Job.id != job.id, Job.status == "active").order_by(Job.published_at.desc()).limit(8).all()
 
+    personas = simulator.get_interviewer_personas()
+
     return render_template(
         "interview_simulator.html",
         job=job,
@@ -103,8 +107,78 @@ def start_interview(job_id):
         candidate_skills=candidate_skills,
         user_apps=user_apps,
         user_saved=user_saved,
-        other_jobs=other_jobs
+        other_jobs=other_jobs,
+        personas=personas
     )
+
+
+def _get_candidate_display_name():
+    if current_user.is_authenticated:
+        if getattr(current_user, "name", None):
+            return current_user.name.strip().split()[0].title()
+        profile = getattr(current_user, "candidate_profile", None)
+        if profile and getattr(profile, "full_name", None):
+            return profile.full_name.strip().split()[0].title()
+        if getattr(current_user, "email", None):
+            return current_user.email.split("@")[0].replace(".", " ").title()
+    return "Candidate"
+
+
+@interview_bp.route("/api/personas")
+@login_required
+def get_personas():
+    """Returns available AI interviewer persona profiles."""
+    return jsonify({"success": True, "personas": simulator.get_interviewer_personas()})
+
+
+@interview_bp.route("/api/voice-session-init", methods=["POST"])
+@login_required
+def voice_session_init():
+    """Initializes a live voice call turn with the interviewer's opening greeting."""
+    data = request.get_json() or {}
+    job_id = data.get("job_id")
+    persona_key = data.get("persona", "technical_lead")
+    if not job_id:
+        return jsonify({"success": False, "error": "Missing job_id"}), 400
+
+    job = Job.query.get_or_404(int(job_id))
+    candidate_name = _get_candidate_display_name()
+    init_data = simulator.generate_interviewer_greeting(job, persona_key=persona_key, candidate_name=candidate_name)
+    return jsonify({"success": True, **init_data})
+
+
+@interview_bp.route("/api/voice-turn", methods=["POST"])
+@login_required
+def voice_turn():
+    """
+    Processes a live voice answer turn:
+    - Runs STAR evaluation & speech delivery analytics
+    - Generates conversational verbal reaction spoken out loud by the interviewer
+    - Produces adaptive probing follow-up question
+    """
+    data = request.get_json() or {}
+    job_id = data.get("job_id")
+    question = data.get("question", "")
+    answer = data.get("answer", "")
+    duration_seconds = data.get("duration_seconds")
+    persona_key = data.get("persona", "technical_lead")
+
+    if not job_id or not question or not answer:
+        return jsonify({"success": False, "error": "Missing question, answer or job ID"}), 400
+
+    job = Job.query.get_or_404(int(job_id))
+    parsed_duration = float(duration_seconds) if duration_seconds else None
+    candidate_name = _get_candidate_display_name()
+
+    turn_result = simulator.generate_voice_turn(
+        job=job,
+        question=question,
+        user_answer=answer,
+        duration_seconds=parsed_duration,
+        persona_key=persona_key,
+        candidate_name=candidate_name
+    )
+    return jsonify({"success": True, **turn_result})
 
 @interview_bp.route("/api/evaluate", methods=["POST"])
 @login_required

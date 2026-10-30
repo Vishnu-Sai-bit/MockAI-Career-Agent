@@ -370,3 +370,173 @@ Format output as a valid JSON array of objects:
             ]
         }
 
+    @staticmethod
+    def get_interviewer_personas() -> Dict[str, Dict[str, Any]]:
+        """
+        Returns structured interviewer personas with vocal and pedagogical profiles.
+        """
+        return {
+            "technical_lead": {
+                "key": "technical_lead",
+                "name": "Sarah Jenkins",
+                "title": "Principal Bar Raiser & Staff Architect",
+                "company_role": "Bar Raiser",
+                "avatar_icon": "bi-cpu-fill",
+                "badge_class": "bg-primary text-white",
+                "accent_color": "#0d6efd",
+                "voice_gender": "female",
+                "pitch": 1.02,
+                "rate": 0.98,
+                "tone": "Analytical, architectural, deep-dive on failure modes and scale",
+                "description": "Probes system architecture, scalability trade-offs, concurrency, and failure mitigation."
+            },
+            "hiring_manager": {
+                "key": "hiring_manager",
+                "name": "Alex Rivera",
+                "title": "Engineering Director & Hiring Manager",
+                "company_role": "Hiring Director",
+                "avatar_icon": "bi-briefcase-fill",
+                "badge_class": "bg-success text-white",
+                "accent_color": "#198754",
+                "voice_gender": "male",
+                "pitch": 0.92,
+                "rate": 0.96,
+                "tone": "Outcome-focused, delivery velocity, prioritization, and business metrics",
+                "description": "Focuses on execution discipline, customer impact, project trade-offs, and team leadership."
+            },
+            "culture_lead": {
+                "key": "culture_lead",
+                "name": "Maya Patel",
+                "title": "People & Culture Partner",
+                "company_role": "Culture Lead",
+                "avatar_icon": "bi-heart-fill",
+                "badge_class": "bg-danger text-white",
+                "accent_color": "#dc3545",
+                "voice_gender": "female",
+                "pitch": 1.12,
+                "rate": 0.95,
+                "tone": "Empathetic, collaborative, values-driven, psychological safety",
+                "description": "Evaluates communication, empathy, handling constructive friction, and culture contribution."
+            }
+        }
+
+    def generate_interviewer_greeting(
+        self,
+        job: Job,
+        persona_key: str = "technical_lead",
+        candidate_name: str = "there"
+    ) -> Dict[str, Any]:
+        """
+        Generates a natural spoken greeting to open a live voice interview call.
+        """
+        personas = self.get_interviewer_personas()
+        persona = personas.get(persona_key, personas["technical_lead"])
+        c_name = candidate_name.strip() if candidate_name and candidate_name.strip() else "there"
+
+        if persona_key == "hiring_manager":
+            greeting = (
+                f"Welcome, {c_name}! I'm {persona['name']}, Engineering Director for {job.company}. "
+                f"Thanks for hopping on this call for the {job.title} role. Today, I'm excited to hear about how you tackle complex deliverables, "
+                f"handle team trade-offs, and drive measurable outcomes. Whenever you're ready, let's begin with our first scenario."
+            )
+        elif persona_key == "culture_lead":
+            greeting = (
+                f"Hello and welcome, {c_name}! I'm {persona['name']} with the People and Culture team at {job.company}. "
+                f"I'm delighted to connect with you for our {job.title} interview. We want this to feel like an open, natural conversation "
+                f"about your values, collaboration style, and growth. Whenever you're set, let's jump into our first question."
+            )
+        else:
+            greeting = (
+                f"Hi {c_name}, thanks for joining! I'm {persona['name']}, Principal Architect here at {job.company}. "
+                f"We're excited to learn more about your technical background for the {job.title} role. "
+                f"Speak naturally, walk me through your engineering decisions using the STAR framework, and we'll take it step by step. "
+                f"Whenever you're ready, let's start with our first challenge."
+            )
+
+        return {
+            "greeting": greeting,
+            "persona": persona,
+            "candidate_name": c_name
+        }
+
+    def generate_voice_turn(
+        self,
+        job: Job,
+        question: str,
+        user_answer: str,
+        duration_seconds: Optional[float] = None,
+        persona_key: str = "technical_lead",
+        candidate_name: str = "there"
+    ) -> Dict[str, Any]:
+        """
+        Processes a live spoken answer from the candidate:
+        1. Runs STAR evaluation and speech delivery analytics.
+        2. Generates a natural, spoken conversational reaction under 30 words.
+        3. Formulates a personalized, probing follow-up question.
+        """
+        personas = self.get_interviewer_personas()
+        persona = personas.get(persona_key, personas["technical_lead"])
+        c_name = candidate_name.strip() if candidate_name and candidate_name.strip() else "there"
+
+        # 1. STAR Evaluation + Speech Delivery Analytics
+        evaluation = self.evaluate_star_answer(question, user_answer, job, duration_seconds=duration_seconds)
+
+        # 2. Formulate Conversational Spoken Reaction & Probing Follow-Up
+        prompt = f"""You are {persona['name']}, {persona['title']} interviewing {c_name} for the position of {job.title} at {job.company}.
+The candidate just answered your interview question verbally on a live call.
+Generate a concise, natural, spoken verbal reaction (under 30 words) that you will speak aloud to bridge their answer before asking your probing follow-up question.
+Do NOT say 'Question:' or 'Reaction:'. Speak directly to {c_name} as a real human interviewer on audio.
+
+QUESTION ASKED:
+"{question}"
+
+CANDIDATE'S SPOKEN ANSWER:
+"{user_answer}"
+
+Output MUST be a single valid JSON object:
+{{
+  "spoken_reaction": "Conversational spoken bridge under 30 words acknowledging their points and setting up the follow-up.",
+  "followup_question": "Direct probing follow-up question digging deeper into their technical decision, trade-off, or metric.",
+  "interviewer_intent": "What you are assessing"
+}}
+"""
+        parsed = self.gemini.generate_json(prompt, timeout=8)
+        if isinstance(parsed, dict) and parsed.get("spoken_reaction") and parsed.get("followup_question"):
+            spoken_reaction = parsed["spoken_reaction"].strip()
+            followup_q = parsed["followup_question"].strip()
+            intent = parsed.get("interviewer_intent", "Probing technical depth and ownership").strip()
+        else:
+            # Deterministic Persona-tailored fallback
+            ans_lower = (user_answer or "").lower()
+            if persona_key == "hiring_manager":
+                spoken_reaction = f"That provides helpful context on your project scope, {c_name}. I'd like to look closely at your deliverables."
+                if any(w in ans_lower for w in ["deadline", "stakeholder", "release", "ship", "launch"]):
+                    followup_q = "If a critical stakeholder pushed back on the release schedule, how did you negotiate scope without sacrificing code stability?"
+                else:
+                    followup_q = f"Looking at the end result, how did your work directly impact the team's operational velocity or business ROI at {job.company}?"
+                intent = "Evaluating business impact, prioritization, and stakeholder negotiation."
+            elif persona_key == "culture_lead":
+                spoken_reaction = f"Thank you for walking me through that, {c_name}. Open communication and psychological safety are central to our team."
+                if any(w in ans_lower for w in ["team", "conflict", "disagree", "peer", "lead"]):
+                    followup_q = "When differing technical opinions emerged, how did you foster constructive consensus while maintaining team morale?"
+                else:
+                    followup_q = "How do you actively mentor junior team members and maintain continuous learning in a fast-paced environment?"
+                intent = "Assessing emotional intelligence, collaborative alignment, and growth mindset."
+            else: # technical_lead
+                spoken_reaction = f"Good technical overview, {c_name}. You highlighted some strong architectural points—let's examine the trade-offs."
+                if any(w in ans_lower for w in ["cache", "redis", "database", "sql", "latency", "queue", "kafka"]):
+                    followup_q = "When traffic surged, how did you guarantee cache consistency and prevent cascading timeouts across downstream dependencies?"
+                else:
+                    followup_q = f"What was the single biggest bottleneck or failure mode in that design, and what would you re-architect if building for 10x scale at {job.company}?"
+                intent = "Probing system reliability, fault tolerance, and scalability trade-offs."
+
+        return {
+            "persona": persona,
+            "spoken_reaction": spoken_reaction,
+            "followup_question": followup_q,
+            "interviewer_intent": intent,
+            "evaluation": evaluation,
+            "speech_analytics": evaluation.get("speech_analytics", {})
+        }
+
+
