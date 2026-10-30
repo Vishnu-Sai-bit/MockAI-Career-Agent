@@ -83,9 +83,9 @@ WORKDAY_TENANTS: Dict[str, Dict[str, str]] = {
         "company_name": "Nike"
     },
     "accenture": {
-        "host": "accenture.wd3.myworkdayjobs.com",
+        "host": "accenture.wd103.myworkdayjobs.com",
         "tenant": "accenture",
-        "site": "Accenture_Careers",
+        "site": "AccentureCareers",
         "company_name": "Accenture"
     }
 }
@@ -100,21 +100,27 @@ class WorkdayCollector(BaseCollector):
         Dynamically resolves company configurations across 3,700+ enterprise Workday tenants.
         """
         config = kwargs.get("config", {})
-        if not config:
-            tenant_info = WORKDAY_TENANTS.get(company_key.lower())
-            if not tenant_info:
-                try:
-                    from services.workday_directory_service import workday_directory
-                    matched = workday_directory.get_company(company_key)
-                    if matched:
-                        tenant_info = {
-                            "host": matched["host"],
-                            "tenant": matched["tenant"],
-                            "site": matched["site"],
-                            "company_name": matched["company_name"]
-                        }
-                except Exception:
-                    tenant_info = None
+        tenant_info = WORKDAY_TENANTS.get(company_key.lower())
+        if tenant_info:
+            merged = dict(tenant_info)
+            if config:
+                for k, v in config.items():
+                    if v and k not in ("host", "site"):  # preserve verified host and site
+                        merged[k] = v
+            config = merged
+        elif not config:
+            try:
+                from services.workday_directory_service import workday_directory
+                matched = workday_directory.get_company(company_key)
+                if matched:
+                    tenant_info = {
+                        "host": matched["host"],
+                        "tenant": matched["tenant"],
+                        "site": matched["site"],
+                        "company_name": matched["company_name"]
+                    }
+            except Exception:
+                tenant_info = None
             config = tenant_info or {}
 
         host = config.get("host") or f"{company_key}.myworkdayjobs.com"
@@ -127,11 +133,13 @@ class WorkdayCollector(BaseCollector):
             "Content-Type": "application/json",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
+        search_txt = kwargs.get("search_text") or config.get("search_text") or ""
+        applied_facets = kwargs.get("applied_facets") or config.get("applied_facets") or {}
         payload = {
-            "appliedFacets": {},
-            "limit": min(limit, 30),
+            "appliedFacets": applied_facets,
+            "limit": min(limit, 20),
             "offset": 0,
-            "searchText": ""
+            "searchText": search_txt
         }
 
         jobs: List[RawJobRecord] = []
@@ -200,7 +208,17 @@ class WorkdayCollector(BaseCollector):
                 original_url = f"https://{host}/{site}/{clean_path}"
                 apply_url = f"https://{host}/{site}/{clean_path}/apply"
 
-                loc = item.get("locationsText", "")
+                loc = item.get("locationsText", "") or ""
+                if not loc and ext_path:
+                    parts = ext_path.strip("/").split("/")
+                    if len(parts) >= 2 and parts[0] == "job":
+                        loc_candidate = parts[1].replace("-", " ")
+                        indian_cities = ["Bengaluru", "Bangalore", "Hyderabad", "Pune", "Mumbai", "Delhi", "Noida", "Gurgaon", "Gurugram", "Chennai", "Kolkata"]
+                        matched_in_city = next((c for c in indian_cities if c.lower() in loc_candidate.lower()), None)
+                        if matched_in_city:
+                            loc = f"{matched_in_city}, India"
+                        else:
+                            loc = loc_candidate
                 work_mode = "remote" if "remote" in loc.lower() or "remote" in title.lower() else "on-site"
 
                 # Description and detail handling
