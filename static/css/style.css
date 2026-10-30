@@ -191,50 +191,22 @@ body {
     border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
-/* Desktop layout: Persistent Fixed Sidebar */
-@media (min-width: 992px) {
-    #appSidebar {
-        position: fixed !important;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        width: 260px !important;
-        z-index: 1040;
-        transform: none !important;
-        visibility: visible !important;
-    }
-
-    .app-main-wrapper {
-        margin-left: 260px;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        transition: margin-left 0.25s ease;
-    }
-
-    body.sidebar-collapsed #appSidebar {
-        transform: translateX(-100%) !important;
-    }
-
-    body.sidebar-collapsed .app-main-wrapper,
-    body.landing-mode .app-main-wrapper,
-    body.auth-mode .app-main-wrapper {
-        margin-left: 0 !important;
-    }
+/* Slide-Over Drawer Navigation Menu (Hidden by default, slides out when clicking Menu) */
+#appSidebar.offcanvas {
+    width: 290px !important;
+    max-width: 85vw;
+    background: linear-gradient(180deg, #090e1a 0%, #0d1527 50%, #070b14 100%) !important;
+    border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 4px 0 35px rgba(0, 0, 0, 0.55);
+    z-index: 1060;
 }
 
-/* Mobile layout: Offcanvas Slide-over */
-@media (max-width: 991.98px) {
-    #appSidebar {
-        width: 280px !important;
-    }
-
-    .app-main-wrapper {
-        margin-left: 0 !important;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-    }
+.app-main-wrapper {
+    margin-left: 0 !important;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 /* App Topbar (Header without duplicate menu items) */
