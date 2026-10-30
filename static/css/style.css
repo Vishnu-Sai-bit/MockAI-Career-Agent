@@ -46,69 +46,144 @@ body {
     border-right: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
-/* Sidebar Brand */
+/* Sidebar Brand & Header */
 .sidebar-header {
     background-color: rgba(255, 255, 255, 0.02);
     border-color: rgba(255, 255, 255, 0.06) !important;
 }
 
 .sidebar-brand .brand-icon-box {
-    width: 32px;
-    height: 32px;
-    background: rgba(6, 182, 212, 0.15);
-    border: 1px solid rgba(6, 182, 212, 0.3);
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.25) 0%, rgba(59, 130, 246, 0.3) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    box-shadow: 0 0 14px rgba(6, 182, 212, 0.25);
+}
+
+.status-pulse-dot {
+    width: 7px;
+    height: 7px;
+    background-color: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: pulseGreen 2s infinite;
+}
+
+@keyframes pulseGreen {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 5px rgba(16, 185, 129, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
 }
 
 .sidebar-heading {
-    font-size: 0.63rem;
+    font-size: 0.65rem;
     letter-spacing: 0.08rem;
     color: #64748b !important;
     font-weight: 700;
-    margin-top: 0.75rem;
-    margin-bottom: 0.25rem;
+    margin-top: 1rem;
+    margin-bottom: 0.35rem;
 }
 
 /* Sidebar Navigation Items */
 .sidebar-nav {
-    gap: 2px;
+    gap: 3px;
+}
+
+.sidebar-icon-box {
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+    transition: all 0.2s ease;
 }
 
 .sidebar-link {
     display: flex;
     align-items: center;
     gap: 0.65rem;
-    padding: 0.44rem 0.75rem;
-    border-radius: 6px;
+    padding: 0.45rem 0.75rem;
+    border-radius: 8px;
     color: #94a3b8;
     text-decoration: none;
     font-size: 0.84rem;
     font-weight: 500;
-    transition: all 0.15s ease-in-out;
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     border-left: 3px solid transparent;
 }
 
 .sidebar-link i {
     font-size: 0.95rem;
-    opacity: 0.85;
-    width: 18px;
-    text-align: center;
 }
 
 .sidebar-link:hover {
     color: #ffffff;
-    background-color: rgba(255, 255, 255, 0.05);
+    background-color: rgba(255, 255, 255, 0.06);
+    transform: translateX(3px);
+}
+
+.sidebar-link:hover .sidebar-icon-box {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .sidebar-link.active {
     color: #38bdf8 !important;
-    background-color: rgba(56, 189, 248, 0.12);
+    background: linear-gradient(90deg, rgba(56, 189, 248, 0.16) 0%, rgba(56, 189, 248, 0.03) 100%);
     border-left-color: #38bdf8;
     font-weight: 600;
+    box-shadow: inset 0 0 16px rgba(56, 189, 248, 0.04);
+}
+
+.sidebar-link.active .sidebar-icon-box {
+    background-color: rgba(56, 189, 248, 0.2);
+    border-color: rgba(56, 189, 248, 0.45);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
 }
 
 .sidebar-link.active i {
     color: #38bdf8 !important;
     opacity: 1;
+}
+
+.sidebar-resume-card {
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: all 0.2s ease;
+}
+
+.sidebar-resume-card:hover {
+    border-color: rgba(56, 189, 248, 0.35);
+    background: rgba(15, 23, 42, 0.85);
+    transform: translateY(-1px);
+}
+
+.user-avatar-badge {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+}
+
+.sidebar-collapse-trigger:hover {
+    background-color: rgba(255, 255, 255, 0.08);
 }
 
 .sidebar-user-footer {
