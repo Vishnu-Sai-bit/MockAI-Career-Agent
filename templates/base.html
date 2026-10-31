@@ -23,111 +23,120 @@
 </head>
 <body class="app-body {% if request.endpoint == 'dashboard.index' %}landing-mode{% elif request.endpoint in ['auth.login', 'auth.register'] %}auth-mode{% endif %}">
     {% if request.endpoint != 'dashboard.index' and request.endpoint not in ['auth.login', 'auth.register'] %}
-    <!-- 1. Dedicated Slide-Over App Navigation Menu (Hidden by default, slides out when clicked) -->
+    <!-- 1. Dedicated Slide-Over App Navigation Menu (Render MockAI Design System) -->
     <aside class="offcanvas offcanvas-start d-flex flex-column" tabindex="-1" id="appSidebar" aria-labelledby="appSidebarLabel">
-        <!-- Sidebar Brand Header with Close Button -->
-        <div class="sidebar-header d-flex align-items-center justify-content-between px-3 py-3 border-bottom border-secondary border-opacity-10">
+        <!-- Header with Brand & Sleek Circular Close Button -->
+        <div class="sidebar-header d-flex align-items-center justify-content-between px-3 py-3 border-bottom border-white border-opacity-10">
             <a class="sidebar-brand d-flex align-items-center gap-2 text-decoration-none" href="{{ url_for('dashboard.index') }}">
-                <div class="brand-icon-box rounded-3 d-flex align-items-center justify-content-center shadow-sm">
-                    <i class="bi bi-cpu-fill fs-5 text-info"></i>
+                <div class="sidebar-logo-icon shadow-sm">
+                    <i class="bi bi-briefcase-fill text-white" style="font-size: 0.95rem;"></i>
                 </div>
-                <div class="d-flex flex-column">
-                    <span class="brand-text fw-bold text-white fs-6 lh-sm">AI Job Agent</span>
-                    <span class="brand-subtext text-secondary d-flex align-items-center gap-1" style="font-size: 0.68rem; letter-spacing: 0.02rem;">
+                <div class="sidebar-brand-text d-flex flex-column" style="line-height: 1.15;">
+                    <span class="fw-bold text-white fs-6" style="letter-spacing: -0.01em; font-family: 'Plus Jakarta Sans', sans-serif;">JobAgent</span>
+                    <span class="text-secondary d-flex align-items-center gap-1" style="font-size: 0.68rem; letter-spacing: 0.02rem;">
                         <span class="status-pulse-dot"></span> Verified Careers
                     </span>
                 </div>
             </a>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" data-bs-target="#appSidebar" aria-label="Close"></button>
+            <button type="button" class="sidebar-close-btn" data-bs-dismiss="offcanvas" data-bs-target="#appSidebar" aria-label="Close" title="Close Menu">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
 
-        <!-- Sidebar Navigation Body (Clean, Uncluttered Menu) -->
+        <!-- Sidebar Navigation Body -->
         <div class="sidebar-body px-3 py-3 overflow-y-auto flex-grow-1">
+            <!-- Search Input Capsule (Exact Render MockAI style) -->
+            <div class="sidebar-search-box">
+                <i class="bi bi-search text-muted" style="font-size: 0.8rem;"></i>
+                <input type="text" id="sidebarNavSearch" placeholder="Search menu / tools..." aria-label="Search navigation" autocomplete="off">
+                <span class="sidebar-search-kbd">⌘K</span>
+            </div>
+
             {% if current_user.is_authenticated %}
                 <!-- Section 1: Job Discovery -->
-                <div class="sidebar-heading text-uppercase px-2 d-flex align-items-center justify-content-between">
+                <div class="sidebar-heading text-uppercase px-2">
                     <span>Job Discovery</span>
                     <i class="bi bi-compass text-secondary opacity-50 fs-9"></i>
                 </div>
                 <ul class="nav flex-column mb-3 sidebar-nav">
                     <li class="nav-item">
-                        <a class="sidebar-link {% if request.endpoint == 'dashboard.dashboard' %}active{% endif %}" href="{{ url_for('dashboard.dashboard') }}">
-                            <span class="sidebar-icon-box"><i class="bi bi-grid-1x2-fill text-info"></i></span>
+                        <a class="sidebar-link {% if request.endpoint == 'dashboard.dashboard' %}active{% endif %}" href="{{ url_for('dashboard.dashboard') }}" title="Candidate Dashboard">
+                            <span class="sidebar-icon-box"><i class="bi bi-grid-fill"></i></span>
                             <span>Dashboard</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="sidebar-link {% if request.endpoint == 'jobs.list_jobs' or request.endpoint == 'jobs.job_details' %}active{% endif %}" href="{{ url_for('jobs.list_jobs') }}">
-                            <span class="sidebar-icon-box"><i class="bi bi-briefcase-fill text-primary"></i></span>
+                        <a class="sidebar-link {% if request.endpoint == 'jobs.list_jobs' or request.endpoint == 'jobs.job_details' %}active{% endif %}" href="{{ url_for('jobs.list_jobs') }}" title="Discover Verified Jobs">
+                            <span class="sidebar-icon-box"><i class="bi bi-briefcase-fill"></i></span>
                             <span>Discover Jobs</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="sidebar-link {% if request.endpoint == 'jobs.saved_jobs' %}active{% endif %}" href="{{ url_for('jobs.saved_jobs') }}">
-                            <span class="sidebar-icon-box"><i class="bi bi-bookmark-star-fill text-warning"></i></span>
+                        <a class="sidebar-link {% if request.endpoint == 'jobs.saved_jobs' %}active{% endif %}" href="{{ url_for('jobs.saved_jobs') }}" title="Saved Job Bookmarks">
+                            <span class="sidebar-icon-box"><i class="bi bi-bookmark-star-fill"></i></span>
                             <span>Saved Jobs</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="sidebar-link {% if 'application' in request.endpoint %}active{% endif %}" href="{{ url_for('applications.list_applications') }}">
-                            <span class="sidebar-icon-box"><i class="bi bi-kanban-fill text-info"></i></span>
+                        <a class="sidebar-link {% if 'application' in request.endpoint %}active{% endif %}" href="{{ url_for('applications.list_applications') }}" title="Application Tracker & Kanban">
+                            <span class="sidebar-icon-box"><i class="bi bi-kanban-fill"></i></span>
                             <span>Application Tracker</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="sidebar-link {% if 'companies' in request.endpoint %}active{% endif %}" href="{{ url_for('jobs.list_companies') }}">
-                            <span class="sidebar-icon-box"><i class="bi bi-buildings-fill text-info"></i></span>
+                        <a class="sidebar-link {% if 'companies' in request.endpoint %}active{% endif %}" href="{{ url_for('jobs.list_companies') }}" title="Browse 620+ Verified Employers">
+                            <span class="sidebar-icon-box"><i class="bi bi-buildings-fill"></i></span>
                             <span>Browse Companies</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="sidebar-link {% if 'watchlist' in request.endpoint %}active{% endif %}" href="{{ url_for('watchlist.view_watchlist') }}">
-                            <span class="sidebar-icon-box"><i class="bi bi-star-fill text-warning"></i></span>
+                        <a class="sidebar-link {% if 'watchlist' in request.endpoint %}active{% endif %}" href="{{ url_for('watchlist.view_watchlist') }}" title="Dream Companies Watchlist">
+                            <span class="sidebar-icon-box"><i class="bi bi-star-fill"></i></span>
                             <span>Dream Companies</span>
                         </a>
                     </li>
                 </ul>
 
                 <!-- Section 2: AI Career Suite (ORDER: ATS Match Report < AI Mock Interview < AI Career Coach) -->
-                <div class="sidebar-heading text-uppercase px-2 d-flex align-items-center justify-content-between">
+                <div class="sidebar-heading text-uppercase px-2">
                     <span>AI Career Suite</span>
                     <i class="bi bi-stars text-secondary opacity-50 fs-9"></i>
                 </div>
                 <ul class="nav flex-column mb-3 sidebar-nav">
                     <li class="nav-item">
-                        <a class="sidebar-link {% if 'ats' in request.endpoint %}active{% endif %}" href="{{ url_for('ats.ats_report') }}">
-                            <span class="sidebar-icon-box"><i class="bi bi-graph-up-arrow text-warning"></i></span>
+                        <a class="sidebar-link {% if 'ats' in request.endpoint %}active{% endif %}" href="{{ url_for('ats.ats_report') }}" title="ATS Resume Match Report">
+                            <span class="sidebar-icon-box"><i class="bi bi-file-earmark-text-fill"></i></span>
                             <span>ATS Match Report</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="sidebar-link {% if 'interview' in request.endpoint %}active{% endif %}" href="{{ url_for('interview.interview_hub') }}">
-                            <span class="sidebar-icon-box"><i class="bi bi-mic-fill text-danger"></i></span>
+                        <a class="sidebar-link {% if 'interview' in request.endpoint %}active{% endif %}" href="{{ url_for('interview.interview_hub') }}" title="AI Voice Mock Interview Simulator">
+                            <span class="sidebar-icon-box"><i class="bi bi-person-video"></i></span>
                             <span>AI Mock Interview</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="sidebar-link {% if 'assistant' in request.endpoint %}active{% endif %}" href="{{ url_for('assistant.chat_view') }}">
-                            <span class="sidebar-icon-box"><i class="bi bi-chat-dots-fill text-info"></i></span>
+                        <a class="sidebar-link {% if 'assistant' in request.endpoint %}active{% endif %}" href="{{ url_for('assistant.chat_view') }}" title="Interactive AI Career Coach">
+                            <span class="sidebar-icon-box"><i class="bi bi-stars"></i></span>
                             <span>AI Career Coach</span>
                         </a>
                     </li>
                 </ul>
 
                 <!-- Section 3: Settings -->
-                <div class="sidebar-heading text-uppercase px-2 d-flex align-items-center justify-content-between">
+                <div class="sidebar-heading text-uppercase px-2">
                     <span>Settings</span>
                     <i class="bi bi-sliders text-secondary opacity-50 fs-9"></i>
                 </div>
                 <ul class="nav flex-column mb-2 sidebar-nav">
                     <li class="nav-item">
-                        <a class="sidebar-link {% if request.endpoint == 'dashboard.settings' %}active{% endif %}" href="{{ url_for('dashboard.settings') }}">
-                            <span class="sidebar-icon-box"><i class="bi bi-gear-fill text-info"></i></span>
+                        <a class="sidebar-link {% if request.endpoint == 'dashboard.settings' %}active{% endif %}" href="{{ url_for('dashboard.settings') }}" title="Candidate Profile & Settings">
+                            <span class="sidebar-icon-box"><i class="bi bi-gear-fill"></i></span>
                             <span>Settings & Profile</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="sidebar-link text-danger" href="{{ url_for('auth.logout') }}">
+                        <a class="sidebar-link text-danger" href="{{ url_for('auth.logout') }}" title="Sign Out">
                             <span class="sidebar-icon-box"><i class="bi bi-box-arrow-right text-danger"></i></span>
                             <span class="text-danger">Sign Out</span>
                         </a>
@@ -152,28 +161,28 @@
             {% endif %}
         </div>
 
-        <!-- Sleek Sidebar User Footer -->
+        <!-- Sleek Sidebar User Card (Render MockAI style) -->
         {% if current_user.is_authenticated %}
-            <div class="sidebar-user-footer px-3 py-2 border-top border-secondary border-opacity-10 d-flex align-items-center justify-content-between">
-                <a href="{{ url_for('dashboard.settings') }}" class="d-flex align-items-center gap-2 text-decoration-none overflow-hidden flex-grow-1 me-2" title="Manage Profile & Settings">
-                    <div class="user-avatar-badge rounded-circle d-flex align-items-center justify-content-center fw-bold flex-shrink-0 text-white">
-                        {{ current_user.email[0].upper() }}
+            <div class="sidebar-user-card">
+                <a href="{{ url_for('dashboard.settings') }}" class="d-flex align-items-center gap-2 text-decoration-none overflow-hidden flex-grow-1 me-2" title="Candidate Profile & Settings">
+                    <div class="user-avatar-circle">
+                        <span>{{ current_user.email[0].upper() }}</span>
+                        <span class="status-dot-online"></span>
                     </div>
-                    <div class="overflow-hidden">
-                        <div class="fw-semibold text-white text-truncate small" style="font-size: 0.8rem;">
+                    <div class="d-flex flex-column text-truncate" style="line-height: 1.2;">
+                        <span class="text-white fw-semibold text-truncate" style="font-size: 0.84rem;">
                             {{ current_user.candidate_profile.full_name or current_user.email.split('@')[0] }}
-                        </div>
-                        <div class="text-secondary text-truncate d-flex align-items-center gap-1" style="font-size: 0.68rem;">
-                            <span class="status-pulse-dot"></span>
-                            <span class="text-success fw-medium">Active Candidate</span>
-                        </div>
+                        </span>
+                        <span class="text-secondary text-truncate d-flex align-items-center gap-1" style="font-size: 0.7rem;">
+                            Active Candidate
+                        </span>
                     </div>
                 </a>
                 <div class="d-flex align-items-center gap-1 flex-shrink-0">
-                    <a href="{{ url_for('dashboard.settings') }}" class="btn btn-sm btn-link text-secondary p-1" title="Settings">
+                    <a href="{{ url_for('dashboard.settings') }}" class="sidebar-user-action-btn" title="Settings & Profile">
                         <i class="bi bi-gear"></i>
                     </a>
-                    <a href="{{ url_for('auth.logout') }}" class="btn btn-sm btn-link text-danger p-1" title="Sign Out">
+                    <a href="{{ url_for('auth.logout') }}" class="sidebar-user-action-btn text-danger" title="Sign Out">
                         <i class="bi bi-box-arrow-right"></i>
                     </a>
                 </div>
@@ -368,6 +377,56 @@
                     if (bsOffcanvas) bsOffcanvas.hide();
                 }
             });
+        });
+
+        // Sidebar Navigation Live Search Filter (Render MockAI style)
+        const sidebarSearch = document.getElementById('sidebarNavSearch');
+        if (sidebarSearch) {
+            sidebarSearch.addEventListener('input', function(e) {
+                const query = e.target.value.toLowerCase().trim();
+                const navLinks = document.querySelectorAll('#appSidebar .sidebar-nav li');
+                navLinks.forEach(item => {
+                    const text = item.textContent.toLowerCase();
+                    if (!query || text.includes(query)) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                document.querySelectorAll('#appSidebar .sidebar-heading').forEach(heading => {
+                    const nextNav = heading.nextElementSibling;
+                    if (nextNav && nextNav.classList.contains('sidebar-nav')) {
+                        const visible = nextNav.querySelectorAll('li:not([style*="display: none"])');
+                        heading.style.display = visible.length > 0 ? '' : 'none';
+                    }
+                });
+            });
+
+            sidebarSearch.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const query = sidebarSearch.value.trim();
+                    if (query) {
+                        window.location.href = "{{ url_for('jobs.list_jobs') }}?q=" + encodeURIComponent(query);
+                    }
+                }
+            });
+        }
+
+        // Global Keyboard Shortcut: Ctrl+K or Cmd+K toggles sidebar & focuses search
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'k' || e.key === 'K')) {
+                e.preventDefault();
+                const sidebarEl = document.getElementById('appSidebar');
+                if (sidebarEl) {
+                    const bsOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(sidebarEl);
+                    bsOffcanvas.toggle();
+                    setTimeout(() => {
+                        const input = document.getElementById('sidebarNavSearch');
+                        if (input) input.focus();
+                    }, 300);
+                }
+            }
         });
     })();
     </script>
