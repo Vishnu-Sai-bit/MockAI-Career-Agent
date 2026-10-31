@@ -122,26 +122,6 @@
                         </a>
                     </li>
                 </ul>
-
-                <!-- Section 3: Settings -->
-                <div class="sidebar-heading text-uppercase px-2">
-                    <span>Settings</span>
-                    <i class="bi bi-sliders text-secondary opacity-50 fs-9"></i>
-                </div>
-                <ul class="nav flex-column mb-2 sidebar-nav">
-                    <li class="nav-item">
-                        <a class="sidebar-link {% if request.endpoint == 'dashboard.settings' %}active{% endif %}" href="{{ url_for('dashboard.settings') }}" title="Candidate Profile & Settings">
-                            <span class="sidebar-icon-box"><i class="bi bi-gear-fill"></i></span>
-                            <span>Settings & Profile</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="sidebar-link text-danger" href="{{ url_for('auth.logout') }}" title="Sign Out">
-                            <span class="sidebar-icon-box"><i class="bi bi-box-arrow-right text-danger"></i></span>
-                            <span class="text-danger">Sign Out</span>
-                        </a>
-                    </li>
-                </ul>
             {% else %}
                 <div class="p-3 text-center my-4">
                     <div class="mb-3">

@@ -78,13 +78,16 @@
                         <h5 class="fw-bold mb-0"><i class="bi bi-funnel-fill text-primary me-2"></i>Career Application Funnel & Health</h5>
                         <small class="text-muted">Live conversion rates and pipeline diagnostics across application stages</small>
                     </div>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex align-items-center gap-2">
                         <span class="badge bg-primary-subtle text-primary border border-primary-subtle py-1 px-2">
                             Interview Rate: {{ funnel_metrics.applied_to_interview_rate }}%
                         </span>
                         <span class="badge bg-success-subtle text-success border border-success-subtle py-1 px-2">
                             Offer Rate: {{ funnel_metrics.interview_to_offer_rate }}%
                         </span>
+                        <a href="{{ url_for('applications.list_applications') }}" class="btn btn-sm btn-outline-primary ms-1">
+                            Manage Tracker &rarr;
+                        </a>
                     </div>
                 </div>
 
@@ -179,46 +182,6 @@
                         <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-primary-custom btn-sm">Upload Resume</a>
                     </div>
                 {% endif %}
-            </div>
-
-            <!-- Application Pipeline Tracker -->
-            <div class="card p-4 custom-card border-0 bg-white shadow-sm">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0"><i class="bi bi-kanban text-info me-2"></i>Application Pipeline</h5>
-                    <a href="{{ url_for('applications.list_applications') }}" class="small fw-semibold text-primary">Manage Tracker &rarr;</a>
-                </div>
-                <div class="row g-2 text-center">
-                    <div class="col">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <h4 class="fw-bold text-secondary mb-1">{{ app_counts.saved }}</h4>
-                            <small class="text-muted fw-semibold">Saved</small>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <h4 class="fw-bold text-info mb-1">{{ app_counts.prepared }}</h4>
-                            <small class="text-muted fw-semibold">Prepared</small>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <h4 class="fw-bold text-primary mb-1">{{ app_counts.applied }}</h4>
-                            <small class="text-muted fw-semibold">Applied</small>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <h4 class="fw-bold text-warning mb-1">{{ app_counts.interviewing }}</h4>
-                            <small class="text-muted fw-semibold">Interviewing</small>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="p-3 bg-light rounded-3 border">
-                            <h4 class="fw-bold text-success mb-1">{{ app_counts.offer }}</h4>
-                            <small class="text-muted fw-semibold">Offers</small>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
