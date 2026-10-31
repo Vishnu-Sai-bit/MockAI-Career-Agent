@@ -27,7 +27,7 @@
                 </li>
                 {% if current_user.is_authenticated %}
                 <li class="nav-item">
-                    <a class="nav-link nav-link-landing text-primary fw-semibold" href="{{ url_for('dashboard.dashboard') }}"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+                    <a class="nav-link nav-link-landing" href="{{ url_for('dashboard.dashboard') }}" title="Go to Candidate Dashboard">Dashboard</a>
                 </li>
                 {% endif %}
                 <li class="nav-item">
@@ -43,14 +43,6 @@
                         <a class="nav-link nav-link-landing" href="{{ url_for('auth.login', next=url_for('jobs.list_jobs')) }}" title="Sign in to view verified jobs">Jobs</a>
                     {% endif %}
                 </li>
-                {% if current_user.is_authenticated %}
-                <li class="nav-item">
-                    <a class="nav-link nav-link-landing" href="{{ url_for('interview.interview_hub') }}">Mock Interview</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link nav-link-landing" href="{{ url_for('jobs.list_companies') }}">Companies</a>
-                </li>
-                {% endif %}
                 <li class="nav-item">
                     <a class="nav-link nav-link-landing" href="#about">About</a>
                 </li>
@@ -111,17 +103,14 @@
                     </span>
                 </div>
 
-                <!-- CTA Buttons (Connected to Dashboard & Live Tools) -->
+                <!-- CTA Buttons -->
                 <div class="d-flex flex-wrap align-items-center gap-3 mb-5">
                     {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-hero-primary d-inline-flex align-items-center gap-2">
-                            <i class="bi bi-speedometer2"></i> Open Dashboard <i class="bi bi-arrow-right"></i>
+                        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-hero-primary d-inline-flex align-items-center">
+                            Explore Verified Jobs <i class="bi bi-arrow-right ms-2"></i>
                         </a>
-                        <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-primary rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2">
-                            <i class="bi bi-briefcase-fill"></i> Discover Jobs
-                        </a>
-                        <a href="{{ url_for('interview.interview_hub') }}" class="btn btn-outline-danger rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2">
-                            <i class="bi bi-mic-fill"></i> AI Mock Interview
+                        <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-semibold d-inline-flex align-items-center gap-2">
+                            <i class="bi bi-speedometer2"></i> Dashboard
                         </a>
                     {% else %}
                         <a href="{{ url_for('auth.register') }}" class="btn btn-hero-primary d-inline-flex align-items-center">
@@ -211,12 +200,9 @@
                     </div>
                     {% endif %}
 
-                    <!-- Floating Card 2: Resume Score Gauge (Left - Connected to ATS Scorer) -->
-                    <a href="{% if current_user.is_authenticated %}{{ url_for('ats.ats_report') }}{% else %}{{ url_for('auth.login', next=url_for('ats.ats_report')) }}{% endif %}" class="floating-glass-card floating-resume-score text-decoration-none" title="View Real-Time ATS Resume Audit">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold text-dark small">Resume Score</span>
-                            <i class="bi bi-arrow-up-right small text-muted"></i>
-                        </div>
+                    <!-- Floating Card 2: Resume Score Gauge (Left) -->
+                    <div class="floating-glass-card floating-resume-score">
+                        <div class="fw-bold text-dark small mb-2">Resume Score</div>
                         <div class="d-flex align-items-center gap-3">
                             <div class="circle-gauge-wrap">
                                 <svg width="60" height="60" viewBox="0 0 60 60">
@@ -234,10 +220,10 @@
                                 </div>
                             </div>
                         </div>
-                    </a>
+                    </div>
 
-                    <!-- Floating Card 3: Interview Prep (Bottom - Connected to Mock Interview Hub) -->
-                    <a href="{% if current_user.is_authenticated %}{{ url_for('interview.interview_hub') }}{% else %}{{ url_for('auth.login', next=url_for('interview.interview_hub')) }}{% endif %}" class="floating-glass-card floating-interview-prep text-decoration-none" title="Practice AI Voice Mock Interviews">
+                    <!-- Floating Card 3: Interview Prep (Bottom) -->
+                    <a href="{{ url_for('interview.interview_hub') }}" class="floating-glass-card floating-interview-prep">
                         <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
                             <i class="bi bi-headphones fs-6"></i>
                         </div>
@@ -248,8 +234,8 @@
                         <i class="bi bi-chevron-right text-primary fs-7 ms-2"></i>
                     </a>
 
-                    <!-- Floating Card 4: AI Assistant (Top Right - Connected to Career Coach) -->
-                    <a href="{% if current_user.is_authenticated %}{{ url_for('assistant.chat_view') }}{% else %}{{ url_for('auth.login', next=url_for('assistant.chat_view')) }}{% endif %}" class="floating-glass-card floating-ai-assistant text-decoration-none" title="Chat with AI Career Assistant">
+                    <!-- Floating Card 4: AI Assistant (Top Right) -->
+                    <a href="{{ url_for('assistant.chat_view') }}" class="floating-glass-card floating-ai-assistant">
                         <div class="rounded-circle bg-info-subtle text-info d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
                             <i class="bi bi-robot fs-6"></i>
                         </div>

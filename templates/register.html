@@ -1,170 +1,76 @@
 {% extends "base.html" %}
 
-{% block title %}Create Free Account — AI Job Agent{% endblock %}
+{% block title %}Create Account — AI Job Agent{% endblock %}
 
 {% block content %}
 <div class="auth-container">
-    <div class="auth-split-card auth-card d-flex flex-column flex-lg-row">
-        <!-- Left Showcase Panel -->
-        <div class="auth-showcase-panel col-lg-5 d-none d-lg-flex">
-            <div>
-                <div class="d-flex align-items-center gap-2 mb-4">
-                    <div class="sidebar-logo-icon shadow-sm" style="width: 38px; height: 38px;">
-                        <i class="bi bi-briefcase-fill text-white fs-6"></i>
-                    </div>
-                    <div>
-                        <div class="fw-bold text-white fs-5 lh-1">AI Job Agent</div>
-                        <span class="auth-showcase-badge mt-1">
-                            <span class="status-pulse-dot"></span> Verified Platform
-                        </span>
-                    </div>
-                </div>
-
-                <h3 class="fw-bold text-white mb-3" style="letter-spacing: -0.02em; line-height: 1.25;">
-                    Unlock the Smartest Way to Apply
-                </h3>
-                <p class="text-white-50 small mb-4" style="line-height: 1.6;">
-                    Create your free candidate account to gain automated ATS compatibility audits, transparent recruiter matching, and personalized career assistant support.
-                </p>
-
-                <!-- 3 Key Value Props -->
-                <div class="d-flex flex-column gap-3 mb-4">
-                    <div class="auth-feature-pill">
-                        <div class="auth-feature-icon bg-success bg-opacity-25 text-success">
-                            <i class="bi bi-file-earmark-person-fill"></i>
-                        </div>
-                        <div>
-                            <strong class="d-block text-white small">Instant Resume Parsing</strong>
-                            <span class="text-white-50 fs-8">2-Column spatial coordinate extraction & skill indexing.</span>
-                        </div>
-                    </div>
-
-                    <div class="auth-feature-pill">
-                        <div class="auth-feature-icon bg-warning bg-opacity-25 text-warning">
-                            <i class="bi bi-briefcase-fill"></i>
-                        </div>
-                        <div>
-                            <strong class="d-block text-white small">15,800+ Direct Employer Jobs</strong>
-                            <span class="text-white-50 fs-8">Skip aggregator loops with 100% genuine ATS direct apply links.</span>
-                        </div>
-                    </div>
-
-                    <div class="auth-feature-pill">
-                        <div class="auth-feature-icon bg-primary bg-opacity-25 text-primary">
-                            <i class="bi bi-kanban-fill"></i>
-                        </div>
-                        <div>
-                            <strong class="d-block text-white small">Unified Kanban CRM Tracker</strong>
-                            <span class="text-white-50 fs-8">Manage prepared, applied, interviewing, and offer stages.</span>
-                        </div>
-                    </div>
-                </div>
+    <div class="card auth-card p-4 p-sm-5 border">
+        <div class="text-center mb-4">
+            <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 54px; height: 54px; background: rgba(16, 185, 129, 0.12);">
+                <i class="bi bi-person-plus-fill fs-3 text-success"></i>
             </div>
-
-            <!-- Bottom Confidence Card -->
-            <div class="auth-quote-card">
-                <div class="d-flex align-items-center gap-2 mb-1">
-                    <i class="bi bi-shield-check text-success fs-5"></i>
-                    <strong class="text-white small">Zero Spam. 100% Privacy.</strong>
-                </div>
-                <p class="text-white-50 mb-0 fs-8">
-                    Your resume data is strictly analyzed locally on your profile. We never sell candidate data or share unverified postings.
-                </p>
-            </div>
+            <h4 class="fw-bold mb-1 text-body">Create Account</h4>
+            <p class="text-secondary small mb-0">Join AI Job Agent for verified jobs & ATS intelligence</p>
         </div>
 
-        <!-- Right Form Panel -->
-        <div class="auth-form-panel col-lg-7 d-flex flex-column justify-content-between">
-            <div>
-                <!-- Top Navigation Link -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <a href="{{ url_for('dashboard.index', home=1) }}" class="auth-back-link">
-                        <i class="bi bi-arrow-left"></i> Back to Home
-                    </a>
-                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 small fw-semibold">
-                        Free Candidate Account
-                    </span>
+        {% if request.args.get('next') %}
+            <div class="alert alert-info py-2 px-3 small mb-3 text-start">
+                <i class="bi bi-shield-lock-fill me-1"></i> Create an account to access verified jobs and candidate tools.
+            </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('auth.register', next=request.args.get('next')) if request.args.get('next') else url_for('auth.register') }}">
+            {% if request.args.get('next') %}
+                <input type="hidden" name="next" value="{{ request.args.get('next') }}">
+            {% endif %}
+            <div class="mb-3">
+                <label class="form-label small fw-semibold text-body">Full Name</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person text-muted"></i></span>
+                    <input type="text" name="full_name" class="form-control" placeholder="e.g. Alex Johnson" required autofocus autocomplete="name">
                 </div>
+            </div>
 
-                <!-- Header Title -->
-                <div class="mb-4">
-                    <div class="d-flex align-items-center gap-2 mb-2">
-                        <div class="brand-icon-box rounded-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(16, 185, 129, 0.12);">
-                            <i class="bi bi-person-plus-fill text-success fs-5"></i>
-                        </div>
-                        <h4 class="fw-bold mb-0 text-body">Create Free Account</h4>
-                    </div>
-                    <p class="text-secondary small mb-0">Join AI Job Agent for verified career discovery & ATS intelligence.</p>
+            <div class="mb-3">
+                <label class="form-label small fw-semibold text-body">Email Address</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
+                    <input type="email" name="email" class="form-control" placeholder="name@example.com" required autocomplete="email">
                 </div>
+            </div>
 
-                {% if request.args.get('next') %}
-                    <div class="alert alert-info py-2 px-3 small mb-3 text-start d-flex align-items-center gap-2 rounded-3">
-                        <i class="bi bi-info-circle-fill text-primary fs-5 flex-shrink-0"></i>
-                        <div>Create an account to access verified jobs and candidate tools.</div>
-                    </div>
-                {% endif %}
-
-                <!-- Registration Form -->
-                <form method="POST" action="{{ url_for('auth.register', next=request.args.get('next')) if request.args.get('next') else url_for('auth.register') }}">
-                    {% if request.args.get('next') %}
-                        <input type="hidden" name="next" value="{{ request.args.get('next') }}">
-                    {% endif %}
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold text-body">Full Name</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-person text-muted"></i></span>
-                            <input type="text" name="full_name" class="form-control" placeholder="e.g. Alex Johnson" required autofocus autocomplete="name">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label small fw-semibold text-body">Email Address</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
-                            <input type="email" name="email" class="form-control" placeholder="name@example.com" required autocomplete="email">
-                        </div>
-                    </div>
-
-                    <div class="row g-2 mb-4">
-                        <div class="col-sm-6">
-                            <label class="form-label small fw-semibold text-body">Password</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-lock text-muted"></i></span>
-                                <input type="password" name="password" id="registerPassword" class="form-control" placeholder="Min. 6 chars" minlength="6" required autocomplete="new-password">
-                                <button type="button" class="btn password-toggle-btn" onclick="togglePasswordVisibility('registerPassword', this)" title="Show / Hide Password" tabindex="-1">
-                                    <i class="bi bi-eye text-muted"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-sm-6">
-                            <label class="form-label small fw-semibold text-body">Confirm Password</label>
-                            <div class="input-group">
-                                <span class="input-group-text"><i class="bi bi-shield-lock text-muted"></i></span>
-                                <input type="password" name="confirm_password" id="registerConfirmPassword" class="form-control" placeholder="Re-type password" minlength="6" required autocomplete="new-password">
-                                <button type="button" class="btn password-toggle-btn" onclick="togglePasswordVisibility('registerConfirmPassword', this)" title="Show / Hide Password" tabindex="-1">
-                                    <i class="bi bi-eye text-muted"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary-custom w-100 py-2-5 rounded-3 fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-sm">
-                        <i class="bi bi-check2-circle"></i>
-                        <span>Create Candidate Account</span>
+            <div class="mb-3">
+                <label class="form-label small fw-semibold text-body">Password</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock text-muted"></i></span>
+                    <input type="password" name="password" id="registerPassword" class="form-control" placeholder="At least 6 characters" minlength="6" required autocomplete="new-password">
+                    <button type="button" class="btn password-toggle-btn" onclick="togglePasswordVisibility('registerPassword', this)" title="Show / Hide Password" tabindex="-1">
+                        <i class="bi bi-eye text-muted"></i>
                     </button>
-                </form>
+                </div>
             </div>
 
-            <!-- Footer: Switch to Sign In -->
-            <div class="text-center pt-4 mt-4 border-top">
-                <p class="text-secondary small mb-0">
-                    Already have an account?
-                    <a href="{{ url_for('auth.login', next=request.args.get('next')) if request.args.get('next') else url_for('auth.login') }}" class="fw-bold text-primary text-decoration-none">
-                        Sign in here &rarr;
-                    </a>
-                </p>
+            <div class="mb-4">
+                <label class="form-label small fw-semibold text-body">Confirm Password</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-shield-lock text-muted"></i></span>
+                    <input type="password" name="confirm_password" id="registerConfirmPassword" class="form-control" placeholder="Re-type password" minlength="6" required autocomplete="new-password">
+                    <button type="button" class="btn password-toggle-btn" onclick="togglePasswordVisibility('registerConfirmPassword', this)" title="Show / Hide Password" tabindex="-1">
+                        <i class="bi bi-eye text-muted"></i>
+                    </button>
+                </div>
             </div>
+
+            <button type="submit" class="btn btn-primary-custom w-100 py-2 fw-semibold">
+                <i class="bi bi-check2-circle me-1"></i> Create Free Account
+            </button>
+        </form>
+
+        <div class="text-center mt-4 pt-3 border-top">
+            <p class="text-secondary small mb-0">
+                Already have an account?
+                <a href="{{ url_for('auth.login', next=request.args.get('next')) if request.args.get('next') else url_for('auth.login') }}" class="fw-semibold text-primary text-decoration-none">Sign in</a>
+            </p>
         </div>
     </div>
 </div>

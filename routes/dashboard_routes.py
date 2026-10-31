@@ -9,12 +9,10 @@ from tasks.recompute_matches import recompute_user_matches
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
-@dashboard_bp.route("/home")
-@dashboard_bp.route("/landing")
 @dashboard_bp.route("/")
+@dashboard_bp.route("/home")
 def index():
-    is_explicit_landing = request.path in ["/home", "/landing"] or request.args.get("landing") or request.args.get("home") or request.args.get("preview")
-    if current_user.is_authenticated and not is_explicit_landing:
+    if request.path == "/" and current_user.is_authenticated and not request.args.get("landing") and not request.args.get("home") and not request.args.get("preview"):
         return redirect(url_for("dashboard.dashboard"))
     
     # Real database statistics
