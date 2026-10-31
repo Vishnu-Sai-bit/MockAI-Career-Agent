@@ -107,6 +107,7 @@ def dashboard():
     from services.career_analytics_service import CareerAnalyticsService
     analytics_svc = CareerAnalyticsService()
     funnel_metrics = analytics_svc.compute_funnel_metrics(app_counts)
+    activity_streak = analytics_svc.compute_user_activity_streak(current_user.id)
 
     return render_template(
         "dashboard.html",
@@ -117,6 +118,7 @@ def dashboard():
         saved_jobs=saved_jobs,
         app_counts=app_counts,
         funnel_metrics=funnel_metrics,
+        activity_streak=activity_streak,
         total_applications=len(applications),
         total_active_jobs=total_active_jobs
     )

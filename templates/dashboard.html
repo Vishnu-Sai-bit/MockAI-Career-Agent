@@ -260,6 +260,86 @@
                 {% endif %}
             </div>
 
+            <!-- Activity & Practice Streak Heatmap Card (Inspired by Render Dashboard) -->
+            <div class="card p-4 custom-card border-0 mb-4 bg-white shadow-sm">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-0 d-flex align-items-center gap-2">
+                            <i class="bi bi-fire text-danger fs-5"></i>
+                            <span>Activity & Practice Streak</span>
+                        </h6>
+                        <small class="text-muted">Daily consistency across mock calls & applications</small>
+                    </div>
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-1 rounded-pill fw-bold">
+                        🔥 {{ activity_streak.current_streak }} Day{% if activity_streak.current_streak != 1 %}s{% endif %}
+                    </span>
+                </div>
+
+                <!-- Streak Metrics Summary -->
+                <div class="row g-2 text-center mb-3">
+                    <div class="col-4">
+                        <div class="p-2 border rounded-3 bg-light">
+                            <small class="text-muted d-block" style="font-size: 0.72rem;">Current</small>
+                            <strong class="text-dark">{{ activity_streak.current_streak }}d</strong>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 border rounded-3 bg-light">
+                            <small class="text-muted d-block" style="font-size: 0.72rem;">Best Streak</small>
+                            <strong class="text-primary">{{ activity_streak.longest_streak }}d</strong>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="p-2 border rounded-3 bg-light">
+                            <small class="text-muted d-block" style="font-size: 0.72rem;">Total Actions</small>
+                            <strong class="text-success">{{ activity_streak.total_actions }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Heatmap Grid (10 Weeks x 7 Days) -->
+                <div class="p-2 bg-light rounded-3 border mb-3 overflow-auto">
+                    <div class="d-flex gap-1 justify-content-between" style="min-width: 250px;">
+                        {% for week in activity_streak.weeks %}
+                            <div class="d-flex flex-column gap-1 flex-grow-1">
+                                {% for day in week %}
+                                    <div class="streak-grid-cell"
+                                         style="width: 100%; aspect-ratio: 1; border-radius: 3px; background-color: {{ day.color }}; border: 1px solid rgba(0,0,0,0.06); cursor: pointer;"
+                                         data-bs-toggle="tooltip"
+                                         data-bs-placement="top"
+                                         data-bs-title="{{ day.date }}: {{ day.count }} action{% if day.count != 1 %}s{% endif %} ({{ day.details }})">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Heatmap Legend & Consistency -->
+                <div class="d-flex justify-content-between align-items-center small text-secondary">
+                    <span>Consistency: <strong class="text-dark">{{ activity_streak.consistency_pct }}%</strong></span>
+                    <div class="d-flex align-items-center gap-1">
+                        <span style="font-size: 0.7rem;">Less</span>
+                        <span class="rounded-1" style="width: 10px; height: 10px; background: #f1f5f9; border: 1px solid #cbd5e1;"></span>
+                        <span class="rounded-1" style="width: 10px; height: 10px; background: #ede9fe;"></span>
+                        <span class="rounded-1" style="width: 10px; height: 10px; background: #c4b5fd;"></span>
+                        <span class="rounded-1" style="width: 10px; height: 10px; background: #a855f7;"></span>
+                        <span class="rounded-1" style="width: 10px; height: 10px; background: #7c3aed;"></span>
+                        <span style="font-size: 0.7rem;">More</span>
+                    </div>
+                </div>
+
+                <!-- Quick Action Buttons -->
+                <div class="mt-3 pt-3 border-top d-flex gap-2">
+                    <a href="{{ url_for('interview.interview_hub') }}" class="btn btn-outline-danger btn-sm rounded-pill flex-grow-1 d-flex align-items-center justify-content-center gap-1">
+                        <i class="bi bi-mic-fill"></i> Voice Practice
+                    </a>
+                    <a href="{{ url_for('jobs.list_jobs') }}" class="btn btn-outline-primary btn-sm rounded-pill flex-grow-1 d-flex align-items-center justify-content-center gap-1">
+                        <i class="bi bi-search"></i> Apply Jobs
+                    </a>
+                </div>
+            </div>
+
             <!-- Conversational Assistant Quick Prompt -->
             <div class="card p-4 custom-card border-0 bg-white shadow-sm">
                 <h6 class="fw-bold mb-2"><i class="bi bi-chat-quote-fill text-info me-2"></i>Career Assistant Commands</h6>
@@ -282,4 +362,15 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
 {% endblock %}

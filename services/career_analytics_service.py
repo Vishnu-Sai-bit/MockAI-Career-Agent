@@ -108,3 +108,142 @@ END:VCALENDAR"""
             "event_title": title,
             "formatted_time": event_time.strftime("%A, %B %d, %Y at %I:%M %p UTC")
         }
+
+    def compute_user_activity_streak(self, user_id: int) -> Dict[str, Any]:
+        """
+        Computes the candidate's activity and consistency heatmap across the last 70 days (10 weeks):
+        - Applications tracked / updated
+        - Mock interview practice sessions
+        - Saved job bookmarks
+        Returns heatmap weeks, current streak, longest streak, total actions, and consistency metrics.
+        """
+        from datetime import date, timedelta
+        from collections import defaultdict
+        from models.application import Application
+        from models.interview import InterviewSession
+        from models.job_match import SavedJob
+
+        today = date.today()
+        # 70 days (10 weeks)
+        start_date = today - timedelta(days=69)
+
+        activity_map = defaultdict(lambda: {"count": 0, "details": []})
+
+        # 1. Applications
+        try:
+            apps = Application.query.filter(Application.user_id == user_id).all()
+            for app in apps:
+                if app.created_at:
+                    dt = app.created_at.date()
+                    if dt >= start_date:
+                        activity_map[dt]["count"] += 1
+                        company = app.job.company if app.job else "Target Role"
+                        activity_map[dt]["details"].append(f"Applied: {company}")
+        except Exception:
+            pass
+
+        # 2. Mock Interviews
+        try:
+            interviews = InterviewSession.query.filter(InterviewSession.user_id == user_id).all()
+            for iv in interviews:
+                if iv.created_at:
+                    dt = iv.created_at.date()
+                    if dt >= start_date:
+                        activity_map[dt]["count"] += 2  # Practice sessions count with high weight
+                        activity_map[dt]["details"].append(f"Mock Call: {iv.company}")
+        except Exception:
+            pass
+
+        # 3. Saved Jobs
+        try:
+            saved = SavedJob.query.filter(SavedJob.user_id == user_id).all()
+            for sj in saved:
+                if sj.saved_at:
+                    dt = sj.saved_at.date()
+                    if dt >= start_date:
+                        activity_map[dt]["count"] += 1
+                        activity_map[dt]["details"].append("Saved job vacancy")
+        except Exception:
+            pass
+
+        # Build day items
+        days_list = []
+        curr = start_date
+        while curr <= today:
+            cnt = activity_map[curr]["count"]
+            if cnt == 0:
+                color = "#f1f5f9"
+                level = 0
+            elif cnt == 1:
+                color = "#ede9fe"
+                level = 1
+            elif cnt in [2, 3]:
+                color = "#c4b5fd"
+                level = 2
+            elif cnt in [4, 5]:
+                color = "#a855f7"
+                level = 3
+            else:
+                color = "#7c3aed"
+                level = 4
+
+            details = "; ".join(activity_map[curr]["details"][:3]) if activity_map[curr]["details"] else "No activities logged"
+
+            days_list.append({
+                "date": curr.strftime("%b %d, %Y"),
+                "date_short": curr.strftime("%b %d"),
+                "day_name": curr.strftime("%a"),
+                "count": cnt,
+                "level": level,
+                "color": color,
+                "details": details
+            })
+            curr += timedelta(days=1)
+
+        # Calculate streaks
+        current_streak = 0
+        check = today
+        while check >= start_date:
+            if activity_map[check]["count"] > 0:
+                current_streak += 1
+                check -= timedelta(days=1)
+            else:
+                if check == today:
+                    check -= timedelta(days=1)
+                    continue
+                break
+
+        longest_streak = 0
+        temp_streak = 0
+        s_day = start_date
+        while s_day <= today:
+            if activity_map[s_day]["count"] > 0:
+                temp_streak += 1
+                longest_streak = max(longest_streak, temp_streak)
+            else:
+                temp_streak = 0
+            s_day += timedelta(days=1)
+
+        total_actions = sum(item["count"] for item in activity_map.values())
+        active_days = sum(1 for item in activity_map.values() if item["count"] > 0)
+        consistency_pct = round((active_days / max(1, len(days_list))) * 100)
+
+        # Group days into 10 columns (weeks)
+        weeks = []
+        cur_week = []
+        for d in days_list:
+            cur_week.append(d)
+            if len(cur_week) == 7:
+                weeks.append(cur_week)
+                cur_week = []
+        if cur_week:
+            weeks.append(cur_week)
+
+        return {
+            "weeks": weeks,
+            "current_streak": current_streak,
+            "longest_streak": longest_streak,
+            "total_actions": total_actions,
+            "active_days": active_days,
+            "consistency_pct": consistency_pct
+        }
