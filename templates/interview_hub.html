@@ -127,6 +127,170 @@
         </div>
     </div>
 
+    <!-- Technical Skill Tracks & Full Topic Mastery -->
+    <div id="technical-skill-tracks" class="card p-4 custom-card border-0 bg-white shadow-sm mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-3">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-primary text-white rounded-pill px-3 py-1 small fw-semibold">
+                        <i class="bi bi-mortarboard-fill me-1"></i>Curriculum Mastery
+                    </span>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 small">
+                        <i class="bi bi-mic-fill me-1"></i>Voice Simulation
+                    </span>
+                    <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-3 py-1 small">
+                        <i class="bi bi-code-slash me-1"></i>Code Sandboxes
+                    </span>
+                </div>
+                <h4 class="fw-bold text-body mb-1">Technical Skill Tracks & Full Topics Directory</h4>
+                <p class="text-secondary small mb-0">Master deep-dive technical interviews in <strong>SQL</strong>, <strong>Python</strong>, <strong>C Language</strong>, <strong>DSA</strong>, <strong>Java</strong>, <strong>C++</strong>, <strong>JS/TS</strong>, and <strong>System Design</strong> with interactive voice simulation and coding challenges.</p>
+            </div>
+            <!-- Quick Filter Pills -->
+            <div class="d-flex flex-wrap gap-1" id="skill-filter-container">
+                <button type="button" class="btn btn-sm btn-dark active filter-skill-btn rounded-pill px-3 py-1" data-filter="all">All Tracks</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary filter-skill-btn rounded-pill px-3 py-1" data-filter="sql">SQL (10 Topics)</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary filter-skill-btn rounded-pill px-3 py-1" data-filter="python">Python (8 Topics)</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary filter-skill-btn rounded-pill px-3 py-1" data-filter="c_language">C Language (8 Topics)</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary filter-skill-btn rounded-pill px-3 py-1" data-filter="dsa">DSA (4 Topics)</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary filter-skill-btn rounded-pill px-3 py-1" data-filter="java">Java (2 Topics)</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary filter-skill-btn rounded-pill px-3 py-1" data-filter="cpp">C++ (2 Topics)</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary filter-skill-btn rounded-pill px-3 py-1" data-filter="javascript_web">JS / TS (2 Topics)</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary filter-skill-btn rounded-pill px-3 py-1" data-filter="system_design">System Design (3 Topics)</button>
+            </div>
+        </div>
+
+        <!-- Skill Cards Grid -->
+        <div class="row g-4" id="skill-cards-grid">
+            {% for sk_key, sk in skill_tracks.items() %}
+                <div class="col-lg-6 skill-track-col" data-skill="{{ sk_key }}">
+                    <div class="card p-3 p-md-4 border rounded-3 bg-body-tertiary h-100 d-flex flex-column justify-content-between shadow-sm hover-shadow transition-all">
+                        <div>
+                            <div class="d-flex justify-content-between align-items-start mb-2 gap-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-3 p-2 d-flex align-items-center justify-content-center text-white fs-4" style="background-color: {{ sk.color }}; width: 44px; height: 44px;">
+                                        <i class="bi {{ sk.icon }}"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold text-body mb-0">{{ sk.name }}</h5>
+                                        <small class="text-secondary">{{ sk.short_name }} Specialization</small>
+                                    </div>
+                                </div>
+                                <span class="badge {{ sk.badge_class }} rounded-pill px-2 py-1 small">
+                                    {{ sk.topics|length }} Full Topics
+                                </span>
+                            </div>
+                            <p class="small text-muted mb-3">{{ sk.tagline }}</p>
+
+                            <!-- Topic Badges Preview -->
+                            <div class="mb-3">
+                                <div class="small fw-semibold text-body mb-1 d-flex justify-content-between">
+                                    <span>Core Topics Covered:</span>
+                                    <span class="text-secondary small">{{ sk.topics|length }} topics</span>
+                                </div>
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for top in sk.topics %}
+                                        <a href="{{ url_for('interview.practice_skill', skill_key=sk_key, topic=top.key) }}" class="badge bg-white text-dark border text-decoration-none py-1 px-2 small hover-primary" title="Practice {{ top.name }} in {{ sk.short_name }}">
+                                            <i class="bi bi-play-circle text-primary me-1"></i>{{ top.name }}
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Action Buttons -->
+                        <div class="pt-3 border-top d-flex flex-wrap gap-2 justify-content-between align-items-center">
+                            <div class="d-flex gap-2">
+                                <a href="{{ url_for('interview.practice_skill', skill_key=sk_key) }}" class="btn btn-sm btn-danger d-flex align-items-center gap-1">
+                                    <i class="bi bi-mic-fill"></i> <span>Practice Voice / STAR</span>
+                                </a>
+                                <a href="{{ url_for('interview.coding_skill', skill_key=sk_key) }}" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1">
+                                    <i class="bi bi-code-slash"></i> <span>Coding Sandbox</span>
+                                </a>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#skillModal-{{ sk_key }}">
+                                <i class="bi bi-card-list"></i> <span>View All Topics</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Topic Explorer Modal for this Skill -->
+                <div class="modal fade" id="skillModal-{{ sk_key }}" tabindex="-1" aria-labelledby="skillModalLabel-{{ sk_key }}" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                        <div class="modal-content border-0 shadow">
+                            <div class="modal-header text-white" style="background: linear-gradient(135deg, #090d16 0%, #1e1b4b 60%, #172554 100%);">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-3 p-2 text-white fs-4" style="background-color: {{ sk.color }};">
+                                        <i class="bi {{ sk.icon }}"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="modal-title fw-bold text-white mb-0" id="skillModalLabel-{{ sk_key }}">{{ sk.name }}</h5>
+                                        <small class="text-white-50">{{ sk.topics|length }} Comprehensive Topics & Interview Question Bank</small>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body p-4 bg-light">
+                                <p class="text-secondary small mb-3">{{ sk.description }}</p>
+                                <div class="d-flex flex-column gap-3">
+                                    {% for top in sk.topics %}
+                                        <div class="card p-3 border rounded-3 bg-white shadow-sm">
+                                            <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-2">
+                                                <div>
+                                                    <span class="badge bg-secondary-subtle text-secondary small mb-1">{{ top.difficulty }}</span>
+                                                    <h6 class="fw-bold text-body mb-0">{{ top.name }}</h6>
+                                                </div>
+                                                <div class="d-flex gap-2">
+                                                    <a href="{{ url_for('interview.practice_skill', skill_key=sk_key, topic=top.key) }}" class="btn btn-sm btn-danger d-flex align-items-center gap-1 py-1 px-2 small">
+                                                        <i class="bi bi-mic-fill"></i> Practice Topic
+                                                    </a>
+                                                    <a href="{{ url_for('interview.coding_skill', skill_key=sk_key, topic=top.key) }}" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1 py-1 px-2 small">
+                                                        <i class="bi bi-code-slash"></i> Sandbox
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            <p class="small text-secondary mb-2">{{ top.summary }}</p>
+                                            
+                                            {% if top.core_concepts %}
+                                                <div class="bg-body-tertiary p-2 rounded-2 mb-2 small">
+                                                    <strong class="text-body d-block mb-1"><i class="bi bi-check2-circle text-success me-1"></i>Key Concepts Tested:</strong>
+                                                    <ul class="mb-0 ps-3 text-secondary">
+                                                        {% for concept in top.core_concepts %}
+                                                            <li>{{ concept }}</li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                            {% endif %}
+
+                                            {% if top.sample_question %}
+                                                <div class="border-start border-3 border-primary ps-2 py-1 bg-primary-subtle bg-opacity-10 rounded-end small mb-2">
+                                                    <strong class="text-primary d-block mb-0"><i class="bi bi-question-circle-fill me-1"></i>Sample Interview Question:</strong>
+                                                    <span class="text-body fst-italic">"{{ top.sample_question }}"</span>
+                                                </div>
+                                            {% endif %}
+
+                                            {% if top.evaluation_criteria %}
+                                                <div class="small text-muted">
+                                                    <strong>Interviewer Rubric:</strong> {{ top.evaluation_criteria }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="modal-footer bg-white border-top">
+                                <a href="{{ url_for('interview.practice_skill', skill_key=sk_key) }}" class="btn btn-danger d-flex align-items-center gap-2">
+                                    <i class="bi bi-play-circle-fill"></i> Start Full {{ sk.short_name }} Track Simulation
+                                </a>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
     <div class="row g-4">
         <!-- Main: Target Roles for Practice -->
         <div class="col-lg-8">
@@ -365,4 +529,31 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const filterButtons = document.querySelectorAll(".filter-skill-btn");
+    const skillCols = document.querySelectorAll(".skill-track-col");
+
+    filterButtons.forEach(btn => {
+        btn.addEventListener("click", function() {
+            filterButtons.forEach(b => {
+                b.classList.remove("btn-dark", "active");
+                b.classList.add("btn-outline-secondary");
+            });
+            this.classList.remove("btn-outline-secondary");
+            this.classList.add("btn-dark", "active");
+
+            const filter = this.getAttribute("data-filter");
+            skillCols.forEach(col => {
+                if (filter === "all" || col.getAttribute("data-skill") === filter) {
+                    col.style.display = "";
+                } else {
+                    col.style.display = "none";
+                }
+            });
+        });
+    });
+});
+</script>
 {% endblock %}

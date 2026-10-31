@@ -4,16 +4,178 @@ from models.job import Job
 from models.resume import Resume
 from models.user import CandidateProfile
 from services.gemini_service import GeminiService
+from services.skill_tracks_data import (
+    TECHNICAL_SKILL_TRACKS,
+    get_all_skill_tracks,
+    get_skill_track,
+    get_topic_details,
+)
 from utils.logging_config import logger
 
 class InterviewSimulator:
     def __init__(self, gemini_service: Optional[GeminiService] = None):
         self.gemini = gemini_service or GeminiService()
 
+    @staticmethod
+    def get_skill_tracks() -> Dict[str, Dict[str, Any]]:
+        """Returns all supported technical skill tracks and their comprehensive topics."""
+        return get_all_skill_tracks()
+
+    def generate_skill_interview_questions(
+        self,
+        skill_key: str,
+        topic_key: Optional[str] = None,
+        profile: Optional[CandidateProfile] = None,
+        difficulty: str = "Medium"
+    ) -> List[Dict[str, Any]]:
+        """
+        Generates rigorous, topic-specific technical interview questions for dedicated skill tracks
+        such as SQL, Python, C Language, DSA, Java, C++, JS/TS, and System Design.
+        """
+        skill_data = get_skill_track(skill_key)
+        if not skill_data:
+            # Fallback to generic python track if unknown
+            skill_data = get_skill_track("python") or {}
+
+        skill_name = skill_data.get("name", skill_key.upper())
+        topics = skill_data.get("topics", [])
+        active_topic = None
+        if topic_key:
+            for t in topics:
+                if t.get("key") == topic_key:
+                    active_topic = t
+                    break
+
+        topic_name = active_topic.get("name") if active_topic else "Comprehensive Curriculum"
+        core_concepts = active_topic.get("core_concepts", []) if active_topic else []
+        concepts_str = ", ".join(core_concepts) if core_concepts else skill_data.get("tagline", "")
+
+        prompt = f"""You are a principal staff engineer and bar raiser interviewing a senior candidate.
+Generate 4 rigorous, high-yield technical interview questions for a candidate specializing in:
+SKILL: {skill_name}
+TOPIC: {topic_name}
+CORE CONCEPTS: {concepts_str}
+DIFFICULTY: {difficulty}
+
+The 4 questions must span:
+1. Core Language / Database Internals and Execution Mechanics
+2. Edge Cases, Failure Modes, and Anti-Patterns in Production
+3. Code Architecture, Memory / Performance Optimization Trade-offs
+4. Real-World Engineering Incident / Post-Mortem Scenario (STAR Method)
+
+Format output as a valid JSON array of 4 objects:
+[
+  {{
+    "id": 1,
+    "type": "Technical Internals / Edge Cases & Trade-offs / System Resilience / Scenario Problem Solving",
+    "question": "The interview question",
+    "evaluation_criteria": "What the interviewer is specifically listening for (internal mechanics, trade-offs)",
+    "star_guide": {{
+      "situation": "Hint on establishing context",
+      "task": "Hint on identifying the challenge",
+      "action": "Hint on highlighting personal technical decisions",
+      "result": "Hint on quantifying impact"
+    }}
+  }}
+]
+"""
+        parsed = self.gemini.generate_json(prompt, timeout=8)
+        if isinstance(parsed, dict):
+            for k in ["questions", "interview_questions", "items", "data"]:
+                if isinstance(parsed.get(k), list):
+                    parsed = parsed[k]
+                    break
+        if isinstance(parsed, list) and len(parsed) >= 2:
+            return parsed
+
+        # Deterministic high-yield fallback tailored to this specific skill and topic
+        questions = []
+        if active_topic:
+            questions.append({
+                "id": 1,
+                "type": active_topic.get("question_type", "Technical Deep Dive"),
+                "question": active_topic.get("sample_question", f"Explain the core internal mechanics of {active_topic.get('name')} in {skill_name}."),
+                "evaluation_criteria": active_topic.get("evaluation_criteria", f"Assesses internal execution model, complexity, and production trade-offs in {skill_name}."),
+                "star_guide": active_topic.get("star_guide", {
+                    "situation": f"Describe a high-throughput system requiring {active_topic.get('name')}.",
+                    "task": "Identify performance constraints and correctness challenges.",
+                    "action": f"Explain your choice of data structures, algorithms, and {skill_name} features.",
+                    "result": "Quantify latency reductions, memory savings, or stability gains."
+                })
+            })
+
+            # Additional topic questions
+            concepts = active_topic.get("core_concepts", [])
+            concept_sub = concepts[1] if len(concepts) > 1 else "scalability"
+            questions.append({
+                "id": 2,
+                "type": "Production Edge Cases & Failure Modes",
+                "question": f"In the context of {active_topic.get('name')} in {skill_name}, what is the most dangerous anti-pattern or failure mode you have encountered regarding {concept_sub}? How do you diagnose and prevent it?",
+                "evaluation_criteria": "Depth of real-world production experience, root-cause analysis, and preventative testing.",
+                "star_guide": {
+                    "situation": "System degraded under high load due to unexpected behavior in production.",
+                    "task": "Diagnose the root cause without taking down dependent microservices.",
+                    "action": "Used profiling and telemetry to isolate the bug and refactored the implementation.",
+                    "result": "Restored 99.99% availability and implemented automated regression tests."
+                }
+            })
+            questions.append({
+                "id": 3,
+                "type": "Architecture & Engineering Trade-offs",
+                "question": f"Walk me through the architectural trade-offs when optimizing {active_topic.get('name')}. What alternative approaches did you consider and why was your solution superior?",
+                "evaluation_criteria": "Clear understanding of Big-O time and space complexity, memory consumption, and developer maintainability.",
+                "star_guide": {
+                    "situation": "Legacy service was experiencing high resource utilization under peak traffic.",
+                    "task": "Evaluate 2-3 architectural approaches for optimizing performance.",
+                    "action": f"Selected optimal {skill_name} design pattern and benchmarked latency improvements.",
+                    "result": "Reduced CPU utilization by 40% and simplified system maintenance."
+                }
+            })
+            questions.append({
+                "id": 4,
+                "type": "Scenario & Incident Resolution (STAR)",
+                "question": f"Describe a real-world scenario where a critical bug or bottleneck related to {skill_name} caused an incident in your team. How did you spearhead the resolution using the STAR method?",
+                "evaluation_criteria": "Structured communication using STAR, proactive technical ownership, and quantifiable outcomes.",
+                "star_guide": {
+                    "situation": "Describe the business context, user impact, and urgency.",
+                    "task": "State your direct ownership role during the incident.",
+                    "action": "Explain the exact diagnostic steps, telemetry used, and code patch deployed.",
+                    "result": "State measurable improvements (e.g., zero data loss, MTTR under 20 minutes)."
+                }
+            })
+        else:
+            # Multi-topic skill overview
+            for idx, top in enumerate(topics[:4], 1):
+                questions.append({
+                    "id": idx,
+                    "type": top.get("question_type", f"Specialized {skill_name} Deep Dive"),
+                    "question": top.get("sample_question", f"Explain how {top.get('name')} works in {skill_name}."),
+                    "evaluation_criteria": top.get("evaluation_criteria", "Assesses technical depth and architectural reasoning."),
+                    "star_guide": top.get("star_guide", {
+                        "situation": "Provide business and technical context.",
+                        "task": "Explain your specific engineering responsibility.",
+                        "action": "Detail execution steps and technical choices.",
+                        "result": "Quantify the outcome."
+                    })
+                })
+
+        return questions
+
     def generate_interview_questions(self, job: Job, profile: Optional[CandidateProfile] = None) -> List[Dict[str, Any]]:
         """
         Generates role-specific behavioral, technical, and scenario questions tailored to the vacancy.
+        Automatically delegates to dedicated skill tracks if the job represents a technical skill track.
         """
+        # If this is a dedicated technical skill track (SQL, Python, C Language, etc.)
+        if getattr(job, "source_platform", None) == "skill_track":
+            skill_key = getattr(job, "source_company_key", "") or "python"
+            metadata = getattr(job, "source_metadata", {}) or {}
+            topic_key = metadata.get("topic_key")
+            if not topic_key and job.source_job_id and "_" in job.source_job_id:
+                parts = job.source_job_id.split("_", 2)
+                if len(parts) >= 3 and parts[2] != "all":
+                    topic_key = parts[2]
+            return self.generate_skill_interview_questions(skill_key, topic_key, profile)
         candidate_skills = (profile.skills if profile and profile.skills else []) or []
         skills_str = ", ".join(candidate_skills) if candidate_skills else "software engineering, problem solving, architecture"
         primary_skill = candidate_skills[0] if candidate_skills else "software engineering"
@@ -432,6 +594,36 @@ Format output as a valid JSON array of objects:
         personas = self.get_interviewer_personas()
         persona = personas.get(persona_key, personas["technical_lead"])
         c_name = candidate_name.strip() if candidate_name and candidate_name.strip() else "there"
+
+        # Check if this is a dedicated technical skill track (SQL, Python, C, etc.)
+        if getattr(job, "source_platform", None) == "skill_track":
+            skill_title = job.title or "Technical Specialization"
+            if persona_key == "hiring_manager":
+                greeting = (
+                    f"Welcome, {c_name}! I'm {persona['name']}, Engineering Director. "
+                    f"Today we're assessing your technical depth and execution ownership in {skill_title}. "
+                    f"I want to hear about how you tackle architectural trade-offs, debugging, and measurable deliverables. "
+                    f"Whenever you're ready, let's jump into our first question."
+                )
+            elif persona_key == "culture_lead":
+                greeting = (
+                    f"Hello and welcome, {c_name}! I'm {persona['name']} with People & Culture. "
+                    f"We're excited to have you in this technical simulation for {skill_title}. "
+                    f"We want this to be an open conversation about how you communicate technical complexity and grow your skills. "
+                    f"Let's get started whenever you're ready."
+                )
+            else:
+                greeting = (
+                    f"Hi {c_name}, thanks for joining! I'm {persona['name']}, Principal Architect. "
+                    f"Today we're conducting a deep-dive technical assessment on {skill_title}. "
+                    f"Speak naturally, walk me through internal mechanics and edge cases using the STAR method, and we'll take it step by step. "
+                    f"Let's start with our first technical challenge."
+                )
+            return {
+                "greeting": greeting,
+                "persona": persona,
+                "candidate_name": c_name
+            }
 
         if persona_key == "hiring_manager":
             greeting = (

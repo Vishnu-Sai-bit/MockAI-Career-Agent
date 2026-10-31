@@ -2,14 +2,89 @@ from flask import Blueprint, render_template, request, jsonify, redirect, url_fo
 from flask_login import login_required, current_user
 from extensions import db
 from models.job import Job
+from models.job_source import JobSource
 from models.job_match import JobMatch, SavedJob
 from models.application import Application
 from models.interview import InterviewSession, InterviewAnswer
 from services.interview_simulator import InterviewSimulator
 from services.job_matcher import JobMatcher
+from services.skill_tracks_data import get_all_skill_tracks, get_skill_track, get_topic_details
 
 interview_bp = Blueprint("interview", __name__, url_prefix="/interview")
 simulator = InterviewSimulator()
+
+
+def _get_or_create_skill_job(skill_key: str, topic_key: str = None) -> Job:
+    """Finds or creates a realistic database Job record backing a dedicated technical skill track."""
+    clean_skill = (skill_key or "sql").lower().strip()
+    skill_info = get_skill_track(clean_skill) or get_skill_track("sql") or {}
+    clean_skill = skill_info.get("key", "sql")
+
+    clean_topic = (topic_key or "").strip()
+    topic_info = get_topic_details(clean_skill, clean_topic) if clean_topic else None
+
+    # Ensure JobSource exists
+    source = JobSource.query.filter_by(platform="skill_track", company_key="interview_prep").first()
+    if not source:
+        source = JobSource(
+            platform="skill_track",
+            company_key="interview_prep",
+            name="Technical Skill Mastery Track",
+            source_config={"type": "technical_specialization"},
+            is_active=True
+        )
+        db.session.add(source)
+        db.session.commit()
+
+    source_job_id = f"skill_{clean_skill}_{clean_topic if clean_topic else 'all'}"
+    job = Job.query.filter_by(source_id=source.id, source_job_id=source_job_id).first()
+
+    if not job:
+        if topic_info:
+            title = f"{skill_info.get('name', 'Technical Track')}: {topic_info.get('name')}"
+            company = f"Skill Track: {skill_info.get('short_name', clean_skill.upper())}"
+            desc = (
+                f"Dedicated technical interview simulation and coding assessment for {skill_info.get('name')} "
+                f"focusing on {topic_info.get('name')}.\n\n"
+                f"Summary: {topic_info.get('summary', '')}\n\n"
+                f"Core Concepts Tested:\n" + "\n".join(f"- {c}" for c in topic_info.get("core_concepts", []))
+            )
+            skills = [skill_info.get("short_name", clean_skill.upper())] + topic_info.get("core_concepts", [])
+        else:
+            title = f"{skill_info.get('name', clean_skill.upper())} — Comprehensive Technical Specialization"
+            company = f"Skill Track: {skill_info.get('short_name', clean_skill.upper())}"
+            desc = (
+                f"Comprehensive technical interview and architecture simulation for {skill_info.get('name')}.\n\n"
+                f"{skill_info.get('description', '')}\n\n"
+                f"Topics Covered:\n" + "\n".join(f"- {t.get('name')}: {t.get('summary')}" for t in skill_info.get("topics", []))
+            )
+            skills = [skill_info.get("short_name", clean_skill.upper())] + [t.get("name") for t in skill_info.get("topics", [])]
+
+        job = Job(
+            source_id=source.id,
+            source_platform="skill_track",
+            source_company_key=clean_skill,
+            source_job_id=source_job_id,
+            title=title,
+            company=company,
+            department="Engineering Technical Track",
+            location="Live Audio Simulation & Sandbox",
+            work_mode="remote",
+            employment_type="full-time",
+            experience_level="mid-senior",
+            description=desc,
+            raw_description=desc,
+            required_skills=skills[:8],
+            preferred_skills=[skill_info.get("short_name", clean_skill.upper())],
+            original_url=f"/interview/practice/skill/{clean_skill}",
+            apply_url=f"/interview/practice/skill/{clean_skill}",
+            status="active",
+            source_metadata={"skill_key": clean_skill, "topic_key": clean_topic}
+        )
+        db.session.add(job)
+        db.session.commit()
+
+    return job
 
 @interview_bp.route("/")
 @login_required
@@ -54,6 +129,7 @@ def interview_hub():
             avg_score = round(sum(scores) / len(scores), 1)
 
     personas = simulator.get_interviewer_personas()
+    skill_tracks = simulator.get_skill_tracks()
     return render_template(
         "interview_hub.html",
         primary_job=primary_job,
@@ -62,8 +138,34 @@ def interview_hub():
         active_jobs=active_jobs,
         past_sessions=past_sessions,
         avg_score=avg_score,
-        personas=personas
+        personas=personas,
+        skill_tracks=skill_tracks
     )
+
+@interview_bp.route("/skills")
+@login_required
+def skill_tracks_directory():
+    """Returns all available technical skill tracks and full topics."""
+    format_type = request.args.get("format", "")
+    if format_type == "json" or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify({"success": True, "skills": simulator.get_skill_tracks()})
+    return redirect(url_for("interview.interview_hub") + "#technical-skill-tracks")
+
+@interview_bp.route("/practice/skill/<skill_key>")
+@login_required
+def practice_skill(skill_key):
+    """Launches an interactive voice-to-voice mock interview for a specific skill and optional topic."""
+    topic = request.args.get("topic")
+    job = _get_or_create_skill_job(skill_key, topic_key=topic)
+    return redirect(url_for("interview.start_interview", job_id=job.id))
+
+@interview_bp.route("/coding/skill/<skill_key>")
+@login_required
+def coding_skill(skill_key):
+    """Launches an interactive technical coding sandbox for a specific skill and optional topic."""
+    topic = request.args.get("topic")
+    job = _get_or_create_skill_job(skill_key, topic_key=topic)
+    return redirect(url_for("interview.coding_challenge", job_id=job.id))
 
 @interview_bp.route("/<int:job_id>")
 @login_required

@@ -45,24 +45,48 @@ Return a valid JSON object:
         if isinstance(parsed, dict) and "title" in parsed:
             return parsed
 
-        # Deterministic fallback based on job title
-        is_sql = any(k in job.title.lower() for k in ["data", "analyst", "sql", "analytics"])
-        if is_sql:
+        # Deterministic fallback based on job or skill track
+        source_key = (getattr(job, "source_company_key", "") or "").lower()
+        title_lower = (job.title or "").lower()
+
+        # 1. C Language Challenge
+        if "c_language" in source_key or any(k in title_lower for k in ["c language", "embedded", "systems programmer", "systems engineer (c)"]):
             return {
-                "title": f"High-Throughput Window Aggregations at {job.company}",
+                "title": f"Safe Dynamic String Buffer & Pointer Reversal in C ({job.company})",
                 "difficulty": "Medium",
-                "tech_stack": "SQL / Python",
-                "scenario": f"At {job.company}, our stream processing pipeline aggregates user activity metrics across sliding time intervals.",
-                "problem_statement": "Write a query or function to compute the 7-day rolling average of transactions per user and identify top 10% outlier anomalies.",
-                "input_description": "Table or list of records: (user_id, timestamp, transaction_amount)",
-                "output_description": "Records with (user_id, date, rolling_avg_7d, is_anomaly)",
-                "starter_code": """def analyze_transactions(transactions):\n    # Return list of records with rolling averages\n    return []""",
+                "tech_stack": "C Language",
+                "scenario": f"At {job.company}, our high-throughput network engine processes raw TCP packet payloads. You must safely manipulate byte buffers using raw pointers and dynamic memory without memory leaks.",
+                "problem_statement": "Implement two functions in C:\n1. `void reverse_buffer(char* buf, size_t len)`: Reverses the buffer in-place using two pointers.\n2. `char* safe_concat(const char* s1, const char* s2)`: Allocates exact memory using malloc, concatenates both strings safely, and ensures null-termination. Handle NULL inputs gracefully.",
+                "input_description": "Pointer to char buffer, buffer lengths, or null-terminated strings",
+                "output_description": "In-place mutated buffer or newly allocated null-terminated string",
+                "starter_code": """#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\n// 1. In-place pointer reversal\nvoid reverse_buffer(char* buf, size_t len) {\n    if (!buf || len <= 1) return;\n    char* start = buf;\n    char* end = buf + len - 1;\n    while (start < end) {\n        char temp = *start;\n        *start++ = *end;\n        *end-- = temp;\n    }\n}\n\n// 2. Safe dynamic allocation\nchar* safe_concat(const char* s1, const char* s2) {\n    if (!s1 && !s2) return NULL;\n    size_t len1 = s1 ? strlen(s1) : 0;\n    size_t len2 = s2 ? strlen(s2) : 0;\n    char* result = (char*)malloc(len1 + len2 + 1);\n    if (!result) return NULL;\n    if (len1 > 0) memcpy(result, s1, len1);\n    if (len2 > 0) memcpy(result + len1, s2, len2);\n    result[len1 + len2] = '\\0';\n    return result;\n}\n""",
                 "test_cases": [
-                    {"input": "[('u1', '2026-10-01', 100), ('u1', '2026-10-02', 150)]", "expected": "[{'user_id': 'u1', 'rolling_avg': 125.0}]", "explanation": "Simple rolling average"}
+                    {"input": "buf = 'NETWORK', len = 7", "expected": "'KROWTEN'", "explanation": "Reverses in-place using two pointers"},
+                    {"input": "safe_concat('Hello ', 'Systems')", "expected": "'Hello Systems'", "explanation": "Allocates 14 bytes and null terminates"}
                 ],
-                "hints": ["Consider using collections.defaultdict or SQL AVG() OVER (PARTITION BY ...)", "Handle days with zero transactions"]
+                "hints": ["Always guard against NULL pointers before dereferencing", "Remember to add +1 for the null terminator '\\0' in malloc"]
             }
 
+        # 2. SQL Challenge
+        is_sql = "sql" in source_key or any(k in title_lower for k in ["sql", "data", "analyst", "database", "analytics"])
+        if is_sql:
+            return {
+                "title": f"High-Throughput Window Aggregations & Outlier Detection ({job.company})",
+                "difficulty": "Medium",
+                "tech_stack": "SQL / PostgreSQL",
+                "scenario": f"At {job.company}, our stream processing pipeline aggregates user activity metrics across sliding time intervals and detects anomalous transaction volumes.",
+                "problem_statement": "Write an ANSI SQL query using Window Functions (AVG OVER, DENSE_RANK) to:\n1. Compute the 7-day rolling average of transaction amounts partitioned by user_id.\n2. Rank transactions within each department or category to identify the top 5% value transactions.\n3. Filter out any rows where the transaction is flagged as cancelled.",
+                "input_description": "Table `transactions` (transaction_id, user_id, category, amount, created_at, status)",
+                "output_description": "Columns: user_id, transaction_id, amount, rolling_7d_avg, category_rank",
+                "starter_code": """SELECT \n    user_id,\n    transaction_id,\n    amount,\n    AVG(amount) OVER (\n        PARTITION BY user_id \n        ORDER BY created_at \n        ROWS BETWEEN 6 PRECEDING AND CURRENT ROW\n    ) AS rolling_7d_avg,\n    DENSE_RANK() OVER (\n        PARTITION BY category \n        ORDER BY amount DESC\n    ) AS category_rank\nFROM transactions\nWHERE status = 'completed'\nORDER BY user_id, created_at DESC;""",
+                "test_cases": [
+                    {"input": "3 completed transactions for user_1: 100, 200, 300", "expected": "rolling_7d_avg: 100, 150, 200", "explanation": "Moving average over sliding window partition"},
+                    {"input": "Cancelled transactions with status = 'void'", "expected": "Excluded from calculation", "explanation": "Filtered via WHERE predicate"}
+                ],
+                "hints": ["Use PARTITION BY user_id and ROWS BETWEEN 6 PRECEDING AND CURRENT ROW", "Use DENSE_RANK() to prevent rank gaps in ties"]
+            }
+
+        # 3. Default Python Challenge
         return {
             "title": f"Scalable In-Memory Cache with TTL for {job.company}",
             "difficulty": "Medium",

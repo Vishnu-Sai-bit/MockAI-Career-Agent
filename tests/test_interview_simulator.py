@@ -290,3 +290,110 @@ def test_voice_to_voice_interactive_simulator_apis(app_instance, client):
     assert "Voice-to-Voice Interactive Mock Interview Simulator" in hub_html
     assert "Live Bi-Directional Audio" in hub_html
 
+
+def test_technical_skill_tracks_and_topics(app_instance, client):
+    """
+    Tests the comprehensive technical skill tracks covering SQL, Python, C Language,
+    DSA, Java, C++, JS/TS, and System Design.
+    """
+    from services.skill_tracks_data import get_all_skill_tracks, get_skill_track, get_topic_details
+
+    # 1. Verify Catalog Completeness
+    all_tracks = get_all_skill_tracks()
+    expected_skills = ["sql", "python", "c_language", "dsa", "java", "cpp", "javascript_web", "system_design"]
+    for sk in expected_skills:
+        assert sk in all_tracks, f"Missing expected skill track: {sk}"
+        track = all_tracks[sk]
+        assert "name" in track
+        assert "topics" in track
+        assert len(track["topics"]) >= 2
+
+    # Verify SQL topics
+    sql_track = get_skill_track("sql")
+    sql_topic_keys = [t["key"] for t in sql_track["topics"]]
+    assert "window_functions" in sql_topic_keys
+    assert "complex_joins" in sql_topic_keys
+    assert "indexing_optimization" in sql_topic_keys
+    assert "acid_transactions" in sql_topic_keys
+
+    # Verify Python topics
+    py_track = get_skill_track("python")
+    py_topic_keys = [t["key"] for t in py_track["topics"]]
+    assert "core_internals" in py_topic_keys
+    assert "gil_concurrency" in py_topic_keys
+    assert "asyncio_event_loop" in py_topic_keys
+
+    # Verify C Language topics
+    c_track = get_skill_track("c_language")
+    c_topic_keys = [t["key"] for t in c_track["topics"]]
+    assert "pointers_arithmetic" in c_topic_keys
+    assert "dynamic_memory_valgrind" in c_topic_keys
+    assert "structs_unions_alignment" in c_topic_keys
+    assert "bitwise_manipulation" in c_topic_keys
+
+    # 2. Test Question Generation for Specific Skill & Topic
+    sim = InterviewSimulator()
+    sql_questions = sim.generate_skill_interview_questions("sql", topic_key="window_functions")
+    assert len(sql_questions) >= 4
+    assert any("window" in q["question"].lower() or "d_rank" in q["question"].lower() or "row_number" in q["question"].lower() or "rank" in q["question"].lower() for q in sql_questions)
+
+    c_questions = sim.generate_skill_interview_questions("c_language", topic_key="pointers_arithmetic")
+    assert len(c_questions) >= 4
+    assert any("pointer" in q["question"].lower() for q in c_questions)
+
+    # 3. Test Web Routes for Skill Directory & Practice
+    with app_instance.app_context():
+        u = User.query.first()
+        user_id = str(u.id) if u else "1"
+
+    with client.session_transaction() as sess:
+        sess["_user_id"] = user_id
+        sess["_fresh"] = True
+
+    # Check Skills JSON API
+    resp_skills = client.get("/interview/skills?format=json")
+    assert resp_skills.status_code == 200
+    skills_json = resp_skills.get_json()
+    assert skills_json["success"] is True
+    assert "sql" in skills_json["skills"]
+    assert "c_language" in skills_json["skills"]
+
+    # Check Practice Skill Launch for SQL Window Functions
+    resp_sql = client.get("/interview/practice/skill/sql?topic=window_functions")
+    assert resp_sql.status_code == 302
+    assert "/interview/" in resp_sql.headers.get("Location")
+
+    # Follow redirect to simulator
+    resp_sim_sql = client.get(resp_sql.headers.get("Location"))
+    assert resp_sim_sql.status_code == 200
+    sim_sql_html = resp_sim_sql.data.decode("utf-8")
+    assert "Technical Skill Track" in sim_sql_html
+    assert "SQL" in sim_sql_html
+
+    # Check Practice Skill Launch for C Language Pointers
+    resp_c = client.get("/interview/practice/skill/c_language?topic=pointers_arithmetic")
+    assert resp_c.status_code == 302
+    resp_sim_c = client.get(resp_c.headers.get("Location"))
+    assert resp_sim_c.status_code == 200
+    sim_c_html = resp_sim_c.data.decode("utf-8")
+    assert "C Language" in sim_c_html
+
+    # Check Coding Challenge Launch for C Language
+    resp_code_c = client.get("/interview/coding/skill/c_language")
+    assert resp_code_c.status_code == 302
+    resp_code_page = client.get(resp_code_c.headers.get("Location"))
+    assert resp_code_page.status_code == 200
+    code_html = resp_code_page.data.decode("utf-8")
+    assert "C Language" in code_html or "reverse_buffer" in code_html
+
+    # Check Hub renders Skill Directory and Topics
+    resp_hub = client.get("/interview/hub")
+    assert resp_hub.status_code == 200
+    hub_html = resp_hub.data.decode("utf-8")
+    assert "Technical Skill Tracks &amp; Full Topics Directory" in hub_html or "Technical Skill Tracks & Full Topics Directory" in hub_html
+    assert "SQL &amp; Database Engineering" in hub_html or "SQL & Database Engineering" in hub_html
+    assert "C Language &amp; Systems Programming" in hub_html or "C Language & Systems Programming" in hub_html
+    assert "Python Systems &amp; Backend Engineering" in hub_html or "Python Systems & Backend Engineering" in hub_html
+    assert "Data Structures &amp; Algorithms (DSA)" in hub_html or "Data Structures & Algorithms (DSA)" in hub_html
+
+

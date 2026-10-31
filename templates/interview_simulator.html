@@ -24,18 +24,30 @@
             <button type="button" class="btn btn-sm btn-outline-success d-flex align-items-center gap-1" id="reverse-questions-btn" data-bs-toggle="modal" data-bs-target="#reverseQuestionsModal">
                 <i class="bi bi-patch-question-fill"></i> <span>Questions to Ask</span>
             </button>
-            <button type="button" class="btn btn-sm btn-outline-custom d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#switchJobModal">
-                <i class="bi bi-arrow-repeat"></i> <span>Switch Target Role</span>
-            </button>
+            {% if job.source_platform == 'skill_track' %}
+                <a href="{{ url_for('interview.interview_hub') }}#technical-skill-tracks" class="btn btn-sm btn-outline-custom d-flex align-items-center gap-1">
+                    <i class="bi bi-grid-fill"></i> <span>All Skill Tracks</span>
+                </a>
+            {% else %}
+                <button type="button" class="btn btn-sm btn-outline-custom d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#switchJobModal">
+                    <i class="bi bi-arrow-repeat"></i> <span>Switch Target Role</span>
+                </button>
+            {% endif %}
             <a href="{{ url_for('interview.coding_challenge', job_id=job.id) }}" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1">
                 <i class="bi bi-code-slash"></i> <span>Coding Sandbox</span>
             </a>
-            <a href="{{ url_for('applications.view_tailored_cover_letter', job_id=job.id) }}" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
-                <i class="bi bi-file-earmark-text"></i> <span>Cover Letter</span>
-            </a>
-            <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="btn btn-sm btn-outline-secondary">
-                Back to Job
-            </a>
+            {% if job.source_platform != 'skill_track' %}
+                <a href="{{ url_for('applications.view_tailored_cover_letter', job_id=job.id) }}" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
+                    <i class="bi bi-file-earmark-text"></i> <span>Cover Letter</span>
+                </a>
+                <a href="{{ url_for('jobs.job_details', job_id=job.id) }}" class="btn btn-sm btn-outline-secondary">
+                    Back to Job
+                </a>
+            {% else %}
+                <a href="{{ url_for('interview.interview_hub') }}" class="btn btn-sm btn-outline-secondary">
+                    Back to Hub
+                </a>
+            {% endif %}
         </div>
     </div>
 
@@ -121,9 +133,15 @@
                 <div>
                     <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
                         <h4 class="fw-bold text-body mb-0">{{ job.title }}</h4>
-                        <span class="badge bg-success-subtle text-success border border-success-subtle small">
-                            <i class="bi bi-shield-check me-1"></i>Verified Live
-                        </span>
+                        {% if job.source_platform == 'skill_track' %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle small">
+                                <i class="bi bi-award-fill me-1"></i>Technical Skill Track
+                            </span>
+                        {% else %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle small">
+                                <i class="bi bi-shield-check me-1"></i>Verified Live
+                            </span>
+                        {% endif %}
                         {% if match_score %}
                             <span class="badge {% if match_score >= 80 %}bg-success text-white{% elif match_score >= 60 %}bg-warning-subtle text-warning-emphasis{% else %}bg-secondary-subtle text-secondary{% endif %}">
                                 <i class="bi bi-bullseye me-1"></i>{{ match_score }}% ATS Fit
