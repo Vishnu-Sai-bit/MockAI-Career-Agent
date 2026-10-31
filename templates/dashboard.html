@@ -29,43 +29,43 @@
         </div>
     </div>
 
-    <!-- Quick Stat Cards -->
+    <!-- Quick Stat Cards (Connected to Respective Platform Features) -->
     <div class="row g-3 mb-4">
         <div class="col-md-3">
-            <div class="card stat-card bg-white border custom-card">
+            <a href="{{ url_for('ats.ats_report') }}" class="card stat-card bg-white border custom-card text-decoration-none hover-shadow transition" title="View Full ATS Resume Diagnostic">
                 <div class="stat-icon stat-green"><i class="bi bi-graph-up-arrow"></i></div>
                 <div>
-                    <h5 class="fw-bold mb-0">{{ resume.ats_quality_score|round(0)|int if resume else '--' }}<span class="text-muted fs-6">/100</span></h5>
-                    <small class="text-muted">ATS Quality Score</small>
+                    <h5 class="fw-bold mb-0 text-dark">{{ resume.ats_quality_score|round(0)|int if resume else '--' }}<span class="text-muted fs-6">/100</span></h5>
+                    <small class="text-muted">ATS Quality Score &rarr;</small>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-md-3">
-            <div class="card stat-card bg-white border custom-card">
+            <a href="{{ url_for('dashboard.settings') }}" class="card stat-card bg-white border custom-card text-decoration-none hover-shadow transition" title="Complete Profile & Candidate Preferences">
                 <div class="stat-icon stat-blue"><i class="bi bi-person-check"></i></div>
                 <div>
-                    <h5 class="fw-bold mb-0">{{ completeness }}%</h5>
-                    <small class="text-muted">Profile Complete</small>
+                    <h5 class="fw-bold mb-0 text-dark">{{ completeness }}%</h5>
+                    <small class="text-muted">Profile Complete &rarr;</small>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-md-3">
-            <div class="card stat-card bg-white border custom-card">
+            <a href="{{ url_for('jobs.saved_jobs') }}" class="card stat-card bg-white border custom-card text-decoration-none hover-shadow transition" title="View Saved Job Bookmarks">
                 <div class="stat-icon stat-amber"><i class="bi bi-bookmark-star-fill"></i></div>
                 <div>
-                    <h5 class="fw-bold mb-0">{{ saved_jobs|length }}</h5>
-                    <small class="text-muted">Saved Bookmarks</small>
+                    <h5 class="fw-bold mb-0 text-dark">{{ saved_jobs|length }}</h5>
+                    <small class="text-muted">Saved Bookmarks &rarr;</small>
                 </div>
-            </div>
+            </a>
         </div>
         <div class="col-md-3">
-            <div class="card stat-card bg-white border custom-card">
+            <a href="{{ url_for('applications.list_applications') }}" class="card stat-card bg-white border custom-card text-decoration-none hover-shadow transition" title="Open Application CRM & Kanban Board">
                 <div class="stat-icon stat-purple"><i class="bi bi-send-check-fill"></i></div>
                 <div>
-                    <h5 class="fw-bold mb-0">{{ total_applications }}</h5>
-                    <small class="text-muted">Active Applications</small>
+                    <h5 class="fw-bold mb-0 text-dark">{{ total_applications }}</h5>
+                    <small class="text-muted">Active Applications &rarr;</small>
                 </div>
-            </div>
+            </a>
         </div>
     </div>
 

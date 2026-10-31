@@ -89,6 +89,23 @@ def register():
     return render_template("register.html")
 
 
+@auth_bp.route("/demo-login", methods=["GET", "POST"])
+def demo_login():
+    demo_user = User.query.filter_by(email="beerevishnusai776600@gmail.com").first()
+    if not demo_user:
+        demo_user = User.query.first()
+    if demo_user:
+        login_user(demo_user)
+        user_name = demo_user.candidate_profile.full_name if demo_user.candidate_profile else demo_user.email
+        flash(f"Signed in as candidate {user_name}!", "success")
+        next_page = request.args.get("next") or request.form.get("next")
+        if next_page and is_safe_redirect_url(next_page):
+            return redirect(next_page)
+        return redirect(url_for("dashboard.dashboard"))
+    flash("No candidate account found. Please register.", "warning")
+    return redirect(url_for("auth.register"))
+
+
 @auth_bp.route("/logout")
 @login_required
 def logout():

@@ -98,3 +98,59 @@ def test_jobs_login_redirect_flow(app_instance, client):
     # If password matched, redirects to /jobs
     if login_post.status_code == 302:
         assert login_post.headers.get("Location") == "/jobs"
+
+def test_auth_split_layout_and_demo_login(client):
+    # Test Login page renders modern split layout
+    login_resp = client.get("/login")
+    assert login_resp.status_code == 200
+    login_html = login_resp.data.decode("utf-8")
+    assert "auth-split-card" in login_html
+    assert "auth-showcase-panel" in login_html
+    assert "auth-demo-btn" in login_html
+    assert "Quick Sign In as Demo Candidate" in login_html
+    assert "Back to Home" in login_html
+
+    # Test Register page renders modern split layout
+    reg_resp = client.get("/register")
+    assert reg_resp.status_code == 200
+    reg_html = reg_resp.data.decode("utf-8")
+    assert "auth-split-card" in reg_html
+    assert "auth-showcase-panel" in reg_html
+    assert "Create Free Account" in reg_html
+    assert "Back to Home" in reg_html
+
+    # Test Demo Login endpoint signs in and redirects to dashboard or next param
+    demo_resp = client.post("/demo-login?next=/jobs", follow_redirects=False)
+    assert demo_resp.status_code == 302
+    assert demo_resp.headers.get("Location") == "/jobs"
+
+def test_dashboard_connected_links_and_navigation(app_instance, client):
+    with app_instance.app_context():
+        u = User.query.first()
+        user_id = str(u.id) if u else "1"
+
+    with client.session_transaction() as sess:
+        sess["_user_id"] = user_id
+        sess["_fresh"] = True
+
+    # Access dashboard
+    dash_resp = client.get("/dashboard")
+    assert dash_resp.status_code == 200
+    dash_html = dash_resp.data.decode("utf-8")
+
+    # Verify stat cards are clickable links to respective tools
+    assert 'href="/ats"' in dash_html
+    assert 'href="/settings"' in dash_html
+    assert 'href="/saved-jobs"' in dash_html
+    assert 'href="/applications"' in dash_html
+
+    # Verify topbar and sidebar contain Home navigation
+    assert 'Home Page' in dash_html
+    assert 'href="/?home=1"' in dash_html
+
+    # Verify authenticated user can visit /home without forced redirect
+    home_resp = client.get("/home")
+    assert home_resp.status_code == 200
+    home_html = home_resp.data.decode("utf-8")
+    assert "Find Your Dream Job Faster" in home_html
+    assert "Dashboard" in home_html

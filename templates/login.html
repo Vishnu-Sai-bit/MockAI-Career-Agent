@@ -4,61 +4,174 @@
 
 {% block content %}
 <div class="auth-container">
-    <div class="card auth-card p-4 p-sm-5 border">
-        <div class="text-center mb-4">
-            <div class="rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 54px; height: 54px; background: rgba(59, 130, 246, 0.12);">
-                <i class="bi bi-shield-lock-fill fs-3 text-primary"></i>
+    <div class="auth-split-card auth-card d-flex flex-column flex-lg-row">
+        <!-- Left Showcase Panel (Branded SaaS Highlights) -->
+        <div class="auth-showcase-panel col-lg-5 d-none d-lg-flex">
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-4">
+                    <div class="sidebar-logo-icon shadow-sm" style="width: 38px; height: 38px;">
+                        <i class="bi bi-briefcase-fill text-white fs-6"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-white fs-5 lh-1">AI Job Agent</div>
+                        <span class="auth-showcase-badge mt-1">
+                            <span class="status-pulse-dot"></span> 100% Real Postings
+                        </span>
+                    </div>
+                </div>
+
+                <h3 class="fw-bold text-white mb-3" style="letter-spacing: -0.02em; line-height: 1.25;">
+                    Accelerate Your Career with Grounded AI
+                </h3>
+                <p class="text-white-50 small mb-4" style="line-height: 1.6;">
+                    Connect directly to 15,800+ verified employer vacancies, ATS resume match diagnostics, and real-time voice mock interviews.
+                </p>
+
+                <!-- Feature Pills -->
+                <div class="d-flex flex-column gap-3 mb-4">
+                    <div class="auth-feature-pill">
+                        <div class="auth-feature-icon bg-primary bg-opacity-25 text-primary">
+                            <i class="bi bi-patch-check-fill"></i>
+                        </div>
+                        <div>
+                            <strong class="d-block text-white small">Direct ATS Verified Requisitions</strong>
+                            <span class="text-white-50 fs-8">Greenhouse, Lever, Ashby, and Workday portals only.</span>
+                        </div>
+                    </div>
+
+                    <div class="auth-feature-pill">
+                        <div class="auth-feature-icon bg-info bg-opacity-25 text-info">
+                            <i class="bi bi-file-earmark-bar-graph-fill"></i>
+                        </div>
+                        <div>
+                            <strong class="d-block text-white small">Spatial ATS Match Score</strong>
+                            <span class="text-white-50 fs-8">6-section resume diagnostics & keyword coverage audit.</span>
+                        </div>
+                    </div>
+
+                    <div class="auth-feature-pill">
+                        <div class="auth-feature-icon bg-danger bg-opacity-25 text-danger">
+                            <i class="bi bi-mic-fill"></i>
+                        </div>
+                        <div>
+                            <strong class="d-block text-white small">Voice-to-Voice Mock Interviews</strong>
+                            <span class="text-white-50 fs-8">STAR behavioral simulator with real-time audio scoring.</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <h4 class="fw-bold mb-1 text-body">Welcome Back</h4>
-            <p class="text-secondary small mb-0">Sign in to your AI Job Agent account</p>
+
+            <!-- Bottom Confidence Card -->
+            <div class="auth-quote-card">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="text-warning small"><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i></span>
+                    <strong class="text-white small">15,800+ Live Jobs Grounded</strong>
+                </div>
+                <p class="text-white-50 mb-0 fs-8">
+                    Every vacancy is validated against genuine employer portals with 0% ghost jobs and real recruiter ATS filters.
+                </p>
+            </div>
         </div>
 
-        {% if request.args.get('next') %}
-            <div class="alert alert-info py-2 px-3 small mb-3 text-start">
-                <i class="bi bi-shield-lock-fill me-1"></i> Please sign in or create an account to access verified jobs and candidate tools.
-            </div>
-        {% endif %}
-
-        <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) if request.args.get('next') else url_for('auth.login') }}">
-            {% if request.args.get('next') %}
-                <input type="hidden" name="next" value="{{ request.args.get('next') }}">
-            {% endif %}
-            <div class="mb-3">
-                <label class="form-label small fw-semibold text-body">Email Address</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
-                    <input type="email" name="email" class="form-control" placeholder="name@example.com" required autofocus autocomplete="email">
+        <!-- Right Form Panel -->
+        <div class="auth-form-panel col-lg-7 d-flex flex-column justify-content-between">
+            <div>
+                <!-- Top Navigation Link -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <a href="{{ url_for('dashboard.index', home=1) }}" class="auth-back-link">
+                        <i class="bi bi-arrow-left"></i> Back to Home
+                    </a>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 small fw-semibold">
+                        Candidate Portal
+                    </span>
                 </div>
-            </div>
 
-            <div class="mb-3">
-                <label class="form-label small fw-semibold text-body">Password</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-lock text-muted"></i></span>
-                    <input type="password" name="password" id="loginPassword" class="form-control" placeholder="••••••••" required autocomplete="current-password">
-                    <button type="button" class="btn password-toggle-btn" onclick="togglePasswordVisibility('loginPassword', this)" title="Show / Hide Password" tabindex="-1">
-                        <i class="bi bi-eye text-muted"></i>
+                <!-- Header Title -->
+                <div class="mb-4">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <div class="brand-icon-box rounded-3 d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background: rgba(59, 130, 246, 0.12);">
+                            <i class="bi bi-shield-lock-fill text-primary fs-5"></i>
+                        </div>
+                        <h4 class="fw-bold mb-0 text-body">Welcome Back</h4>
+                    </div>
+                    <p class="text-secondary small mb-0">Sign in to access your jobs, applications, and AI career suite.</p>
+                </div>
+
+                {% if request.args.get('next') %}
+                    <div class="alert alert-info py-2 px-3 small mb-3 text-start d-flex align-items-center gap-2 rounded-3">
+                        <i class="bi bi-info-circle-fill text-primary fs-5 flex-shrink-0"></i>
+                        <div>Please sign in or create an account to access verified jobs and candidate tools.</div>
+                    </div>
+                {% endif %}
+
+                <!-- 1-Click Quick Demo Sign In Button -->
+                <form method="POST" action="{{ url_for('auth.demo_login', next=request.args.get('next')) if request.args.get('next') else url_for('auth.demo_login') }}" class="mb-3">
+                    {% if request.args.get('next') %}
+                        <input type="hidden" name="next" value="{{ request.args.get('next') }}">
+                    {% endif %}
+                    <button type="submit" class="btn auth-demo-btn w-100 py-2-5 rounded-3 d-flex align-items-center justify-content-center gap-2 shadow-xs" title="1-Click Instant Login with active candidate profile">
+                        <i class="bi bi-lightning-charge-fill text-warning fs-5"></i>
+                        <span>Quick Sign In as Demo Candidate (Vishnu)</span>
                     </button>
+                </form>
+
+                <div class="d-flex align-items-center my-3">
+                    <hr class="flex-grow-1 opacity-25">
+                    <span class="px-3 text-muted small text-uppercase fs-8 fw-semibold letter-spacing-1">or sign in with email</span>
+                    <hr class="flex-grow-1 opacity-25">
                 </div>
+
+                <!-- Standard Email & Password Form -->
+                <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) if request.args.get('next') else url_for('auth.login') }}" id="loginForm">
+                    {% if request.args.get('next') %}
+                        <input type="hidden" name="next" value="{{ request.args.get('next') }}">
+                    {% endif %}
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold text-body">Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope text-muted"></i></span>
+                            <input type="email" name="email" id="loginEmail" class="form-control" placeholder="name@example.com" required autofocus autocomplete="email">
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label small fw-semibold text-body mb-0">Password</label>
+                            <span class="small text-muted fs-8">Min. 6 characters</span>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock text-muted"></i></span>
+                            <input type="password" name="password" id="loginPassword" class="form-control" placeholder="••••••••" required autocomplete="current-password">
+                            <button type="button" class="btn password-toggle-btn" onclick="togglePasswordVisibility('loginPassword', this)" title="Show / Hide Password" tabindex="-1">
+                                <i class="bi bi-eye text-muted"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="form-check">
+                            <input type="checkbox" name="remember" class="form-check-input" id="rememberMe">
+                            <label class="form-check-label small text-secondary" for="rememberMe">Remember me on this browser</label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary-custom w-100 py-2-5 rounded-3 fw-semibold d-flex align-items-center justify-content-center gap-2 shadow-sm">
+                        <span>Sign In</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </button>
+                </form>
             </div>
 
-            <div class="d-flex align-items-center justify-content-between mb-4">
-                <div class="form-check">
-                    <input type="checkbox" name="remember" class="form-check-input" id="rememberMe">
-                    <label class="form-check-label small text-secondary" for="rememberMe">Remember me</label>
-                </div>
+            <!-- Footer: Switch to Register -->
+            <div class="text-center pt-4 mt-4 border-top">
+                <p class="text-secondary small mb-0">
+                    Don't have an account yet?
+                    <a href="{{ url_for('auth.register', next=request.args.get('next')) if request.args.get('next') else url_for('auth.register') }}" class="fw-bold text-primary text-decoration-none">
+                        Create free account &rarr;
+                    </a>
+                </p>
             </div>
-
-            <button type="submit" class="btn btn-primary-custom w-100 py-2 fw-semibold">
-                <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
-            </button>
-        </form>
-
-        <div class="text-center mt-4 pt-3 border-top">
-            <p class="text-secondary small mb-0">
-                Don't have an account?
-                <a href="{{ url_for('auth.register', next=request.args.get('next')) if request.args.get('next') else url_for('auth.register') }}" class="fw-semibold text-primary text-decoration-none">Create account</a>
-            </p>
         </div>
     </div>
 </div>
