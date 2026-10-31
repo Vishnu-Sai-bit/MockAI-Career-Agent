@@ -28,7 +28,7 @@ def login():
         login_user(user, remember=remember)
         flash("Logged in successfully.", "success")
         
-        next_page = request.args.get("next")
+        next_page = request.args.get("next") or request.form.get("next")
         if next_page and is_safe_redirect_url(next_page):
             return redirect(next_page)
         return redirect(url_for("dashboard.dashboard"))
@@ -79,6 +79,10 @@ def register():
         db.session.commit()
 
         login_user(user)
+        next_page = request.args.get("next") or request.form.get("next")
+        if next_page and is_safe_redirect_url(next_page):
+            flash("Registration successful! Welcome to AI Job Agent.", "success")
+            return redirect(next_page)
         flash("Registration successful! Welcome to AI Job Agent. Upload your resume to begin.", "success")
         return redirect(url_for("resume.upload_resume"))
 

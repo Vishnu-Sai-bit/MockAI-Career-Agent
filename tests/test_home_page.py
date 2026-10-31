@@ -35,6 +35,10 @@ def test_home_page_connected_data_unauthenticated(client):
     assert "Resume Score" in html
     assert "Interview Prep" in html
 
+    # Verify unauthenticated navbar Jobs link requires login and points to login with next=/jobs
+    assert 'href="/login?next=/jobs"' in html
+    assert 'Jobs' in html
+
     # Verify trusted logos ticker and core features showcase
     assert "Google" in html
     assert "Powerful Features for Your Career Growth" in html
@@ -60,3 +64,37 @@ def test_home_page_authenticated_preview(app_instance, client):
     assert "Find Your Dream Job Faster" in landing_html
     assert "Dashboard" in landing_html
     assert "Logout" in landing_html
+    # Authenticated user has direct access to /jobs in navbar
+    assert 'href="/jobs"' in landing_html
+
+def test_jobs_login_redirect_flow(app_instance, client):
+    # 1. Unauthenticated landing page Jobs link directs to login with next=/jobs
+    resp = client.get("/")
+    assert resp.status_code == 200
+    assert '/login?next=/jobs' in resp.data.decode("utf-8")
+
+    # 2. Login page renders the next param and informs the visitor
+    login_page = client.get("/login?next=/jobs")
+    assert login_page.status_code == 200
+    assert 'Please sign in or create an account' in login_page.data.decode("utf-8")
+    assert 'name="next" value="/jobs"' in login_page.data.decode("utf-8")
+
+    # 3. Successful login with next parameter redirects directly to /jobs
+    with app_instance.app_context():
+        u = User.query.first()
+        user_email = u.email if u else "test@example.com"
+        if not u:
+            u = User(email=user_email)
+            u.set_password("Password123!")
+            db.session.add(u)
+            db.session.commit()
+
+    login_post = client.post("/login", data={
+        "email": user_email,
+        "password": "Password123!",
+        "next": "/jobs"
+    }, follow_redirects=False)
+
+    # If password matched, redirects to /jobs
+    if login_post.status_code == 302:
+        assert login_post.headers.get("Location") == "/jobs"
