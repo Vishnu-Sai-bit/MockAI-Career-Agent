@@ -60,12 +60,6 @@
                 </div>
                 <ul class="nav flex-column mb-3 sidebar-nav">
                     <li class="nav-item">
-                        <a class="sidebar-link {% if request.endpoint == 'dashboard.index' %}active{% endif %}" href="{{ url_for('dashboard.index', home=1) }}" title="Platform Landing & Overview">
-                            <span class="sidebar-icon-box"><i class="bi bi-house-door-fill"></i></span>
-                            <span>Home Page</span>
-                        </a>
-                    </li>
-                    <li class="nav-item">
                         <a class="sidebar-link {% if request.endpoint == 'dashboard.dashboard' %}active{% endif %}" href="{{ url_for('dashboard.dashboard') }}" title="Candidate Dashboard">
                             <span class="sidebar-icon-box"><i class="bi bi-grid-fill"></i></span>
                             <span>Dashboard</span>
@@ -193,32 +187,15 @@
                     <span class="fw-bold text-body fs-6" style="letter-spacing: -0.01em;">AI Job Agent</span>
                 </a>
                 {% else %}
-                <!-- Brand on App Pages (Clickable logo back to landing page) -->
-                <a class="d-flex align-items-center gap-2 text-decoration-none me-1" href="{{ url_for('dashboard.index', home=1) }}" title="Go to Platform Home Page">
-                    <div class="brand-icon-box rounded-3 d-flex align-items-center justify-content-center shadow-xs" style="width: 32px; height: 32px; background: linear-gradient(135deg, #2563eb, #1d4ed8);">
-                        <i class="bi bi-briefcase-fill text-white fs-6"></i>
-                    </div>
-                    <span class="fw-bold text-body fs-6 d-none d-sm-inline" style="letter-spacing: -0.01em;">AI Job Agent</span>
-                </a>
-
                 <!-- Menu Button (Opens slide-out menu drawer) -->
-                <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1-5 px-3 py-1-5 rounded-pill shadow-xs border" type="button" data-bs-toggle="offcanvas" data-bs-target="#appSidebar" aria-controls="appSidebar" id="sidebarToggleBtn" title="Open Navigation Menu">
+                <button class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2 px-3 py-1-5 rounded-pill shadow-xs border" type="button" data-bs-toggle="offcanvas" data-bs-target="#appSidebar" aria-controls="appSidebar" id="sidebarToggleBtn" title="Open Navigation Menu">
                     <i class="bi bi-list fs-5 text-primary"></i>
                     <span class="fw-semibold small">Menu</span>
                 </button>
-
-                <!-- Connected Navigation Quick Links (Home, Dashboard, Current Module) -->
-                <div class="d-none d-md-flex align-items-center gap-1 ms-1 text-muted small">
-                    <a href="{{ url_for('dashboard.index', home=1) }}" class="btn btn-sm btn-light border py-1 px-2-5 rounded-pill text-decoration-none text-secondary d-flex align-items-center gap-1" title="Platform Home Page">
-                        <i class="bi bi-house-door-fill text-primary"></i> Home
-                    </a>
-                    <a href="{{ url_for('dashboard.dashboard') }}" class="btn btn-sm {% if request.endpoint == 'dashboard.dashboard' %}btn-primary-subtle text-primary border border-primary-subtle fw-semibold{% else %}btn-light border text-secondary{% endif %} py-1 px-2-5 rounded-pill text-decoration-none d-flex align-items-center gap-1" title="Candidate Dashboard">
-                        <i class="bi bi-grid-fill text-primary"></i> Dashboard
-                    </a>
-                    {% if request.endpoint != 'dashboard.dashboard' %}
-                    <span class="text-secondary opacity-50 mx-1">/</span>
+                <div class="d-none d-md-flex align-items-center gap-2 ms-2 text-muted small">
                     <span class="fw-semibold text-body">
-                        {% if request.endpoint == 'jobs.list_companies' %}Verified Employers
+                        {% if request.endpoint == 'dashboard.dashboard' %}Dashboard
+                        {% elif request.endpoint == 'jobs.list_companies' %}Verified Employers
                         {% elif 'jobs' in request.endpoint %}Jobs Discovery
                         {% elif 'application' in request.endpoint %}Application Tracker
                         {% elif 'ats' in request.endpoint %}ATS Match Intelligence
@@ -232,7 +209,6 @@
                         {% else %}AI Job Agent
                         {% endif %}
                     </span>
-                    {% endif %}
                 </div>
                 {% endif %}
             </div>
@@ -306,44 +282,6 @@
                 <button class="btn btn-sm btn-outline-secondary border-secondary d-flex align-items-center px-2 py-1" id="theme-toggle" title="Toggle Dark/Light Mode">
                     <i class="bi bi-moon-stars text-warning" id="theme-icon"></i>
                 </button>
-
-                {% if current_user.is_authenticated %}
-                    <!-- User Profile Dropdown connecting to Home, Dashboard & Settings -->
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-light border d-flex align-items-center gap-1-5 py-1 px-2 rounded-pill shadow-xs" type="button" id="topbarUserMenuBtn" data-bs-toggle="dropdown" aria-expanded="false" title="Account Navigation">
-                            <div class="user-avatar-circle" style="width: 24px; height: 24px; font-size: 0.7rem;">
-                                <span>{{ current_user.email[0].upper() }}</span>
-                            </div>
-                            <span class="d-none d-lg-inline small fw-semibold text-truncate" style="max-width: 120px;">
-                                {{ current_user.candidate_profile.full_name or current_user.email.split('@')[0] }}
-                            </span>
-                            <i class="bi bi-chevron-down text-secondary fs-9"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border p-1" aria-labelledby="topbarUserMenuBtn" style="font-size: 0.85rem; min-width: 180px;">
-                            <li>
-                                <a class="dropdown-item py-1-5 rounded-2 d-flex align-items-center gap-2" href="{{ url_for('dashboard.index', home=1) }}">
-                                    <i class="bi bi-house-door-fill text-primary"></i> Home Page
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item py-1-5 rounded-2 d-flex align-items-center gap-2" href="{{ url_for('dashboard.dashboard') }}">
-                                    <i class="bi bi-grid-fill text-primary"></i> Dashboard
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item py-1-5 rounded-2 d-flex align-items-center gap-2" href="{{ url_for('dashboard.settings') }}">
-                                    <i class="bi bi-gear text-secondary"></i> Settings & Profile
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider my-1"></li>
-                            <li>
-                                <a class="dropdown-item py-1-5 rounded-2 text-danger d-flex align-items-center gap-2" href="{{ url_for('auth.logout') }}">
-                                    <i class="bi bi-box-arrow-right"></i> Sign Out
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                {% endif %}
 
                 {% if not current_user.is_authenticated %}
                     {% if request.endpoint == 'auth.login' %}

@@ -22,11 +22,8 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-4 text-lg-end d-flex align-items-center justify-content-lg-end gap-2 flex-wrap">
-                <a href="{{ url_for('dashboard.index', home=1) }}" class="btn btn-outline-secondary rounded-pill" title="Go to Platform Home Page">
-                    <i class="bi bi-house-door-fill text-primary me-1"></i> Home
-                </a>
-                <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-outline-custom"><i class="bi bi-upload me-1"></i> Upload Resume</a>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{{ url_for('resume.upload_resume') }}" class="btn btn-outline-custom me-2"><i class="bi bi-upload me-1"></i> Upload Resume</a>
                 <a href="{{ url_for('assistant.chat_view') }}" class="btn btn-primary-custom"><i class="bi bi-chat-dots-fill me-1"></i> Ask Assistant</a>
             </div>
         </div>

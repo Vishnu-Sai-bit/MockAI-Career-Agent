@@ -25,11 +25,6 @@
                 <li class="nav-item">
                     <a class="nav-link nav-link-landing active" href="#hero">Home</a>
                 </li>
-                {% if current_user.is_authenticated %}
-                <li class="nav-item">
-                    <a class="nav-link nav-link-landing" href="{{ url_for('dashboard.dashboard') }}" title="Go to Candidate Dashboard">Dashboard</a>
-                </li>
-                {% endif %}
                 <li class="nav-item">
                     <a class="nav-link nav-link-landing" href="#features">Features</a>
                 </li>
