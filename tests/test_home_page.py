@@ -29,17 +29,15 @@ def test_home_page_connected_data_unauthenticated(client):
     # Verify real database counters & stats
     assert "Live Verified Jobs" in html
     assert "Direct Companies" in html
-    assert "Official ATS Sources" in html
+    assert "Official Apply Links" in html
 
-    # Verify hero search bar is connected
-    assert 'action="/jobs"' in html or 'action="/jobs/"' in html or 'action="http://localhost/jobs"' in html
-    assert 'name="q"' in html
-    assert 'name="country"' in html
+    # Verify hero floating preview cards
+    assert "Resume Score" in html
+    assert "Interview Prep" in html
 
-    # Verify dynamic connected sections
-    assert "Recently Verified Vacancies" in html
-    assert "Top Verified Employers Hiring Now" in html
-    assert "Voice-to-Voice Call Simulator" in html
+    # Verify trusted logos ticker and core features showcase
+    assert "Google" in html
+    assert "Powerful Features for Your Career Growth" in html
 
 def test_home_page_authenticated_preview(app_instance, client):
     with app_instance.app_context():
