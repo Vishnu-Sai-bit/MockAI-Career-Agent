@@ -115,3 +115,7 @@ To package a clean, production-ready source release archive (excluding local sec
 ```powershell
 python scripts/package_release.py
 ```
+
+## 📄 License
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
